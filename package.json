@@ -9,7 +9,9 @@
     "lint": "eslint",
     "db:studio": "drizzle-kit studio",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate"
+    "db:migrate": "tsx lib/migrate.ts",
+    "db:seed": "tsx lib/seed.ts",
+    "db:reset": "npm run db:migrate && npm run db:seed"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
@@ -25,11 +27,13 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
+    "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.8",
     "drizzle-orm": "^0.45.1",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
