@@ -7,6 +7,7 @@ import {
   boolean,
   unique,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 export const competitions = pgTable("competitions", {
   id: serial("id").primaryKey(),
@@ -94,3 +95,42 @@ export const admins = pgTable("admins", {
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
+
+export const matchesRelations = relations(matches, ({ one }) => ({
+  homeTeam: one(teams, {
+    fields: [matches.homeTeamId],
+    references: [teams.id],
+    relationName: "homeTeam",
+  }),
+  awayTeam: one(teams, {
+    fields: [matches.awayTeamId],
+    references: [teams.id],
+    relationName: "awayTeam",
+  }),
+  competition: one(competitions, {
+    fields: [matches.competitionId],
+    references: [competitions.id],
+  }),
+}));
+
+export const predictionsRelations = relations(predictions, ({ one }) => ({
+  participant: one(participants, {
+    fields: [predictions.participantId],
+    references: [participants.id],
+  }),
+  match: one(matches, {
+    fields: [predictions.matchId],
+    references: [matches.id],
+  }),
+}));
+
+export const teamsRelations = relations(teams, ({ one }) => ({
+  competition: one(competitions, {
+    fields: [teams.competitionId],
+    references: [competitions.id],
+  }),
+}));
+
+export const participantsRelations = relations(participants, ({ many }) => ({
+  predictions: many(predictions),
+}));
