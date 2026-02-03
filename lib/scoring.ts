@@ -1,6 +1,7 @@
 import { db, sql as neonSql } from "./db";
-import { predictions, matches, participants } from "./schema";
-import { eq, and, sql } from "drizzle-orm";
+import { predictions } from "./schema";
+import { eq } from "drizzle-orm";
+import type { LeaderboardEntry } from "./types";
 
 /**
  * Calculate points for a single prediction
@@ -110,7 +111,10 @@ export async function recalculateAllPoints() {
 /**
  * Get leaderboard with total points per participant
  */
-export async function getLeaderboard(competitionId?: number) {
+
+export async function getLeaderboard(
+  competitionId?: number
+): Promise<LeaderboardEntry[]> {
   if (competitionId) {
     const result = await neonSql`
       SELECT 
@@ -128,7 +132,7 @@ export async function getLeaderboard(competitionId?: number) {
       GROUP BY p.id, p.name, p.email
       ORDER BY total_points DESC, exact_scores DESC
     `;
-    return result;
+    return result as LeaderboardEntry[];
   }
 
   const result = await neonSql`
@@ -146,7 +150,7 @@ export async function getLeaderboard(competitionId?: number) {
     ORDER BY total_points DESC, exact_scores DESC
   `;
 
-  return result;
+  return result as LeaderboardEntry[];
 }
 
 /**
