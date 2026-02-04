@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { put } from "@vercel/blob";
 import { processImageToPredictions } from "@/lib/ocr";
+import { db } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -38,14 +39,43 @@ export async function POST(request: NextRequest) {
     // Process with OCR
     const extracted = await processImageToPredictions(base64);
 
-    // Return preview data (don't save to DB yet)
+    // Get all matches in order for this competition
+    const matches = await db.query.matches.findMany({
+      with: {
+        homeTeam: true,
+        awayTeam: true,
+      },
+      orderBy: (matches, { asc }) => [asc(matches.matchNumber)],
+    });
+
+    // Map extracted scores to matches
+    const matchPredictions = matches.map((match, index) => ({
+      matchId: match.id,
+      matchNumber: match.matchNumber,
+      homeTeam: {
+        id: match.homeTeam.id,
+        name: match.homeTeam.name,
+        code: match.homeTeam.code,
+      },
+      awayTeam: {
+        id: match.awayTeam.id,
+        name: match.awayTeam.name,
+        code: match.awayTeam.code,
+      },
+      homeScore: extracted.scores[index]?.homeScore ?? null,
+      awayScore: extracted.scores[index]?.awayScore ?? null,
+      status: match.status,
+    }));
+
     return NextResponse.json({
       success: true,
       preview: {
         blobUrl: blob.url,
         participantName: extracted.participantName,
         rawText: extracted.rawText,
-        matches: extracted.predictions,
+        extractedScoresCount: extracted.scores.length,
+        matchesCount: matches.length,
+        matches: matchPredictions,
       },
     });
   } catch (error) {

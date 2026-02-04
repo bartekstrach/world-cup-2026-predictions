@@ -1,61 +1,10 @@
-import countries from "i18n-iso-countries";
-import enLocale from "i18n-iso-countries/langs/en.json";
-import plLocale from "i18n-iso-countries/langs/pl.json";
-
-countries.registerLocale(enLocale);
-countries.registerLocale(plLocale);
-
 export interface ExtractedPrediction {
   participantName: string;
   rawText: string;
-  predictions: Array<{
-    matchNumber?: number;
-    date?: string;
-    time?: string;
-    group?: string;
-    homeTeam: string;
-    awayTeam: string;
+  scores: Array<{
     homeScore: number | null;
     awayScore: number | null;
   }>;
-}
-
-/**
- * Get ISO alpha-3 code from country name (Polish or English)
- */
-function getCountryCode(countryName: string): string | null {
-  const normalized = countryName.trim();
-
-  // Try Polish → alpha-2
-  let alpha2 = countries.getAlpha2Code(normalized, "pl");
-
-  // Try English → alpha-2
-  if (!alpha2) {
-    alpha2 = countries.getAlpha2Code(normalized, "en");
-  }
-
-  // Try case-insensitive
-  if (!alpha2) {
-    const allCountriesPL = countries.getNames("pl");
-    const allCountriesEN = countries.getNames("en");
-
-    const foundPL = Object.entries(allCountriesPL).find(
-      ([, name]) => name.toLowerCase() === normalized.toLowerCase()
-    );
-
-    const foundEN = Object.entries(allCountriesEN).find(
-      ([, name]) => name.toLowerCase() === normalized.toLowerCase()
-    );
-
-    alpha2 = foundPL?.[0] || foundEN?.[0];
-  }
-
-  if (!alpha2) {
-    return null;
-  }
-
-  // Convert to alpha-3 (BRA, DEU, JPN, etc.)
-  return countries.alpha2ToAlpha3(alpha2) || null;
 }
 
 export async function extractTextFromImage(
@@ -76,7 +25,10 @@ export async function extractTextFromImage(
         requests: [
           {
             image: { content: imageBase64 },
-            features: [{ type: "TEXT_DETECTION" }],
+            features: [
+              { type: "TEXT_DETECTION" },
+              { type: "DOCUMENT_TEXT_DETECTION" },
+            ],
           },
         ],
       }),
@@ -98,64 +50,84 @@ export async function extractTextFromImage(
   return textAnnotations[0].description || "";
 }
 
-export function parsePredictionsText(text: string): ExtractedPrediction {
-  const lines = text.split("\n").filter((line) => line.trim());
-
-  let participantName = "Unknown";
-  const predictions: ExtractedPrediction["predictions"] = [];
-  let currentDate = "";
+function extractParticipantName(text: string): string {
+  const lines = text.split("\n");
 
   for (const line of lines) {
-    const trimmedLine = line.trim();
+    const trimmed = line.trim();
 
-    // Extract participant name
-    const nameMatch = trimmedLine.match(
-      /(?:name|imię|nazwa|uczestnik):?\s*(.+)/i
-    );
+    // Match "Imię: Name" or "Name: Name"
+    const nameMatch = trimmed.match(/(?:imię|name|nazwa|uczestnik):?\s*(.+)/i);
     if (nameMatch) {
-      participantName = nameMatch[1].trim();
-      continue;
+      return nameMatch[1].trim();
     }
 
-    // Extract date
-    const dateMatch = trimmedLine.match(/(\d{2}\.\d{2})\s*(\w+)?/);
-    if (dateMatch && trimmedLine.length < 30) {
-      currentDate = dateMatch[1];
-      continue;
-    }
-
-    // Parse match line
-    const matchPattern =
-      /([A-L])?\s*(\d{1,2}:\d{2})?\s*([^\d:_]+?)\s*([_\d])\s*:\s*([_\d])\s*(.+)/i;
-    const matchMatch = trimmedLine.match(matchPattern);
-
-    if (matchMatch) {
-      const group = matchMatch[1] || undefined;
-      const time = matchMatch[2] || undefined;
-      const homeTeamRaw = matchMatch[3].trim();
-      const homeScoreRaw = matchMatch[4].trim();
-      const awayScoreRaw = matchMatch[5].trim();
-      const awayTeamRaw = matchMatch[6].trim();
-
-      const homeCode = getCountryCode(homeTeamRaw);
-      const awayCode = getCountryCode(awayTeamRaw);
-
-      predictions.push({
-        date: currentDate || undefined,
-        time,
-        group,
-        homeTeam: homeCode || homeTeamRaw,
-        awayTeam: awayCode || awayTeamRaw,
-        homeScore: homeScoreRaw === "_" ? null : parseInt(homeScoreRaw),
-        awayScore: awayScoreRaw === "_" ? null : parseInt(awayScoreRaw),
-      });
+    // If first line and no colon, might be just the name
+    if (
+      lines.indexOf(line) < 3 &&
+      trimmed.length > 2 &&
+      !trimmed.includes(":")
+    ) {
+      // Check if it's not a date or match info
+      if (!/\d{2}\.\d{2}/.test(trimmed) && !/\d+:\d+/.test(trimmed)) {
+        return trimmed;
+      }
     }
   }
+
+  return "Unknown";
+}
+
+function extractScores(
+  text: string
+): Array<{ homeScore: number | null; awayScore: number | null }> {
+  const scores: Array<{ homeScore: number | null; awayScore: number | null }> =
+    [];
+
+  // Find all patterns that look like scores
+  // Patterns: "2:1", "2 - 1", "2-1", "2 1", "[2] : [1]", etc.
+  const patterns = [
+    /(\d)\s*:\s*(\d)/g, // 2:1
+    /(\d)\s*-\s*(\d)/g, // 2-1 or 2 - 1
+    /\[(\d)\]\s*:\s*\[(\d)\]/g, // [2] : [1]
+    /(\d)\s+(\d)(?!\d)/g, // 2 1 (but not part of larger number)
+  ];
+
+  const foundScores = new Set<string>();
+
+  for (const pattern of patterns) {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      const homeScore = parseInt(match[1]);
+      const awayScore = parseInt(match[2]);
+
+      // Validate scores (0-9 range for football)
+      if (
+        homeScore >= 0 &&
+        homeScore <= 9 &&
+        awayScore >= 0 &&
+        awayScore <= 9
+      ) {
+        const key = `${homeScore}:${awayScore}`;
+        if (!foundScores.has(key)) {
+          foundScores.add(key);
+          scores.push({ homeScore, awayScore });
+        }
+      }
+    }
+  }
+
+  return scores;
+}
+
+export function parsePredictionsText(text: string): ExtractedPrediction {
+  const participantName = extractParticipantName(text);
+  const scores = extractScores(text);
 
   return {
     participantName,
     rawText: text,
-    predictions,
+    scores,
   };
 }
 

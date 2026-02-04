@@ -15,6 +15,17 @@ export async function POST(request: NextRequest) {
   try {
     const { participantName, matchPredictions } = await request.json();
 
+    if (
+      !participantName ||
+      !matchPredictions ||
+      matchPredictions.length === 0
+    ) {
+      return NextResponse.json(
+        { error: "Missing participant name or predictions" },
+        { status: 400 }
+      );
+    }
+
     // Find or create participant
     let participant = await db.query.participants.findFirst({
       where: (participants, { eq }) => eq(participants.name, participantName),
@@ -27,30 +38,11 @@ export async function POST(request: NextRequest) {
         .returning();
     }
 
-    // Get all matches with teams
-    const allMatches = await db.query.matches.findMany({
-      with: {
-        homeTeam: true,
-        awayTeam: true,
-      },
-    });
-
-    const insertedPredictions = [];
+    let inserted = 0;
+    let updated = 0;
 
     for (const pred of matchPredictions) {
-      // Find matching match by team codes
-      const match = allMatches.find(
-        (m) =>
-          m.homeTeam.code === pred.homeTeam && m.awayTeam.code === pred.awayTeam
-      );
-
-      if (!match) {
-        console.warn(`Match not found: ${pred.homeTeam} vs ${pred.awayTeam}`);
-        continue;
-      }
-
-      if (pred.homeScore === null || pred.awayScore === null) {
-        console.warn(`Skipping match ${match.id}: missing scores`);
+      if (pred.homeScore === null || pred.awayScore === null || !pred.matchId) {
         continue;
       }
 
@@ -59,7 +51,7 @@ export async function POST(request: NextRequest) {
         where: (predictions, { eq, and }) =>
           and(
             eq(predictions.participantId, participant!.id),
-            eq(predictions.matchId, match.id)
+            eq(predictions.matchId, pred.matchId)
           ),
       });
 
@@ -72,26 +64,27 @@ export async function POST(request: NextRequest) {
             updatedAt: new Date(),
           })
           .where(eq(predictions.id, existing.id));
-
-        insertedPredictions.push({ matchId: match.id, updated: true });
+        updated++;
       } else {
         await db.insert(predictions).values({
           participantId: participant.id,
-          matchId: match.id,
+          matchId: pred.matchId,
           homeScore: pred.homeScore,
           awayScore: pred.awayScore,
         });
-
-        insertedPredictions.push({ matchId: match.id, updated: false });
+        inserted++;
       }
     }
 
     revalidatePath("/predictions");
+    revalidatePath("/");
 
     return NextResponse.json({
       success: true,
       participantId: participant.id,
-      predictionsInserted: insertedPredictions.length,
+      inserted,
+      updated,
+      total: inserted + updated,
     });
   } catch (error) {
     console.error("Confirm error:", error);
