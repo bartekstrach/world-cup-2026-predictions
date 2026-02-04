@@ -69,6 +69,12 @@ export default async function AdminDashboardLayout({
               Predictions
             </Link>
             <Link
+              href="/admin/predictions/manual"
+              className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
+            >
+              Manual Entry
+            </Link>
+            <Link
               href="/"
               className="px-4 py-2 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 transition ml-auto"
             >
