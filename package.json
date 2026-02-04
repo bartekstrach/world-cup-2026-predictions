@@ -14,8 +14,11 @@
     "db:reset": "npm run db:migrate && npm run db:seed"
   },
   "dependencies": {
+    "@google-cloud/vision": "^5.3.4",
     "@neondatabase/serverless": "^1.0.2",
+    "@vercel/blob": "^2.0.1",
     "bcryptjs": "^3.0.3",
+    "formidable": "^3.5.4",
     "next": "16.1.6",
     "next-auth": "5.0.0-beta.30",
     "react": "19.2.3",
@@ -23,6 +26,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/formidable": "^3.4.6",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
