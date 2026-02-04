@@ -27,7 +27,7 @@ export const teams = pgTable(
       .references(() => competitions.id)
       .notNull(),
     name: varchar("name", { length: 100 }).notNull(),
-    code: varchar("code", { length: 3 }).notNull(), // FIFA code: BRA, POL
+    code: varchar("code", { length: 3 }).notNull(), // Store ISO alpha-3 codes
     group: varchar("group", { length: 1 }), // A-L for group stage, null for knockouts
     flagUrl: varchar("flag_url", { length: 255 }),
   },

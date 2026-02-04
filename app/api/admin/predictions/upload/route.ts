@@ -2,10 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { put } from "@vercel/blob";
 import { processImageToPredictions } from "@/lib/ocr";
-import { db } from "@/lib/db";
-import { participants, predictions } from "@/lib/schema";
-import { eq } from "drizzle-orm";
-import { revalidatePath } from "next/cache";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -22,7 +18,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       return NextResponse.json(
         { error: "File must be an image" },
@@ -43,77 +38,14 @@ export async function POST(request: NextRequest) {
     // Process with OCR
     const extracted = await processImageToPredictions(base64);
 
-    // Find or create participant
-    let participant = await db.query.participants.findFirst({
-      where: (participants, { eq }) =>
-        eq(participants.name, extracted.participantName),
-    });
-
-    if (!participant) {
-      [participant] = await db
-        .insert(participants)
-        .values({ name: extracted.participantName })
-        .returning();
-    }
-
-    // Get all matches to validate
-    const matches = await db.query.matches.findMany();
-    const matchMap = new Map(matches.map((m) => [m.matchNumber, m.id]));
-
-    // Insert predictions
-    const insertedPredictions = [];
-    for (const pred of extracted.predictions) {
-      const matchId = matchMap.get(pred.matchNumber);
-
-      if (!matchId) {
-        console.warn(`Match ${pred.matchNumber} not found, skipping`);
-        continue;
-      }
-
-      // Check if prediction already exists
-      const existing = await db.query.predictions.findFirst({
-        where: (predictions, { eq, and }) =>
-          and(
-            eq(predictions.participantId, participant!.id),
-            eq(predictions.matchId, matchId)
-          ),
-      });
-
-      if (existing) {
-        // Update existing
-        await db
-          .update(predictions)
-          .set({
-            homeScore: pred.homeScore,
-            awayScore: pred.awayScore,
-            updatedAt: new Date(),
-          })
-          .where(eq(predictions.id, existing.id));
-
-        insertedPredictions.push({ ...pred, updated: true });
-      } else {
-        // Insert new
-        await db.insert(predictions).values({
-          participantId: participant.id,
-          matchId,
-          homeScore: pred.homeScore,
-          awayScore: pred.awayScore,
-        });
-
-        insertedPredictions.push({ ...pred, updated: false });
-      }
-    }
-
-    // Revalidate public pages
-    revalidatePath("/predictions");
-
+    // Return preview data (don't save to DB yet)
     return NextResponse.json({
       success: true,
-      blobUrl: blob.url,
-      extracted: {
+      preview: {
+        blobUrl: blob.url,
         participantName: extracted.participantName,
-        participantId: participant.id,
-        predictions: insertedPredictions,
+        rawText: extracted.rawText,
+        matches: extracted.predictions,
       },
     });
   } catch (error) {
@@ -124,6 +56,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
-// Next.js 14+ App Router doesn't need bodyParser config
-// Formdata is handled automatically

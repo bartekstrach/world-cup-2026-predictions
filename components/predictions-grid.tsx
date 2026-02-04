@@ -1,3 +1,4 @@
+import { getCountryName, getCountryFlag } from "@/lib/country-utils";
 import type { PredictionsGridData } from "@/lib/types";
 
 interface PredictionsGridProps {
@@ -44,7 +45,10 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                   #{match.matchNumber}
                 </div>
                 <div className="text-xs text-gray-600">
-                  {match.homeTeam.code} vs {match.awayTeam.code}
+                  {getCountryFlag(match.homeTeam.code)}{" "}
+                  {getCountryName(match.homeTeam.code)} vs{" "}
+                  {getCountryName(match.awayTeam.code)}{" "}
+                  {getCountryFlag(match.awayTeam.code)}
                 </div>
                 <div className="text-xs text-gray-500">
                   {match.status === "finished" && "✓ Finished"}

@@ -1,34 +1,44 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 
-interface ExtractedData {
+interface ParsedMatch {
+  date?: string;
+  time?: string;
+  group?: string;
+  homeTeam: string;
+  awayTeam: string;
+  homeScore: number | null;
+  awayScore: number | null;
+}
+
+interface PreviewData {
+  blobUrl: string;
   participantName: string;
-  participantId: number;
-  predictions: Array<{
-    matchNumber: number;
-    homeScore: number;
-    awayScore: number;
-    updated?: boolean;
-  }>;
+  rawText: string;
+  matches: ParsedMatch[];
 }
 
 export function PredictionsUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ExtractedData | null>(null);
+  const [previewData, setPreviewData] = useState<PreviewData | null>(null);
+  const [editedData, setEditedData] = useState<PreviewData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = e.target.files?.[0];
     if (!selected) return;
 
     setFile(selected);
-    setResult(null);
+    setPreviewData(null);
+    setEditedData(null);
     setError(null);
+    setSuccess(false);
 
-    // Create preview
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
     reader.readAsDataURL(selected);
@@ -55,7 +65,8 @@ export function PredictionsUpload() {
         throw new Error(data.error || "Upload failed");
       }
 
-      setResult(data.extracted);
+      setPreviewData(data.preview);
+      setEditedData(data.preview);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
@@ -63,11 +74,82 @@ export function PredictionsUpload() {
     }
   }
 
+  async function handleConfirm() {
+    if (!editedData) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/admin/predictions/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          participantName: editedData.participantName,
+          matchPredictions: editedData.matches,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Confirmation failed");
+      }
+
+      setSuccess(true);
+      setTimeout(() => {
+        setFile(null);
+        setPreview(null);
+        setPreviewData(null);
+        setEditedData(null);
+        setSuccess(false);
+      }, 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Confirmation failed");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function updateParticipantName(name: string) {
+    if (!editedData) return;
+    setEditedData({ ...editedData, participantName: name });
+  }
+
+  function updateMatchScore(
+    index: number,
+    field: "homeScore" | "awayScore",
+    value: string
+  ) {
+    if (!editedData) return;
+    const newMatches = [...editedData.matches];
+    newMatches[index] = {
+      ...newMatches[index],
+      [field]: value === "" ? null : parseInt(value),
+    };
+    setEditedData({ ...editedData, matches: newMatches });
+  }
+
+  function updateMatchTeam(
+    index: number,
+    field: "homeTeam" | "awayTeam",
+    value: string
+  ) {
+    if (!editedData) return;
+    const newMatches = [...editedData.matches];
+    newMatches[index] = {
+      ...newMatches[index],
+      [field]: value,
+    };
+    setEditedData({ ...editedData, matches: newMatches });
+  }
+
   return (
     <div className="space-y-6">
+      {/* Upload Section */}
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">
-          Upload Image
+          1. Upload Image
         </h3>
 
         <div className="space-y-4">
@@ -86,24 +168,28 @@ export function PredictionsUpload() {
           {preview && (
             <div>
               <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
-              <img
+              <Image
                 src={preview}
                 alt="Preview"
-                className="max-w-md rounded border border-gray-300"
+                width={768}
+                height={1024}
+                className="rounded border border-gray-300"
+                style={{ width: "auto", height: "auto", maxWidth: "100%" }}
               />
             </div>
           )}
 
           <button
             onClick={handleUpload}
-            disabled={!file || loading}
+            disabled={!file || loading || !!previewData}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
           >
-            {loading ? "Processing..." : "Upload & Process"}
+            {loading ? "Processing..." : "Extract Text"}
           </button>
         </div>
       </div>
 
+      {/* Error Display */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-800 font-semibold">Error:</p>
@@ -111,56 +197,144 @@ export function PredictionsUpload() {
         </div>
       )}
 
-      {result && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-green-900 mb-4">
-            ✓ Extracted Successfully
+      {/* Success Display */}
+      {success && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <p className="text-green-800 font-semibold">
+            ✓ Predictions saved successfully!
+          </p>
+        </div>
+      )}
+
+      {/* Preview & Edit Section */}
+      {editedData && (
+        <div className="bg-white rounded-lg shadow p-6 space-y-6">
+          <h3 className="text-lg font-semibold text-gray-900">
+            2. Review & Edit
           </h3>
 
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-green-800">Participant:</p>
-              <p className="text-green-900">
-                {result.participantName} (ID: {result.participantId})
-              </p>
-            </div>
+          {/* Raw Text */}
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              Extracted Text:
+            </p>
+            <pre className="text-xs bg-gray-50 p-3 rounded border overflow-x-auto">
+              {previewData?.rawText}
+            </pre>
+          </div>
 
-            <div>
-              <p className="text-sm font-medium text-green-800 mb-2">
-                Predictions ({result.predictions.length}):
-              </p>
-              <div className="bg-white rounded border border-green-200 p-4 max-h-96 overflow-y-auto">
-                <table className="min-w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-2">Match</th>
-                      <th className="text-left py-2">Score</th>
-                      <th className="text-left py-2">Status</th>
+          {/* Participant Name */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Participant Name:
+            </label>
+            <input
+              type="text"
+              value={editedData.participantName}
+              onChange={(e) => updateParticipantName(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+            />
+          </div>
+
+          {/* Matches Table */}
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              Predictions ({editedData.matches.length}):
+            </p>
+            <div className="border rounded-lg overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      Date/Time
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      Home
+                    </th>
+                    <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                      Score
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      Away
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {editedData.matches.map((match, idx) => (
+                    <tr key={idx}>
+                      <td className="px-3 py-2 text-sm text-gray-600 whitespace-nowrap">
+                        {match.date} {match.time}
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          value={match.homeTeam}
+                          onChange={(e) =>
+                            updateMatchTeam(idx, "homeTeam", e.target.value)
+                          }
+                          className="w-20 px-2 py-1 text-sm border rounded"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <div className="flex items-center justify-center gap-2">
+                          <input
+                            type="number"
+                            min="0"
+                            value={match.homeScore ?? ""}
+                            onChange={(e) =>
+                              updateMatchScore(idx, "homeScore", e.target.value)
+                            }
+                            className="w-12 px-2 py-1 text-sm border rounded text-center"
+                            placeholder="_"
+                          />
+                          <span className="text-gray-500">:</span>
+                          <input
+                            type="number"
+                            min="0"
+                            value={match.awayScore ?? ""}
+                            onChange={(e) =>
+                              updateMatchScore(idx, "awayScore", e.target.value)
+                            }
+                            className="w-12 px-2 py-1 text-sm border rounded text-center"
+                            placeholder="_"
+                          />
+                        </div>
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          value={match.awayTeam}
+                          onChange={(e) =>
+                            updateMatchTeam(idx, "awayTeam", e.target.value)
+                          }
+                          className="w-20 px-2 py-1 text-sm border rounded"
+                        />
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody>
-                    {result.predictions.map((pred) => (
-                      <tr
-                        key={pred.matchNumber}
-                        className="border-b last:border-0"
-                      >
-                        <td className="py-2">#{pred.matchNumber}</td>
-                        <td className="py-2 font-mono">
-                          {pred.homeScore}:{pred.awayScore}
-                        </td>
-                        <td className="py-2">
-                          {pred.updated ? (
-                            <span className="text-yellow-600">Updated</span>
-                          ) : (
-                            <span className="text-green-600">New</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          </div>
+
+          {/* Confirm Button */}
+          <div className="flex gap-3">
+            <button
+              onClick={handleConfirm}
+              disabled={loading}
+              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 transition"
+            >
+              {loading ? "Saving..." : "Confirm & Save to Database"}
+            </button>
+            <button
+              onClick={() => {
+                setPreviewData(null);
+                setEditedData(null);
+              }}
+              className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
