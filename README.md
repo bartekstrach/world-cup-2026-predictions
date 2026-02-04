@@ -1,48 +1,111 @@
-# 2026 FIFA World Cup Betting App
+# 🏆 2026 FIFA World Cup Betting App
 
-A simple web app for a private betting competition during the 2026 FIFA World Cup.
+A simple web app for running a private betting competition during the 2026 FIFA World Cup.
 
-Participants can guess match scores and earn points based on correct predictions. Designed for fun competition between friends.
+Players predict match scores and earn points based on how accurate their predictions are. Built for fun competition between friends.
 
-## Tech stack
+## 🧰 Tech Stack
 
-React • TypeScript • Next.js
+This project uses a modern full-stack setup built on Next.js and React, with a focus on performance, type safety, and server-first architecture.
 
-## Details
+### ⚙️ Core Framework
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+- **Next.js 16** - full-stack React framework (routing, Server Components, API routes)
+- **React 19.2** - UI library
+- **React DOM** - React renderer for the browser
 
-## Getting Started
+### 🎨 Styling
 
-First, run the development server:
+- **Tailwind CSS 4** - utility-first styling (via PostCSS integration)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 🧪 Language & Tooling
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- **TypeScript** - static typing and safer refactoring
+- **ESLint** - linting and code quality rules
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 🔐 Authentication
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **NextAuth.js** (`next-auth`) - authentication and session handling
 
-## Learn More
+### 🗄️ Database
 
-To learn more about Next.js, take a look at the following resources:
+- **Drizzle ORM** - SQL ORM + schema management
+- **Neon** (`@neondatabase/serverless`) - serverless Postgres driver
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 📦 File Uploads & Storage
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **formidable** - multipart/form-data parsing (file uploads)
+- **Vercel Blob** (`@vercel/blob`) - blob/file storage
 
-## Deploy on Vercel
+### 🛡️ Security
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- **bcryptjs** - password hashing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### 🤖 External Services
+
+- **Google Cloud Vision** (`@google-cloud/vision`) - OCR / image recognition features
+
+### 🧩 Runtime / Dev Utilities
+
+- **dotenv** - environment variable loading
+- **tsx** - TypeScript execution in development
+
+## ✨ Features
+
+- Public leaderboard view
+- Public view of player predictions (including uploaded images and OCR-parsed results)
+- Admin login access
+- Admin dashboard with summaries and key stats
+- Match management (create matches, update final results)
+- Participant management
+- Prediction uploads:
+  - upload images to **Vercel Blob**
+  - run OCR via **Google Cloud Vision**
+  - save parsed predictions to the database
+- Manual editing of predictions (for fixing OCR mistakes)
+
+## 🚧 Coming Soon
+
+### 🏠 Home Page Improvements
+
+- Show when the next match starts
+- Add results table (based on the reference format)
+- Add predictions table (based on the reference format)
+- Add a link to uploaded prediction sheets
+- Add a link to download the spreadsheet
+- Sharing option: generate a screenshot of the table
+
+### 🛠️ Admin Panel Improvements
+
+- Improve match management UI
+- Improve participant management UI
+- Better OCR support (correctly detect all test matches and scores)
+- Add prediction editing UI
+- Improve overall UI
+- Add mobile-friendly layout
+- Show what match is next and when the next tournament stage begins
+- Show how many predictions are missing
+- Generate downloadable spreadsheet
+
+### 🤖 OCR Improvements
+
+- Improve OCR accuracy (correctly detect all test matches and scores)
+- Detect participant from OCR text:
+  - select an existing participant
+  - or create a new one if not found
+- Add an option to assign a tournament stage
+- Rename uploaded files (include participant + stage)
+- Group files inside Blob Storage
+- Link uploaded images to participants (so they can be shown on the home page)
+
+### 🧱 Other
+
+- Add a Match API to get live scores and live updates
+
+## 🧠 Diagrams
+
+TBD
+
+## 📸 Screenshots
+
+TBD
