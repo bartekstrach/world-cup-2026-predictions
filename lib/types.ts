@@ -46,21 +46,3 @@ export interface PredictionsGridData {
   participants: Participant[];
   predictions: Record<string, Prediction>;
 }
-
-export interface ParsedMatch {
-  date?: string;
-  time?: string;
-  group?: string;
-  homeTeam: string;
-  awayTeam: string;
-  homeScore: number | null;
-  awayScore: number | null;
-  matchNumber?: number;
-}
-
-export interface OCRPreviewData {
-  rawText: string;
-  participantName: string;
-  matches: ParsedMatch[];
-  blobUrl: string;
-}
