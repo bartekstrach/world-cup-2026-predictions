@@ -30,9 +30,7 @@ export function LeaderboardTable({ data }: LeaderboardTableProps) {
             <TableHead className="w-16">Rank</TableHead>
             <TableHead>Participant</TableHead>
             <TableHead className="text-center">Points</TableHead>
-            <TableHead className="text-center">Exact</TableHead>
-            <TableHead className="text-center">Correct</TableHead>
-            <TableHead className="text-center">Total</TableHead>
+            <TableHead className="text-center">NEXT_GAME prediction</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -52,12 +50,6 @@ export function LeaderboardTable({ data }: LeaderboardTableProps) {
               </TableCell>
               <TableCell className="text-center text-muted-foreground">
                 {entry.exact_scores}
-              </TableCell>
-              <TableCell className="text-center text-muted-foreground">
-                {entry.correct_outcomes}
-              </TableCell>
-              <TableCell className="text-center text-muted-foreground">
-                {entry.predictions_count}
               </TableCell>
             </TableRow>
           ))}
