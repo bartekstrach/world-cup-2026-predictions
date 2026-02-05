@@ -21,12 +21,12 @@ This project uses a modern full-stack setup built on Next.js and React, with a f
 
 ### 🌍 Language
 
-- **i18n-iso-countries**
+- **i18n-iso-countries** - ISO country codes
 
 ### 🔐 Authentication & Security
 
-- **bcryptjs** - password hashing
-- **NextAuth.js** - authentication and session handling
+- **bcrypt.js** - password hashing
+- **NextAuth.js** - authentication for Next.js
 
 ### 🗄️ Database
 
@@ -35,8 +35,7 @@ This project uses a modern full-stack setup built on Next.js and React, with a f
 
 ### 📦 File Uploads & Storage
 
-- **formidable** - multipart/form-data parsing (file uploads)
-- **Vercel Blob** - blob/file storage
+- **Vercel Blob** - blob storage
 
 ### 🤖 External Services
 
@@ -55,8 +54,13 @@ This project uses a modern full-stack setup built on Next.js and React, with a f
 
 ## ✨ Features
 
-- Public leaderboard view
-- Public view of player predictions (including uploaded images and OCR-parsed results)
+### 🏠 Publicly available Home Page
+
+- Leaderboard view
+- Table of player predictions
+
+### 🛠️ Admin Panel
+
 - Admin login access
 - Admin dashboard with summaries and key stats
 - Match management (create matches, update final results)
@@ -64,7 +68,7 @@ This project uses a modern full-stack setup built on Next.js and React, with a f
 - Prediction uploads:
   - upload images to **Vercel Blob**
   - run OCR via **Google Cloud Vision**
-  - save parsed predictions to the database
+  - review and save parsed predictions to the database
 - Manual editing of predictions (for fixing OCR mistakes)
 
 ## 🚧 Coming Soon
@@ -72,19 +76,16 @@ This project uses a modern full-stack setup built on Next.js and React, with a f
 ### 🏠 Home Page Improvements
 
 - Show when the next match starts
-- Add results table (based on the reference format)
-- Add predictions table (based on the reference format)
-- Add a link to uploaded prediction sheets
-- Add a link to download the spreadsheet
+- Add a link to uploaded predictions
+- Add a link to download the template for betting the next round
 - Sharing option: generate a screenshot of the table
+- Add mobile-friendly layout
 
 ### 🛠️ Admin Panel Improvements
 
 - Improve match management UI
 - Improve participant management UI
-- Better OCR support (correctly detect all test matches and scores)
 - Add prediction editing UI
-- Improve overall UI
 - Add mobile-friendly layout
 - Show what match is next and when the next tournament stage begins
 - Show how many predictions are missing
@@ -98,7 +99,7 @@ This project uses a modern full-stack setup built on Next.js and React, with a f
   - or create a new one if not found
 - Add an option to assign a tournament stage
 - Rename uploaded files (include participant + stage)
-- Group files inside Blob Storage
+- Group files inside Blob Storage (per tournament and stage)
 - Link uploaded images to participants (so they can be shown on the home page)
 
 ### 🧱 Other
