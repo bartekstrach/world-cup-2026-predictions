@@ -1,5 +1,6 @@
 import { ManualPredictionForm } from "@/components/admin/manual-prediction-form";
 import { db } from "@/lib/db";
+import { Edit } from "lucide-react";
 
 async function getData() {
   const participants = await db.query.participants.findMany({
@@ -22,9 +23,14 @@ export default async function ManualPredictionsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold text-gray-900">Manual Entry</h2>
-        <p className="text-gray-600 mt-1">Add predictions manually</p>
+      <div className="flex items-center gap-3">
+        <Edit className="h-8 w-8 text-primary" />
+        <div>
+          <h2 className="text-3xl font-bold text-slate-900">Manual Entry</h2>
+          <p className="text-muted-foreground mt-1">
+            Enter predictions manually for participants
+          </p>
+        </div>
       </div>
 
       <ManualPredictionForm participants={participants} matches={matches} />

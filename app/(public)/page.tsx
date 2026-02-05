@@ -1,6 +1,9 @@
 import { getLeaderboard } from "@/lib/scoring";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Trophy, Target, CheckCircle, XCircle } from "lucide-react";
 
 export const revalidate = 60;
 
@@ -9,33 +12,38 @@ export default async function LeaderboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">Leaderboard</h2>
-          <p className="text-gray-600 mt-1">Competition standings</p>
+          <h2 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
+            <Trophy className="h-8 w-8 text-yellow-500" />
+            Leaderboard
+          </h2>
+          <p className="text-muted-foreground mt-1">Competition standings</p>
         </div>
-        <Link
-          href="/predictions"
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-        >
-          View All Predictions
-        </Link>
+        <Button asChild>
+          <Link href="/predictions">View All Predictions</Link>
+        </Button>
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-900 mb-2">Scoring Rules</h3>
-        <ul className="text-sm text-blue-800 space-y-1">
-          <li>
-            🎯 <strong>Exact score:</strong> 3 points
-          </li>
-          <li>
-            ✅ <strong>Correct winner/draw:</strong> 1 point
-          </li>
-          <li>
-            ❌ <strong>Wrong prediction:</strong> 0 points
-          </li>
-        </ul>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Scoring Rules</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex items-center gap-2 text-sm">
+            <Target className="h-4 w-4 text-green-600" />
+            <strong>Exact score:</strong> 3 points
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <CheckCircle className="h-4 w-4 text-yellow-600" />
+            <strong>Correct winner/draw:</strong> 1 point
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <XCircle className="h-4 w-4 text-slate-400" />
+            <strong>Wrong prediction:</strong> 0 points
+          </div>
+        </CardContent>
+      </Card>
 
       <LeaderboardTable data={leaderboard} />
     </div>

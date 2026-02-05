@@ -1,5 +1,15 @@
 "use client";
 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card } from "@/components/ui/card";
+
 interface Participant {
   id: number;
   name: string;
@@ -12,37 +22,27 @@ export function ParticipantsTable({
   participants: Participant[];
 }) {
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              ID
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              Name
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              Email
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+    <Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-16">ID</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Email</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {participants.map((p) => (
-            <tr key={p.id}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {p.id}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {p.name}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+            <TableRow key={p.id}>
+              <TableCell className="font-medium">{p.id}</TableCell>
+              <TableCell>{p.name}</TableCell>
+              <TableCell className="text-muted-foreground">
                 {p.email || "-"}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </Card>
   );
 }

@@ -1,6 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
 
 interface Participant {
   id: number;
@@ -21,8 +33,8 @@ export function ManualPredictionForm({
   participants: Participant[];
   matches: Match[];
 }) {
-  const [participantId, setParticipantId] = useState<number>(
-    participants[0]?.id || 0
+  const [participantId, setParticipantId] = useState<string>(
+    participants[0]?.id.toString() || ""
   );
   const [predictions, setPredictions] = useState<
     Record<number, { home: number; away: number }>
@@ -52,81 +64,104 @@ export function ManualPredictionForm({
       })
     );
 
+    if (predictionsList.length === 0) {
+      toast.error("No predictions", {
+        description: "Please add at least one prediction",
+      });
+      return;
+    }
+
     const response = await fetch("/api/admin/predictions/manual", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        participantId,
+        participantId: parseInt(participantId),
         predictions: predictionsList,
       }),
     });
 
     if (response.ok) {
-      alert("Predictions saved!");
+      toast.success("Predictions saved!", {
+        description: `${predictionsList.length} predictions have been saved successfully.`,
+      });
       setPredictions({});
+    } else {
+      toast.error("Failed to save predictions", {
+        description: "Please try again later.",
+      });
     }
   }
 
+  const filledCount = Object.keys(predictions).length;
+
   return (
-    <div className="bg-white rounded-lg shadow p-6 space-y-6">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Participant
-        </label>
-        <select
-          value={participantId}
-          onChange={(e) => setParticipantId(Number(e.target.value))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-        >
-          {participants.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
+    <Card>
+      <CardHeader>
+        <CardTitle>Manual Prediction Entry</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="participant">Participant</Label>
+          <Select value={participantId} onValueChange={setParticipantId}>
+            <SelectTrigger id="participant">
+              <SelectValue placeholder="Select participant" />
+            </SelectTrigger>
+            <SelectContent>
+              {participants.map((p) => (
+                <SelectItem key={p.id} value={p.id.toString()}>
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2 max-h-96 overflow-y-auto border rounded-lg p-4">
+          {matches.map((match) => (
+            <div
+              key={match.id}
+              className="flex items-center gap-4 p-2 border rounded-lg hover:bg-muted/50 transition"
+            >
+              <span className="text-sm font-medium w-12">
+                #{match.matchNumber}
+              </span>
+              <span className="text-sm w-32 text-muted-foreground">
+                {match.homeTeam.code} vs {match.awayTeam.code}
+              </span>
+              <Input
+                type="number"
+                min="0"
+                max="9"
+                placeholder="0"
+                className="w-16 text-center"
+                onChange={(e) =>
+                  handleScoreChange(match.id, "home", e.target.value)
+                }
+              />
+              <span className="text-muted-foreground">:</span>
+              <Input
+                type="number"
+                min="0"
+                max="9"
+                placeholder="0"
+                className="w-16 text-center"
+                onChange={(e) =>
+                  handleScoreChange(match.id, "away", e.target.value)
+                }
+              />
+            </div>
           ))}
-        </select>
-      </div>
+        </div>
 
-      <div className="space-y-2 max-h-96 overflow-y-auto">
-        {matches.map((match) => (
-          <div
-            key={match.id}
-            className="flex items-center gap-4 p-2 border rounded"
-          >
-            <span className="text-sm font-medium w-12">
-              #{match.matchNumber}
-            </span>
-            <span className="text-sm w-32">
-              {match.homeTeam.code} vs {match.awayTeam.code}
-            </span>
-            <input
-              type="number"
-              min="0"
-              placeholder="0"
-              className="w-16 px-2 py-1 border rounded text-center"
-              onChange={(e) =>
-                handleScoreChange(match.id, "home", e.target.value)
-              }
-            />
-            <span>:</span>
-            <input
-              type="number"
-              min="0"
-              placeholder="0"
-              className="w-16 px-2 py-1 border rounded text-center"
-              onChange={(e) =>
-                handleScoreChange(match.id, "away", e.target.value)
-              }
-            />
-          </div>
-        ))}
-      </div>
-
-      <button
-        onClick={handleSubmit}
-        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-      >
-        Save All Predictions
-      </button>
-    </div>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">
+            {filledCount} predictions entered
+          </p>
+          <Button onClick={handleSubmit} disabled={filledCount === 0}>
+            Save All Predictions
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

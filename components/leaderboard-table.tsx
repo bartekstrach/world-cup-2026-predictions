@@ -1,65 +1,68 @@
 import type { LeaderboardEntry } from "@/lib/types";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 
 interface LeaderboardTableProps {
   data: LeaderboardEntry[];
 }
 
 export function LeaderboardTable({ data }: LeaderboardTableProps) {
+  const getMedalEmoji = (index: number) => {
+    if (index === 0) return "🥇";
+    if (index === 1) return "🥈";
+    if (index === 2) return "🥉";
+    return null;
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Rank
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Participant
-            </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Points
-            </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Exact
-            </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Correct
-            </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Total Predictions
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+    <Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-16">Rank</TableHead>
+            <TableHead>Participant</TableHead>
+            <TableHead className="text-center">Points</TableHead>
+            <TableHead className="text-center">Exact</TableHead>
+            <TableHead className="text-center">Correct</TableHead>
+            <TableHead className="text-center">Total</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {data.map((entry, index) => (
-            <tr key={entry.id} className={index < 3 ? "bg-yellow-50" : ""}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                {index === 0 && "🥇"}
-                {index === 1 && "🥈"}
-                {index === 2 && "🥉"}
-                {index > 2 && index + 1}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap">
-                <div className="text-sm font-medium text-gray-900">
-                  {entry.name}
-                </div>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-900">
-                {entry.total_points}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+            <TableRow
+              key={entry.id}
+              className={index < 3 ? "bg-yellow-50/50" : ""}
+            >
+              <TableCell className="font-medium">
+                {getMedalEmoji(index) || index + 1}
+              </TableCell>
+              <TableCell className="font-medium">{entry.name}</TableCell>
+              <TableCell className="text-center">
+                <Badge variant="default" className="font-bold">
+                  {entry.total_points}
+                </Badge>
+              </TableCell>
+              <TableCell className="text-center text-muted-foreground">
                 {entry.exact_scores}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+              </TableCell>
+              <TableCell className="text-center text-muted-foreground">
                 {entry.correct_outcomes}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
+              </TableCell>
+              <TableCell className="text-center text-muted-foreground">
                 {entry.predictions_count}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </Card>
   );
 }

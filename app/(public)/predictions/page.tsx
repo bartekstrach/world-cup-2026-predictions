@@ -1,6 +1,10 @@
-import { db } from "@/lib/db";
-import { PredictionsGrid } from "@/components/predictions-grid";
+import { ArrowLeft, FileSpreadsheet } from "lucide-react";
 import Link from "next/link";
+import { PredictionsGrid } from "@/components/predictions-grid";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { db } from "@/lib/db";
 import type { PredictionsGridData, Prediction } from "@/lib/types";
 
 export const revalidate = 60;
@@ -40,34 +44,44 @@ export default async function PredictionsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center gap-3 mb-6">
+        <FileSpreadsheet className="h-8 w-8 text-primary" />
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">All Predictions</h2>
-          <p className="text-gray-600 mt-1">
+          <h2 className="text-3xl font-bold text-slate-900">All Predictions</h2>
+          <p className="text-muted-foreground mt-1">
             {data.matches.length} matches × {data.participants.length}{" "}
             participants
           </p>
         </div>
-        <Link
-          href="/"
-          className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition"
-        >
-          Back to Leaderboard
-        </Link>
+        <Button variant="outline" asChild>
+          <Link href="/">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Leaderboard
+          </Link>
+        </Button>
       </div>
 
-      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm text-gray-700">
-        <strong>Legend:</strong>
-        <span className="ml-4 inline-block px-2 py-1 bg-green-100 text-green-800 rounded">
-          3pt = Exact
-        </span>
-        <span className="ml-2 inline-block px-2 py-1 bg-yellow-100 text-yellow-800 rounded">
-          1pt = Correct outcome
-        </span>
-        <span className="ml-2 inline-block px-2 py-1 bg-gray-100 text-gray-600 rounded">
-          0pt = Wrong
-        </span>
-      </div>
+      <Card className="border-slate-200">
+        <CardContent className="p-4">
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <strong>Legend:</strong>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge className="bg-green-600">3pt</Badge>
+              <span className="text-muted-foreground">Exact score</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">1pt</Badge>
+              <span className="text-muted-foreground">Correct outcome</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline">0pt</Badge>
+              <span className="text-muted-foreground">Wrong prediction</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <PredictionsGrid data={data} />
     </div>

@@ -1,21 +1,27 @@
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+
 export default function PredictionsLoading() {
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div className="space-y-2">
-          <div className="h-9 bg-gray-200 rounded w-64 animate-pulse" />
-          <div className="h-5 bg-gray-200 rounded w-48 animate-pulse" />
+          <Skeleton className="h-9 w-64" />
+          <Skeleton className="h-5 w-48" />
         </div>
-        <div className="h-10 bg-gray-200 rounded w-32 animate-pulse" />
+        <Skeleton className="h-10 w-40" />
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="p-8 space-y-4">
+      <Card>
+        <CardHeader>
+          <Skeleton className="h-4 w-48" />
+        </CardHeader>
+        <CardContent className="space-y-3">
           {[...Array(10)].map((_, i) => (
-            <div key={i} className="h-16 bg-gray-100 rounded animate-pulse" />
+            <Skeleton key={i} className="h-16 w-full" />
           ))}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

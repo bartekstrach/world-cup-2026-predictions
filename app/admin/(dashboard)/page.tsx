@@ -1,5 +1,7 @@
 import { db } from "@/lib/db";
 import { sql } from "drizzle-orm";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Trophy, CheckCircle, Radio, Users, Target, Flag } from "lucide-react";
 
 async function getStats() {
   const result = await db.execute(sql`
@@ -26,51 +28,102 @@ export default async function AdminDashboard() {
   const stats = await getStats();
 
   const cards = [
-    { label: "Total Matches", value: stats.total_matches, icon: "⚽" },
-    { label: "Finished", value: stats.finished_matches, icon: "✅" },
-    { label: "Live", value: stats.live_matches, icon: "🔴" },
-    { label: "Participants", value: stats.total_participants, icon: "👥" },
-    { label: "Predictions", value: stats.total_predictions, icon: "🎯" },
-    { label: "Teams", value: stats.total_teams, icon: "🏴" },
+    {
+      label: "Total Matches",
+      value: stats.total_matches,
+      icon: Trophy,
+      description: "In competition",
+    },
+    {
+      label: "Finished",
+      value: stats.finished_matches,
+      icon: CheckCircle,
+      description: "Completed matches",
+    },
+    {
+      label: "Live",
+      value: stats.live_matches,
+      icon: Radio,
+      description: "Currently playing",
+    },
+    {
+      label: "Participants",
+      value: stats.total_participants,
+      icon: Users,
+      description: "Active players",
+    },
+    {
+      label: "Predictions",
+      value: stats.total_predictions,
+      icon: Target,
+      description: "Total submitted",
+    },
+    {
+      label: "Teams",
+      value: stats.total_teams,
+      icon: Flag,
+      description: "Participating nations",
+    },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
-        <p className="text-gray-600 mt-1">Competition overview</p>
+        <h2 className="text-3xl font-bold text-slate-900">Dashboard</h2>
+        <p className="text-muted-foreground mt-1">Competition overview</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {cards.map((card) => (
-          <div key={card.label} className="bg-white rounded-lg shadow p-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-gray-600">{card.label}</p>
-                <p className="text-3xl font-bold text-gray-900 mt-1">
-                  {card.value}
-                </p>
-              </div>
-              <div className="text-4xl">{card.icon}</div>
-            </div>
-          </div>
+          <Card
+            key={card.label}
+            className={
+              card.label === "Live" && stats.live_matches > 0
+                ? "border-red-200 bg-red-50/50"
+                : ""
+            }
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                {card.label}
+              </CardTitle>
+              <card.icon
+                className={`h-4 w-4 ${
+                  card.label === "Live" && stats.live_matches > 0
+                    ? "text-red-500"
+                    : "text-muted-foreground"
+                }`}
+              />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{card.value}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {card.description}
+              </p>
+            </CardContent>
+          </Card>
         ))}
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="font-semibold text-blue-900 mb-2">Quick Actions</h3>
-        <ul className="text-sm text-blue-800 space-y-1">
-          <li>
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm text-muted-foreground">
+          <p>
             • Update match results in <strong>Matches</strong>
-          </li>
-          <li>
+          </p>
+          <p>
             • Add participants in <strong>Participants</strong>
-          </li>
-          <li>
+          </p>
+          <p>
             • Upload prediction files in <strong>Predictions</strong>
-          </li>
-        </ul>
-      </div>
+          </p>
+          <p>
+            • Manual entry available in <strong>Manual Entry</strong>
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

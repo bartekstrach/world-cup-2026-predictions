@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { Button } from "../ui/button";
+import { toast } from "sonner";
 
 interface TeamInfo {
   id: number;
@@ -73,9 +75,16 @@ export function PredictionsUpload() {
         throw new Error(data.error || "Upload failed");
       }
 
+      toast.success("Image processed successfully!", {
+        description: `Extracted ${data.preview.extractedScoresCount} scores`,
+      });
+
       setPreviewData(data.preview);
       setEditedData(data.preview);
     } catch (err) {
+      toast.error("Upload failed", {
+        description: err instanceof Error ? err.message : "Unknown error",
+      });
       setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setLoading(false);
@@ -110,6 +119,10 @@ export function PredictionsUpload() {
         throw new Error(data.error || "Confirmation failed");
       }
 
+      toast.success("Predictions saved!", {
+        description: `${data.total} predictions have been saved successfully.`,
+      });
+
       setSuccess(true);
       setTimeout(() => {
         setFile(null);
@@ -119,6 +132,9 @@ export function PredictionsUpload() {
         setSuccess(false);
       }, 2000);
     } catch (err) {
+      toast.error("Failed to save predictions", {
+        description: err instanceof Error ? err.message : "Unknown error",
+      });
       setError(err instanceof Error ? err.message : "Confirmation failed");
     } finally {
       setLoading(false);
@@ -366,22 +382,29 @@ export function PredictionsUpload() {
 
           {/* Action Buttons */}
           <div className="flex gap-3">
-            <button
+            <Button
+              onClick={handleUpload}
+              disabled={!file || loading || !!previewData}
+            >
+              {loading ? "Processing..." : "Extract Scores"}
+            </Button>
+
+            <Button
               onClick={handleConfirm}
               disabled={loading || filledScores === 0}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
             >
               {loading ? "Saving..." : `Save ${filledScores} Predictions`}
-            </button>
-            <button
+            </Button>
+
+            <Button
+              variant="outline"
               onClick={() => {
                 setPreviewData(null);
                 setEditedData(null);
               }}
-              className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}

@@ -1,5 +1,16 @@
 import { signIn } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Shield } from "lucide-react";
 
 export default function LoginPage() {
   async function handleLogin(formData: FormData) {
@@ -20,57 +31,51 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Admin Login</h1>
-
-        <form action={handleLogin} className="space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Email
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="admin@test.com"
-            />
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <div className="flex items-center gap-2 mb-2">
+            <Shield className="h-6 w-6 text-primary" />
+            <CardTitle className="text-2xl">Admin Login</CardTitle>
           </div>
+          <CardDescription>
+            Enter your credentials to access the admin panel
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form action={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="admin@test.com"
+                required
+              />
+            </div>
 
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Password
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="••••••••"
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="••••••••"
+                required
+              />
+            </div>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-            Sign In
-          </button>
-        </form>
+            <Button type="submit" className="w-full">
+              Sign In
+            </Button>
+          </form>
 
-        <p className="mt-4 text-sm text-gray-600 text-center">
-          Test: admin@test.com / admin123
-        </p>
-      </div>
+          <p className="mt-4 text-sm text-center text-muted-foreground">
+            Test credentials: admin@test.com / admin123
+          </p>
+        </CardContent>
+      </Card>
     </div>
   );
 }

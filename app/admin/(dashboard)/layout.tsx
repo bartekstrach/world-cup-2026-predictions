@@ -1,6 +1,19 @@
 import { auth, signOut } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  LayoutDashboard,
+  Trophy,
+  Users,
+  FileText,
+  Edit,
+  ExternalLink,
+  Shield,
+  LogOut,
+} from "lucide-react";
 
 export default async function AdminDashboardLayout({
   children,
@@ -18,23 +31,32 @@ export default async function AdminDashboardLayout({
     await signOut({ redirectTo: "/" });
   }
 
+  const navItems = [
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/matches", label: "Matches", icon: Trophy },
+    { href: "/admin/participants", label: "Participants", icon: Users },
+    { href: "/admin/predictions", label: "Predictions", icon: FileText },
+    { href: "/admin/predictions/manual", label: "Manual Entry", icon: Edit },
+  ];
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">🔐 Admin Panel</h1>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
+            <div className="flex items-center gap-3">
+              <Shield className="h-6 w-6 text-primary" />
+              <h1 className="text-2xl font-bold text-slate-900">Admin Panel</h1>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge variant="secondary" className="hidden sm:flex">
                 {session.user?.email}
-              </span>
+              </Badge>
               <form action={handleSignOut}>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-sm bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
-                >
+                <Button type="submit" variant="outline" size="sm">
+                  <LogOut className="mr-2 h-4 w-4" />
                   Sign Out
-                </button>
+                </Button>
               </form>
             </div>
           </div>
@@ -42,46 +64,35 @@ export default async function AdminDashboardLayout({
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <nav className="bg-white rounded-lg shadow mb-6">
-          <div className="flex gap-1 p-2">
-            <Link
-              href="/admin"
-              className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
+        <Card className="mb-6">
+          <nav className="flex flex-wrap gap-1 p-2">
+            {navItems.map((item) => (
+              <Button
+                key={item.href}
+                asChild
+                variant="ghost"
+                size="sm"
+                className="gap-2"
+              >
+                <Link href={item.href}>
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              </Button>
+            ))}
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="gap-2 ml-auto text-primary"
             >
-              Dashboard
-            </Link>
-            <Link
-              href="/admin/matches"
-              className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
-            >
-              Matches
-            </Link>
-            <Link
-              href="/admin/participants"
-              className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
-            >
-              Participants
-            </Link>
-            <Link
-              href="/admin/predictions"
-              className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
-            >
-              Predictions
-            </Link>
-            <Link
-              href="/admin/predictions/manual"
-              className="px-4 py-2 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition"
-            >
-              Manual Entry
-            </Link>
-            <Link
-              href="/"
-              className="px-4 py-2 rounded-lg text-sm font-medium text-blue-600 hover:bg-blue-50 transition ml-auto"
-            >
-              View Public Site →
-            </Link>
-          </div>
-        </nav>
+              <Link href="/">
+                <ExternalLink className="h-4 w-4" />
+                View Public Site
+              </Link>
+            </Button>
+          </nav>
+        </Card>
 
         {children}
       </div>

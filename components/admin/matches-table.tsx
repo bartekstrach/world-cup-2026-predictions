@@ -1,6 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
 
 interface Match {
   id: number;
@@ -30,59 +43,60 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
     });
 
     if (response.ok) {
+      toast.success("Match updated!", {
+        description: "Points have been recalculated.",
+      });
       setEditing(null);
       window.location.reload();
+    } else {
+      toast.error("Failed to update match", {
+        description: "Please try again.",
+      });
     }
   }
 
+  const getStatusBadge = (status: string | null) => {
+    if (status === "finished") return <Badge variant="default">Finished</Badge>;
+    if (status === "live") return <Badge variant="destructive">Live</Badge>;
+    return <Badge variant="secondary">Scheduled</Badge>;
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              #
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-              Match
-            </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-              Result
-            </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-              Status
-            </th>
-            <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">
-              Actions
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+    <Card>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-16">#</TableHead>
+            <TableHead>Match</TableHead>
+            <TableHead className="text-center">Result</TableHead>
+            <TableHead className="text-center">Status</TableHead>
+            <TableHead className="text-center">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {matches.map((match) => (
-            <tr key={match.id}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                {match.matchNumber}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+            <TableRow key={match.id}>
+              <TableCell className="font-medium">{match.matchNumber}</TableCell>
+              <TableCell>
                 {match.homeTeam.code} vs {match.awayTeam.code}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-center">
+              </TableCell>
+              <TableCell className="text-center">
                 {editing === match.id ? (
                   <div className="flex items-center justify-center gap-2">
-                    <input
+                    <Input
                       type="number"
                       min="0"
                       value={homeScore}
                       onChange={(e) => setHomeScore(Number(e.target.value))}
-                      className="w-16 px-2 py-1 border border-gray-300 rounded text-center"
+                      className="w-16 text-center"
                     />
                     <span>:</span>
-                    <input
+                    <Input
                       type="number"
                       min="0"
                       value={awayScore}
                       onChange={(e) => setAwayScore(Number(e.target.value))}
-                      className="w-16 px-2 py-1 border border-gray-300 rounded text-center"
+                      className="w-16 text-center"
                     />
                   </div>
                 ) : (
@@ -92,53 +106,46 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
                       : "-"}
                   </span>
                 )}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-center">
-                <span
-                  className={`px-2 py-1 text-xs rounded-full ${
-                    match.status === "finished"
-                      ? "bg-green-100 text-green-800"
-                      : match.status === "live"
-                      ? "bg-red-100 text-red-800"
-                      : "bg-gray-100 text-gray-800"
-                  }`}
-                >
-                  {match.status}
-                </span>
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-center">
+              </TableCell>
+              <TableCell className="text-center">
+                {getStatusBadge(match.status)}
+              </TableCell>
+              <TableCell className="text-center">
                 {editing === match.id ? (
                   <div className="flex justify-center gap-2">
-                    <button
+                    <Button
+                      size="sm"
                       onClick={() => handleSave(match.id)}
-                      className="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700"
+                      variant="default"
                     >
                       Save
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
                       onClick={() => setEditing(null)}
-                      className="px-3 py-1 bg-gray-300 text-gray-700 text-sm rounded hover:bg-gray-400"
                     >
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 ) : (
-                  <button
+                  <Button
+                    size="sm"
+                    variant="outline"
                     onClick={() => {
                       setEditing(match.id);
                       setHomeScore(match.homeScore ?? 0);
                       setAwayScore(match.awayScore ?? 0);
                     }}
-                    className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
                   >
                     Edit
-                  </button>
+                  </Button>
                 )}
-              </td>
-            </tr>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
-    </div>
+        </TableBody>
+      </Table>
+    </Card>
   );
 }
