@@ -19,7 +19,7 @@ const serif = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "World Cup 2026 Predictions",
+  title: "2026 FIFA World Cup Predictions",
   description: "Private betting competition",
 };
 
