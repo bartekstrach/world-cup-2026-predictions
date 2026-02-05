@@ -10,45 +10,48 @@ This project uses a modern full-stack setup built on Next.js and React, with a f
 
 ### ⚙️ Core Framework
 
-- **Next.js 16** - full-stack React framework (routing, Server Components, API routes)
-- **React 19.2** - UI library
-- **React DOM** - React renderer for the browser
+- **Next.js 16**
+- **React 19.2**
+- **TypeScript**
 
 ### 🎨 Styling
 
+- **shadcn/ui** - reusable UI components
 - **Tailwind CSS 4** - utility-first styling (via PostCSS integration)
 
-### 🧪 Language & Tooling
+### 🌍 Language
 
-- **TypeScript** - static typing and safer refactoring
-- **ESLint** - linting and code quality rules
+- **i18n-iso-countries**
 
-### 🔐 Authentication
+### 🔐 Authentication & Security
 
-- **NextAuth.js** (`next-auth`) - authentication and session handling
+- **bcryptjs** - password hashing
+- **NextAuth.js** - authentication and session handling
 
 ### 🗄️ Database
 
 - **Drizzle ORM** - SQL ORM + schema management
-- **Neon** (`@neondatabase/serverless`) - serverless Postgres driver
+- **Neon** - serverless Postgres driver
 
 ### 📦 File Uploads & Storage
 
 - **formidable** - multipart/form-data parsing (file uploads)
-- **Vercel Blob** (`@vercel/blob`) - blob/file storage
-
-### 🛡️ Security
-
-- **bcryptjs** - password hashing
+- **Vercel Blob** - blob/file storage
 
 ### 🤖 External Services
 
-- **Google Cloud Vision** (`@google-cloud/vision`) - OCR / image recognition features
+- **Google Cloud Vision API** - OCR (Optical Character Recognition)
 
 ### 🧩 Runtime / Dev Utilities
 
 - **dotenv** - environment variable loading
+- **ESLint** - linting and code quality rules
 - **tsx** - TypeScript execution in development
+
+### 🧪 Testing (TBD)
+
+- **React Testing Library**
+- **Jest/Vitest**
 
 ## ✨ Features
 
