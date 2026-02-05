@@ -1,4 +1,5 @@
 import { signIn } from "@/lib/auth";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { redirect } from "next/navigation";
 import {
   Card,
@@ -25,8 +26,12 @@ export default function LoginPage() {
         password,
         redirectTo: "/admin",
       });
-    } catch {
-      return redirect("/admin/login?error=invalid");
+    } catch (error) {
+      // https://github.com/nextauthjs/next-auth/discussions/9389
+      if (isRedirectError(error)) throw error; // <-- allow Next.js to redirect
+
+      console.error("Error while logging into Admin panel", error);
+      redirect("/admin/login?error=invalid");
     }
   }
 
@@ -70,10 +75,6 @@ export default function LoginPage() {
               Sign In
             </Button>
           </form>
-
-          <p className="mt-4 text-sm text-center text-muted-foreground">
-            Test credentials: admin@test.com / admin123
-          </p>
         </CardContent>
       </Card>
     </div>
