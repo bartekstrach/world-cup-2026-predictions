@@ -44,7 +44,7 @@ export default async function MainPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-slate-900 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
             Results
           </h2>
           <p className="text-muted-foreground mt-1">
@@ -56,7 +56,7 @@ export default async function MainPage() {
       <LeaderboardTable data={leaderboard} />
 
       <div>
-        <h2 className="text-3xl font-bold text-slate-900">Predictions</h2>
+        <h2 className="text-2xl font-bold text-slate-900">Predictions</h2>
         <p className="text-muted-foreground mt-1">
           See prediction cards <u>here</u>.
         </p>
