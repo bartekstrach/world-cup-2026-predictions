@@ -49,7 +49,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
   };
 
   return (
-    <Card className="overflow-hidden rounded-sm">
+    <Card className="overflow-hidden">
       <div className="overflow-x-auto">
         <Table className="w-full">
           <TableHeader>
@@ -62,7 +62,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
 
               {/* Match + result */}
               <TableHead className="sticky left-0 z-10 bg-background">
-                <div className="gap-4 flex justify-between items-center">
+                <div className="flex justify-between items-center">
                   <span>Match</span>
                   <span>Result</span>
                 </div>
@@ -72,7 +72,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
               {participants.map((p) => (
                 <TableHead
                   key={p.id}
-                  className="text-center whitespace-nowrap min-w-[100px]"
+                  className="text-center whitespace-nowrap min-w-24"
                 >
                   {p.name}
                 </TableHead>
@@ -111,7 +111,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                         {getCountryFlag(match.awayTeam.code)}
                       </div>
                     </>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
                       {match.status === "live" && (
                         <Radio className="h-4 w-4 text-red-700 animate-ping hidden md:block" />
                       )}
