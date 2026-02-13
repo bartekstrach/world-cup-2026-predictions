@@ -1,5 +1,8 @@
 # 🏆 2026 FIFA World Cup Betting App
 
+> [!NOTE]
+> This repo is also a Next.js learning playground.
+
 A simple web app for running a private betting competition during the 2026 FIFA World Cup.
 
 Players predict match scores and earn points based on how accurate their predictions are. Built for fun competition between friends.
