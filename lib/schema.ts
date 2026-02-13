@@ -6,8 +6,10 @@ import {
   timestamp,
   boolean,
   unique,
+  text,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import { MatchStatus } from "./constants";
 
 export const competitions = pgTable("competitions", {
   id: serial("id").primaryKey(),
@@ -53,7 +55,7 @@ export const matches = pgTable(
     awayScore: integer("away_score"),
     stage: varchar("stage", { length: 50 }).notNull(), // group, round_16, quarter, semi, final
     matchDate: timestamp("match_date").notNull(),
-    status: varchar("status", { length: 20 }).default("scheduled"), // scheduled, live, finished
+    status: text("status").$type<MatchStatus>(),
     matchNumber: integer("match_number").notNull(),
   },
   (table) => ({

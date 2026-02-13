@@ -1,5 +1,5 @@
-import { getCountryName, getCountryFlag } from "@/lib/country-utils";
-import type { PredictionsGridData } from "@/lib/types";
+import { Radio } from "lucide-react";
+import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -8,9 +8,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card } from "@/components/ui/card";
-import { Radio } from "lucide-react";
-import { calculatePoints } from "@/lib/scoring";
+import { formatDateTime, getShortWeekday } from "@/lib/date";
+import { calculatePoints, formatScore } from "@/lib/scoring";
+import { getMatchTeamNames, getShortMatchTeamNames } from "@/lib/teams";
+import type { PredictionsGridData } from "@/lib/types";
+import { NO_RESULT } from "@/lib/constants";
 
 interface PredictionsGridProps {
   data: PredictionsGridData;
@@ -18,35 +20,6 @@ interface PredictionsGridProps {
 
 export function PredictionsGrid({ data }: PredictionsGridProps) {
   const { matches, participants, predictions } = data;
-
-  const getPointsBadge = (points: number) => {
-    if (points === 3) return "";
-    if (points === 1) return "";
-    return "";
-  };
-
-  const formatScore = (home: number, away: number): string => `${home}:${away}`;
-
-  const formatDate = (date: Date, locale = "pl-PL") => {
-    const weekday = new Intl.DateTimeFormat(locale, { weekday: "short" })
-      .format(date)
-      .toLowerCase()
-      .replace(".", "")
-      .slice(0, 2);
-
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-
-    return (
-      <div className="flex justify-between">
-        <span>{weekday}</span>
-        <time>{`${day}.${month} ${hours}:${minutes}`}</time>
-      </div>
-    );
-  };
 
   return (
     <Card className="overflow-hidden">
@@ -88,8 +61,9 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                 </TableCell>
 
                 {/* Date */}
-                <TableCell className="text-muted-foreground">
-                  {formatDate(match.matchDate)}
+                <TableCell className="text-muted-foreground flex justify-between">
+                  <span>{getShortWeekday({ date: match.matchDate })}</span>
+                  <time>{formatDateTime({ date: match.matchDate })}</time>
                 </TableCell>
 
                 {/* Match + result */}
@@ -97,18 +71,18 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                   <div className="gap-4 flex justify-between items-center">
                     <>
                       <div className="block md:hidden">
-                        {getCountryFlag(match.homeTeam.code)}{" "}
-                        {match.homeTeam.code}
-                        {" - "}
-                        {match.awayTeam.code}{" "}
-                        {getCountryFlag(match.awayTeam.code)}
+                        {getShortMatchTeamNames({
+                          displayFlags: true,
+                          homeTeamCode: match.homeTeam.code,
+                          awayTeamCode: match.awayTeam.code,
+                        })}
                       </div>
                       <div className="hidden md:block">
-                        {getCountryFlag(match.homeTeam.code)}{" "}
-                        {getCountryName(match.homeTeam.code)}
-                        {" - "}
-                        {getCountryName(match.awayTeam.code)}{" "}
-                        {getCountryFlag(match.awayTeam.code)}
+                        {getMatchTeamNames({
+                          displayFlags: true,
+                          homeTeamCode: match.homeTeam.code,
+                          awayTeamCode: match.awayTeam.code,
+                        })}
                       </div>
                     </>
                     <div className="flex items-center gap-3">
@@ -121,11 +95,14 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                             match.status === "live" && "text-red-700"
                           }`}
                         >
-                          {formatScore(match.homeScore, match.awayScore)}
+                          {formatScore({
+                            homeScore: match.homeScore,
+                            awayScore: match.awayScore,
+                          })}
                         </span>
                       ) : (
                         <span className="text-muted-foreground font-mono">
-                          -:-
+                          {NO_RESULT}
                         </span>
                       )}
                     </div>
@@ -146,23 +123,23 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                   }
 
                   return (
-                    <TableCell
-                      key={p.id}
-                      className={`text-center ${getPointsBadge(pred.points)}`}
-                    >
-                      <span className="font-mono text-sm">
-                        {formatScore(pred.homeScore, pred.awayScore)}
+                    <TableCell key={p.id} className="text-center">
+                      <span className="font-mono">
+                        {formatScore({
+                          homeScore: pred.homeScore,
+                          awayScore: pred.awayScore,
+                        })}
                         <span className="text-muted-foreground">{` | ${
                           match.status === "finished"
                             ? pred.points
                             : match.status === "live"
-                            ? calculatePoints(
-                                pred.homeScore,
-                                pred.awayScore,
-                                match.homeScore ?? 0,
-                                match.awayScore ?? 0
-                              )
-                            : "-"
+                              ? calculatePoints(
+                                  pred.homeScore,
+                                  pred.awayScore,
+                                  match.homeScore ?? 0,
+                                  match.awayScore ?? 0,
+                                )
+                              : "-"
                         }`}</span>
                       </span>
                     </TableCell>

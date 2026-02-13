@@ -8,6 +8,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
+import { getShortMatchTeamNames } from "@/lib/teams";
 
 interface LeaderboardTableProps {
   data: LeaderboardEntry[];
@@ -27,13 +28,6 @@ const getBackground = (rank: number) => {
 };
 
 export function LeaderboardTable({ data }: LeaderboardTableProps) {
-  const getMedalEmoji = (index: number) => {
-    if (index === 0) return "🥇";
-    if (index === 1) return "🥈";
-    if (index === 2) return "🥉";
-    return null;
-  };
-
   return (
     <Card className="w-fit">
       <Table className="table-auto">
@@ -41,23 +35,36 @@ export function LeaderboardTable({ data }: LeaderboardTableProps) {
           <TableRow>
             <TableHead>Rank</TableHead>
             <TableHead>Participant</TableHead>
-            <TableHead className="text-center">Points</TableHead>
-            <TableHead className="text-center">NEXT_GAME prediction</TableHead>
+            <TableHead className="text-center min-w-16">Points</TableHead>
+            {data[0].nextMatches.map((match) => (
+              <TableHead key={match.id} className="text-center">
+                {getShortMatchTeamNames({
+                  displayFlags: true,
+                  homeTeamCode: match.homeTeamCode,
+                  awayTeamCode: match.awayTeamCode,
+                })}
+              </TableHead>
+            ))}
           </TableRow>
         </TableHeader>
         <TableBody>
           {data.map((entry, index) => (
             <TableRow key={entry.id} className={getBackground(index + 1)}>
               <TableCell className="font-medium text-center">
-                {getMedalEmoji(index) || index + 1}
+                {entry.rank}
               </TableCell>
               <TableCell className="font-medium">{entry.name}</TableCell>
               <TableCell className="text-end font-mono font-bold">
                 {entry.total_points}
               </TableCell>
-              <TableCell className="text-center font-mono text-muted-foreground">
-                1:2
-              </TableCell>
+              {entry.nextPredictions.map((prediction) => (
+                <TableCell
+                  key={`${entry.id}+${prediction.matchId}`}
+                  className="text-center font-mono text-muted-foreground"
+                >
+                  {prediction.homeScore}:{prediction.awayScore}
+                </TableCell>
+              ))}
             </TableRow>
           ))}
         </TableBody>

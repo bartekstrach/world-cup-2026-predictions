@@ -1,11 +1,26 @@
 export interface LeaderboardEntry {
   id: number;
+  rank: string;
   name: string;
-  email: string | null;
+  email?: string | null;
   total_points: string | number;
   predictions_count: string | number;
   exact_scores: string | number;
   correct_outcomes: string | number;
+  nextPredictions: Array<{
+    matchId: number;
+    homeScore: number | null;
+    awayScore: number | null;
+  }>;
+  nextMatches: Array<{
+    id: number;
+    homeTeamId: number;
+    awayTeamId: number;
+    homeTeamCode: string;
+    awayTeamCode: string;
+    matchNumber: number;
+    status: string;
+  }>;
 }
 
 export interface Team {
