@@ -1,7 +1,7 @@
 # 🏆 2026 FIFA World Cup Betting App
 
 > [!NOTE]
-> This repo is also a Next.js learning playground.
+> This repo is also a Next.js learning playground. Co-created with Claude and Cursor.
 
 A simple web app for running a private betting competition during the 2026 FIFA World Cup.
 
