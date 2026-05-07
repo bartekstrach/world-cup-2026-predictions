@@ -46,3 +46,7 @@ drizzle
 
 # temp test data
 lib/seed.ts
+
+# ai
+.agents
+skills-lock.json
