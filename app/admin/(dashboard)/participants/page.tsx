@@ -1,7 +1,6 @@
 import { db } from "@/lib/db";
 import { ParticipantsTable } from "@/components/admin/participants-table";
-import { Users, UserPlus } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 async function getParticipants() {
@@ -30,12 +29,6 @@ export default async function ParticipantsPage() {
             </p>
           </div>
         </div>
-
-        {/* Future: Add participant button */}
-        <Button>
-          <UserPlus className="mr-2 h-4 w-4" />
-          Add Participant
-        </Button>
       </div>
 
       <ParticipantsTable participants={participants} />
