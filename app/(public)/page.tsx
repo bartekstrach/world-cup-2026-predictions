@@ -1,7 +1,8 @@
 import { LastFinishedMatches } from "@/components/last-finished-matches";
 import { LeaderboardTable } from "@/components/leaderboard-table";
+import { NextMatchBanner } from "@/components/next-match-banner";
 import { PredictionsGrid } from "@/components/predictions-grid";
-import { getPredictionsData } from "@/lib/predictions";
+import { getNextMatchBannerData, getPredictionsData } from "@/lib/predictions";
 import { getLeaderboard } from "@/lib/scoring";
 
 export const revalidate = 60;
@@ -10,6 +11,7 @@ export default async function MainPage() {
   // TODO: can I move these functions inside of child components?
   const leaderboard = await getLeaderboard();
   const predictionsData = await getPredictionsData();
+  const nextMatchBannerData = await getNextMatchBannerData();
 
   return (
     <div className="space-y-6">
@@ -21,6 +23,9 @@ export default async function MainPage() {
           <div className="text-muted-foreground mt-1">
             <LastFinishedMatches />
           </div>
+          {nextMatchBannerData && (
+            <NextMatchBanner data={nextMatchBannerData} />
+          )}
         </div>
       </div>
 

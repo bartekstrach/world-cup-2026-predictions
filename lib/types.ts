@@ -61,3 +61,11 @@ export interface PredictionsGridData {
   participants: Participant[];
   predictions: Record<string, Prediction>;
 }
+
+export interface NextMatchBannerData {
+  matchDate: Date;
+  matches: Array<{
+    homeTeamCode: string;
+    awayTeamCode: string;
+  }>;
+}
