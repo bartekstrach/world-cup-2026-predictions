@@ -5,6 +5,22 @@ import { matches } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { updateMatchPredictions } from "@/lib/scoring";
 import { revalidatePath } from "next/cache";
+import { MATCH_STATUSES } from "@/lib/constants";
+import type { MatchStatus } from "@/lib/constants";
+
+type PatchPayload = {
+  matchId?: number;
+  homeScore?: number;
+  awayScore?: number;
+  status?: unknown;
+};
+
+function isMatchStatus(value: unknown): value is MatchStatus {
+  return (
+    typeof value === "string" &&
+    (Object.values(MATCH_STATUSES) as string[]).includes(value)
+  );
+}
 
 export async function PATCH(request: NextRequest) {
   const session = await auth();
@@ -13,7 +29,17 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { matchId, homeScore, awayScore, status } = await request.json();
+  const { matchId, homeScore, awayScore, status }: PatchPayload =
+    await request.json();
+
+  if (
+    typeof matchId !== "number" ||
+    typeof homeScore !== "number" ||
+    typeof awayScore !== "number" ||
+    !isMatchStatus(status)
+  ) {
+    return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+  }
 
   await db
     .update(matches)
@@ -25,13 +51,14 @@ export async function PATCH(request: NextRequest) {
     .where(eq(matches.id, matchId));
 
   // Recalculate points if match is finished
-  if (status === "finished") {
+  if (status === MATCH_STATUSES.FINISHED) {
     await updateMatchPredictions(matchId);
   }
 
   // Revalidate public pages
   revalidatePath("/");
   revalidatePath("/predictions");
+  revalidatePath("/admin/matches");
 
   return NextResponse.json({ success: true });
 }

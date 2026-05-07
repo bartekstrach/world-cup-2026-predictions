@@ -22,7 +22,7 @@ export default async function MatchesPage() {
         <div>
           <h2 className="text-3xl font-bold text-slate-900">Matches</h2>
           <p className="text-muted-foreground mt-1">
-            Update match results and calculate points
+            Update match scores, statuses, and calculate points
           </p>
         </div>
       </div>

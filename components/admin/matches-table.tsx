@@ -13,49 +13,84 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
+
+type MatchStatus = "scheduled" | "live" | "finished";
 
 interface Match {
   id: number;
   matchNumber: number;
   homeScore: number | null;
   awayScore: number | null;
-  status: string | null;
+  status: MatchStatus | null;
   homeTeam: { name: string; code: string };
   awayTeam: { name: string; code: string };
 }
 
 export function MatchesTable({ matches }: { matches: Match[] }) {
+  const [rows, setRows] = useState<Match[]>(matches);
   const [editing, setEditing] = useState<number | null>(null);
   const [homeScore, setHomeScore] = useState<number>(0);
   const [awayScore, setAwayScore] = useState<number>(0);
+  const [status, setStatus] = useState<MatchStatus>("scheduled");
+  const [savingMatchId, setSavingMatchId] = useState<number | null>(null);
 
   async function handleSave(matchId: number) {
-    const response = await fetch("/api/admin/matches", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        matchId,
-        homeScore,
-        awayScore,
-        status: "finished",
-      }),
-    });
+    setSavingMatchId(matchId);
 
-    if (response.ok) {
+    try {
+      const response = await fetch("/api/admin/matches", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          matchId,
+          homeScore,
+          awayScore,
+          status,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Request failed");
+      }
+
+      setRows((currentRows) =>
+        currentRows.map((row) =>
+          row.id === matchId
+            ? {
+                ...row,
+                homeScore,
+                awayScore,
+                status,
+              }
+            : row,
+        ),
+      );
+
       toast.success("Match updated!", {
-        description: "Points have been recalculated.",
+        description:
+          status === "finished"
+            ? "Points have been recalculated."
+            : "Match status and score saved.",
       });
       setEditing(null);
-      window.location.reload();
-    } else {
+    } catch {
       toast.error("Failed to update match", {
         description: "Please try again.",
       });
+    } finally {
+      setSavingMatchId(null);
     }
   }
 
-  const getStatusBadge = (status: string | null) => {
+  const getStatusBadge = (status: MatchStatus | null) => {
     if (status === "finished") return <Badge variant="default">Finished</Badge>;
     if (status === "live") return <Badge variant="destructive">Live</Badge>;
     return <Badge variant="secondary">Scheduled</Badge>;
@@ -74,7 +109,7 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {matches.map((match) => (
+          {rows.map((match) => (
             <TableRow key={match.id}>
               <TableCell className="font-medium">{match.matchNumber}</TableCell>
               <TableCell>
@@ -108,7 +143,25 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
                 )}
               </TableCell>
               <TableCell className="text-center">
-                {getStatusBadge(match.status)}
+                {editing === match.id ? (
+                  <div className="flex justify-center">
+                    <Select
+                      value={status}
+                      onValueChange={(value) => setStatus(value as MatchStatus)}
+                    >
+                      <SelectTrigger className="w-32">
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="scheduled">Scheduled</SelectItem>
+                        <SelectItem value="live">Live</SelectItem>
+                        <SelectItem value="finished">Finished</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  getStatusBadge(match.status)
+                )}
               </TableCell>
               <TableCell className="text-center">
                 {editing === match.id ? (
@@ -117,13 +170,15 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
                       size="sm"
                       onClick={() => handleSave(match.id)}
                       variant="default"
+                      disabled={savingMatchId === match.id}
                     >
-                      Save
+                      {savingMatchId === match.id ? "Saving..." : "Save"}
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => setEditing(null)}
+                      disabled={savingMatchId === match.id}
                     >
                       Cancel
                     </Button>
@@ -136,6 +191,7 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
                       setEditing(match.id);
                       setHomeScore(match.homeScore ?? 0);
                       setAwayScore(match.awayScore ?? 0);
+                      setStatus(match.status ?? "scheduled");
                     }}
                   >
                     Edit
