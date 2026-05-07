@@ -103,6 +103,7 @@ export function PredictionsUpload() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           participantName: editedData.participantName,
+          blobUrl: editedData.blobUrl,
           matchPredictions: editedData.matches
             .filter((m) => m.homeScore !== null && m.awayScore !== null)
             .map((m) => ({
@@ -149,7 +150,7 @@ export function PredictionsUpload() {
   function updateMatchScore(
     index: number,
     field: "homeScore" | "awayScore",
-    value: string
+    value: string,
   ) {
     if (!editedData) return;
     const newMatches = [...editedData.matches];
@@ -162,7 +163,7 @@ export function PredictionsUpload() {
 
   const filledScores =
     editedData?.matches.filter(
-      (m) => m.homeScore !== null && m.awayScore !== null
+      (m) => m.homeScore !== null && m.awayScore !== null,
     ).length || 0;
 
   return (
@@ -329,7 +330,7 @@ export function PredictionsUpload() {
                                 updateMatchScore(
                                   idx,
                                   "homeScore",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className="w-12 px-2 py-1 text-sm border rounded text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -345,7 +346,7 @@ export function PredictionsUpload() {
                                 updateMatchScore(
                                   idx,
                                   "awayScore",
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               className="w-12 px-2 py-1 text-sm border rounded text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500"

@@ -69,3 +69,10 @@ export interface NextMatchBannerData {
     awayTeamCode: string;
   }>;
 }
+
+export interface PredictionSheetLink {
+  id: number;
+  participantName: string;
+  blobUrl: string;
+  createdAt: Date | null;
+}

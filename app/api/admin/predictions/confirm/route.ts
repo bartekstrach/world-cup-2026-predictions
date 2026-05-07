@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { participants, predictions } from "@/lib/schema";
+import { participants, predictions, predictionSubmissions } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { participantName, matchPredictions } = await request.json();
+    const { participantName, blobUrl, matchPredictions } = await request.json();
 
     if (
       !participantName ||
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         { error: "Missing participant name or predictions" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -38,6 +38,13 @@ export async function POST(request: NextRequest) {
         .returning();
     }
 
+    if (blobUrl && typeof blobUrl === "string" && blobUrl.trim().length > 0) {
+      await db.insert(predictionSubmissions).values({
+        participantId: participant.id,
+        blobUrl: blobUrl.trim(),
+      });
+    }
+
     let inserted = 0;
     let updated = 0;
 
@@ -51,7 +58,7 @@ export async function POST(request: NextRequest) {
         where: (predictions, { eq, and }) =>
           and(
             eq(predictions.participantId, participant!.id),
-            eq(predictions.matchId, pred.matchId)
+            eq(predictions.matchId, pred.matchId),
           ),
       });
 
@@ -90,7 +97,7 @@ export async function POST(request: NextRequest) {
     console.error("Confirm error:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Confirmation failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

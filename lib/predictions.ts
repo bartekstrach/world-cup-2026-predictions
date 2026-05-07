@@ -2,7 +2,9 @@ import { db } from "./db";
 import { MATCH_STATUSES } from "./constants";
 import { Prediction, PredictionsGridData } from "./types";
 import type { NextMatchBannerData } from "./types";
-import { eq } from "drizzle-orm";
+import type { PredictionSheetLink } from "./types";
+import { desc, eq, isNotNull, sql } from "drizzle-orm";
+import { participants, predictionSubmissions } from "./schema";
 
 export async function getPredictionsData(): Promise<PredictionsGridData> {
   const matches = await db.query.matches.findMany({
@@ -76,4 +78,34 @@ export async function getNextMatchBannerData(): Promise<NextMatchBannerData | nu
       awayTeamCode: match.awayTeam.code,
     })),
   };
+}
+
+export async function getPredictionSheetLinks(): Promise<
+  PredictionSheetLink[]
+> {
+  const rows = await db
+    .select({
+      id: predictionSubmissions.id,
+      participantName: participants.name,
+      blobUrl: predictionSubmissions.blobUrl,
+      createdAt: predictionSubmissions.createdAt,
+    })
+    .from(predictionSubmissions)
+    .innerJoin(
+      participants,
+      eq(participants.id, predictionSubmissions.participantId),
+    )
+    .where(
+      sql`${isNotNull(predictionSubmissions.blobUrl)} AND ${predictionSubmissions.blobUrl} <> ''`,
+    )
+    .orderBy(desc(predictionSubmissions.createdAt));
+
+  return rows.filter((row) => {
+    try {
+      const url = new URL(row.blobUrl);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+      return false;
+    }
+  });
 }

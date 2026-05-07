@@ -35,7 +35,7 @@ export const teams = pgTable(
   },
   (table) => ({
     uniqueCode: unique().on(table.competitionId, table.code),
-  })
+  }),
 );
 
 export const matches = pgTable(
@@ -60,7 +60,7 @@ export const matches = pgTable(
   },
   (table) => ({
     uniqueMatch: unique().on(table.competitionId, table.matchNumber),
-  })
+  }),
 );
 
 export const participants = pgTable("participants", {
@@ -88,8 +88,17 @@ export const predictions = pgTable(
   },
   (table) => ({
     uniquePrediction: unique().on(table.participantId, table.matchId),
-  })
+  }),
 );
+
+export const predictionSubmissions = pgTable("prediction_submissions", {
+  id: serial("id").primaryKey(),
+  participantId: integer("participant_id")
+    .references(() => participants.id)
+    .notNull(),
+  blobUrl: varchar("blob_url", { length: 2048 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
 
 export const admins = pgTable("admins", {
   id: serial("id").primaryKey(),
@@ -135,4 +144,15 @@ export const teamsRelations = relations(teams, ({ one }) => ({
 
 export const participantsRelations = relations(participants, ({ many }) => ({
   predictions: many(predictions),
+  predictionSubmissions: many(predictionSubmissions),
 }));
+
+export const predictionSubmissionsRelations = relations(
+  predictionSubmissions,
+  ({ one }) => ({
+    participant: one(participants, {
+      fields: [predictionSubmissions.participantId],
+      references: [participants.id],
+    }),
+  }),
+);
