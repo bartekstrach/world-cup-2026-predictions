@@ -29,46 +29,59 @@ const getBackground = (rank: number) => {
 
 export function LeaderboardTable({ data }: LeaderboardTableProps) {
   return (
-    <Card className="w-fit">
-      <Table className="table-auto">
-        <TableHeader>
-          <TableRow>
-            <TableHead>Rank</TableHead>
-            <TableHead>Participant</TableHead>
-            <TableHead className="text-center min-w-16">Points</TableHead>
-            {data[0].nextMatches.map((match) => (
-              <TableHead key={match.id} className="text-center">
-                {getShortMatchTeamNames({
-                  displayFlags: true,
-                  homeTeamCode: match.homeTeamCode,
-                  awayTeamCode: match.awayTeamCode,
-                })}
+    <Card className="w-full max-w-full overflow-hidden">
+      <div className="overflow-x-auto public-table-scroll">
+        <Table className="table-auto min-w-max">
+          <TableHeader>
+            <TableRow>
+              <TableHead className="sticky left-0 z-20 bg-card whitespace-nowrap min-w-14">
+                Rank
               </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map((entry, index) => (
-            <TableRow key={entry.id} className={getBackground(index + 1)}>
-              <TableCell className="font-medium text-center">
-                {entry.rank}
-              </TableCell>
-              <TableCell className="font-medium">{entry.name}</TableCell>
-              <TableCell className="text-end font-mono font-bold">
-                {entry.total_points}
-              </TableCell>
-              {entry.nextPredictions.map((prediction) => (
-                <TableCell
-                  key={`${entry.id}+${prediction.matchId}`}
-                  className="text-center font-mono text-muted-foreground"
+              <TableHead className="sticky left-14 z-20 bg-card whitespace-nowrap min-w-36 sm:min-w-44">
+                Participant
+              </TableHead>
+              <TableHead className="sticky left-[12.5rem] sm:left-[14.5rem] z-20 bg-card text-center whitespace-nowrap min-w-16">
+                Points
+              </TableHead>
+              {data[0].nextMatches.map((match) => (
+                <TableHead
+                  key={match.id}
+                  className="text-center whitespace-nowrap min-w-24"
                 >
-                  {prediction.homeScore}:{prediction.awayScore}
-                </TableCell>
+                  {getShortMatchTeamNames({
+                    displayFlags: true,
+                    homeTeamCode: match.homeTeamCode,
+                    awayTeamCode: match.awayTeamCode,
+                  })}
+                </TableHead>
               ))}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {data.map((entry, index) => (
+              <TableRow key={entry.id} className={getBackground(index + 1)}>
+                <TableCell className="font-medium text-center sticky left-0 z-10 bg-inherit whitespace-nowrap">
+                  {entry.rank}
+                </TableCell>
+                <TableCell className="font-medium sticky left-14 z-10 bg-inherit whitespace-nowrap max-w-36 sm:max-w-44 truncate">
+                  {entry.name}
+                </TableCell>
+                <TableCell className="text-end font-mono font-bold sticky left-[12.5rem] sm:left-[14.5rem] z-10 bg-inherit whitespace-nowrap">
+                  {entry.total_points}
+                </TableCell>
+                {entry.nextPredictions.map((prediction) => (
+                  <TableCell
+                    key={`${entry.id}+${prediction.matchId}`}
+                    className="text-center font-mono text-muted-foreground whitespace-nowrap"
+                  >
+                    {prediction.homeScore}:{prediction.awayScore}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </Card>
   );
 }

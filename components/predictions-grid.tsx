@@ -22,19 +22,21 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
   const { matches, participants, predictions } = data;
 
   return (
-    <Card className="overflow-hidden">
-      <div className="overflow-x-auto">
-        <Table className="w-full">
+    <Card className="w-full max-w-full overflow-hidden">
+      <div className="overflow-x-auto public-table-scroll">
+        <Table className="w-full min-w-max table-auto">
           <TableHeader>
             <TableRow>
               {/* Group/stage */}
-              <TableHead>Gr.</TableHead>
+              <TableHead className="hidden sm:table-cell whitespace-nowrap min-w-12">
+                Gr.
+              </TableHead>
 
               {/* Date */}
-              <TableHead>Date</TableHead>
+              <TableHead className="whitespace-nowrap min-w-28">Date</TableHead>
 
               {/* Match + result */}
-              <TableHead className="sticky left-0 z-10 bg-background">
+              <TableHead className="sticky left-0 z-20 bg-background whitespace-nowrap min-w-48 sm:min-w-64">
                 <div className="flex justify-between items-center">
                   <span>Match</span>
                   <span>Result</span>
@@ -56,14 +58,16 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
             {matches.map((match) => (
               <TableRow key={match.id}>
                 {/* Group/stage */}
-                <TableCell className="text-center text-muted-foreground">
+                <TableCell className="hidden sm:table-cell text-center text-muted-foreground whitespace-nowrap">
                   {match.stage === "group" ? match.homeTeam.group : match.stage}
                 </TableCell>
 
                 {/* Date */}
-                <TableCell className="text-muted-foreground flex justify-between">
-                  <span>{getShortWeekday({ date: match.matchDate })}</span>
-                  <time>{formatDateTime({ date: match.matchDate })}</time>
+                <TableCell className="text-muted-foreground whitespace-nowrap text-xs sm:text-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-2">
+                    <span>{getShortWeekday({ date: match.matchDate })}</span>
+                    <time>{formatDateTime({ date: match.matchDate })}</time>
+                  </div>
                 </TableCell>
 
                 {/* Match + result */}
@@ -116,14 +120,20 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
 
                   if (!pred) {
                     return (
-                      <TableCell key={p.id} className="text-center">
+                      <TableCell
+                        key={p.id}
+                        className="text-center whitespace-nowrap"
+                      >
                         <span className="text-muted-foreground">-</span>
                       </TableCell>
                     );
                   }
 
                   return (
-                    <TableCell key={p.id} className="text-center">
+                    <TableCell
+                      key={p.id}
+                      className="text-center whitespace-nowrap"
+                    >
                       <span className="font-mono">
                         {formatScore({
                           homeScore: pred.homeScore,

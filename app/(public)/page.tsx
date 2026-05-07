@@ -27,13 +27,13 @@ export default async function MainPage() {
   ]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
+        <div className="min-w-0 w-full">
+          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2 leading-tight">
             Results
           </h2>
-          <div className="text-muted-foreground mt-1">
+          <div className="text-muted-foreground mt-1 text-sm sm:text-base">
             <LastFinishedMatches />
           </div>
           {nextMatchBannerData && (
@@ -44,9 +44,11 @@ export default async function MainPage() {
 
       <LeaderboardTable data={leaderboard} />
 
-      <div>
-        <h2 className="text-2xl font-bold text-slate-900">Predictions</h2>
-        <p className="text-muted-foreground mt-1 mb-1">
+      <div className="min-w-0">
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+          Predictions
+        </h2>
+        <p className="text-muted-foreground mt-1 mb-1 text-sm sm:text-base">
           Uploaded prediction sheets
         </p>
         <PredictionSheetsLinks data={predictionSheetLinks} />

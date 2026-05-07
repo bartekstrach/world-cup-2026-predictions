@@ -6,7 +6,7 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100">
+    <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-slate-50 to-slate-100">
       <header className="border-b bg-white/70 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-3">
@@ -17,7 +17,7 @@ export default function PublicLayout({
           </div>
         </div>
       </header>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto w-full min-w-0 px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
         {children}
       </main>
     </div>

@@ -134,3 +134,10 @@
     @apply font-serif;
   }
 }
+
+@layer utilities {
+  .public-table-scroll {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+}
