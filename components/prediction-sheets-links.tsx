@@ -29,6 +29,7 @@ export function PredictionSheetsLinks({ data }: PredictionSheetsLinksProps) {
         <TableHeader>
           <TableRow>
             <TableHead>Participant</TableHead>
+            <TableHead>Stage</TableHead>
             <TableHead>Uploaded</TableHead>
             <TableHead>Sheet</TableHead>
           </TableRow>
@@ -40,8 +41,11 @@ export function PredictionSheetsLinks({ data }: PredictionSheetsLinksProps) {
                 {entry.participantName}
               </TableCell>
               <TableCell className="text-muted-foreground">
-                {entry.createdAt
-                  ? formatDateTime({ date: entry.createdAt })
+                {entry.stage}
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {(entry.updatedAt ?? entry.createdAt)
+                  ? formatDateTime({ date: entry.updatedAt ?? entry.createdAt! })
                   : "-"}
               </TableCell>
               <TableCell>

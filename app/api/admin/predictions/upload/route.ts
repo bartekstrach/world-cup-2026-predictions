@@ -8,6 +8,8 @@ import {
   normalizeSubmissionStage,
 } from "@/lib/blob-naming";
 import { SUBMISSION_STAGES } from "@/lib/constants";
+import { predictionSubmissions } from "@/lib/schema";
+import { and, eq } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -71,6 +73,20 @@ export async function POST(request: NextRequest) {
 
     const resolvedStage = normalizeSubmissionStage(rawStage);
 
+    const existingParticipant = await db.query.participants.findFirst({
+      where: (participants, { eq }) =>
+        eq(participants.name, resolvedParticipantName),
+    });
+
+    const existingSubmission = existingParticipant
+      ? await db.query.predictionSubmissions.findFirst({
+          where: and(
+            eq(predictionSubmissions.participantId, existingParticipant.id),
+            eq(predictionSubmissions.stage, resolvedStage),
+          ),
+        })
+      : null;
+
     const activeCompetition = await db.query.competitions.findFirst({
       where: (competitions, { eq }) => eq(competitions.isActive, true),
       orderBy: (competitions, { desc }) => [
@@ -125,6 +141,7 @@ export async function POST(request: NextRequest) {
         blobUrl: blob.url,
         participantName: resolvedParticipantName,
         stage: resolvedStage,
+        willReplaceExisting: !!existingSubmission,
         rawText: extracted.rawText,
         extractedScoresCount: extracted.scores.length,
         matchesCount: matches.length,

@@ -49,7 +49,7 @@ export default async function MainPage() {
           Predictions
         </h2>
         <p className="text-muted-foreground mt-1 mb-1 text-sm sm:text-base">
-          Uploaded prediction sheets
+          Participant-linked uploaded prediction sheets
         </p>
         <PredictionSheetsLinks data={predictionSheetLinks} />
       </div>

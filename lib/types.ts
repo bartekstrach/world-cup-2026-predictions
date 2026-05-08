@@ -73,6 +73,8 @@ export interface NextMatchBannerData {
 export interface PredictionSheetLink {
   id: number;
   participantName: string;
+  stage: string;
   blobUrl: string;
   createdAt: Date | null;
+  updatedAt: Date | null;
 }

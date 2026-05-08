@@ -87,8 +87,10 @@ export async function getPredictionSheetLinks(): Promise<
     .select({
       id: predictionSubmissions.id,
       participantName: participants.name,
+      stage: predictionSubmissions.stage,
       blobUrl: predictionSubmissions.blobUrl,
       createdAt: predictionSubmissions.createdAt,
+      updatedAt: predictionSubmissions.updatedAt,
     })
     .from(predictionSubmissions)
     .innerJoin(
@@ -98,7 +100,10 @@ export async function getPredictionSheetLinks(): Promise<
     .where(
       sql`${isNotNull(predictionSubmissions.blobUrl)} AND ${predictionSubmissions.blobUrl} <> ''`,
     )
-    .orderBy(desc(predictionSubmissions.createdAt));
+    .orderBy(
+      desc(predictionSubmissions.updatedAt),
+      desc(predictionSubmissions.createdAt),
+    );
 
   return rows.filter((row) => {
     try {

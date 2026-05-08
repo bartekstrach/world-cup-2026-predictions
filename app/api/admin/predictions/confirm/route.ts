@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { participants, predictions, predictionSubmissions } from "@/lib/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { normalizeSubmissionStage } from "@/lib/blob-naming";
+import { SUBMISSION_STAGES } from "@/lib/constants";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -15,43 +17,56 @@ export async function POST(request: NextRequest) {
   try {
     const { participantName, stage, blobUrl, matchPredictions } =
       await request.json();
+    const normalizedParticipantName =
+      typeof participantName === "string" ? participantName.trim() : "";
 
-    const allowedStages = ["group", "round_16", "quarter", "semi", "final"];
-
-    if (
-      !participantName ||
-      !stage ||
-      !matchPredictions ||
-      matchPredictions.length === 0
-    ) {
+    if (!normalizedParticipantName || !stage || !Array.isArray(matchPredictions)) {
       return NextResponse.json(
         { error: "Missing participant name, stage or predictions" },
         { status: 400 },
       );
     }
 
-    if (typeof stage !== "string" || !allowedStages.includes(stage)) {
+    if (
+      typeof stage !== "string" ||
+      !SUBMISSION_STAGES.includes(stage as (typeof SUBMISSION_STAGES)[number])
+    ) {
       return NextResponse.json({ error: "Invalid stage" }, { status: 400 });
     }
 
+    const normalizedStage = normalizeSubmissionStage(stage);
+
     // Find or create participant
     let participant = await db.query.participants.findFirst({
-      where: (participants, { eq }) => eq(participants.name, participantName),
+      where: (participants, { eq }) =>
+        eq(participants.name, normalizedParticipantName),
     });
 
     if (!participant) {
       [participant] = await db
         .insert(participants)
-        .values({ name: participantName })
+        .values({ name: normalizedParticipantName })
         .returning();
     }
 
     if (blobUrl && typeof blobUrl === "string" && blobUrl.trim().length > 0) {
-      await db.insert(predictionSubmissions).values({
-        participantId: participant.id,
-        stage,
-        blobUrl: blobUrl.trim(),
-      });
+      await db
+        .insert(predictionSubmissions)
+        .values({
+          participantId: participant.id,
+          stage: normalizedStage,
+          blobUrl: blobUrl.trim(),
+        })
+        .onConflictDoUpdate({
+          target: [
+            predictionSubmissions.participantId,
+            predictionSubmissions.stage,
+          ],
+          set: {
+            blobUrl: blobUrl.trim(),
+            updatedAt: new Date(),
+          },
+        });
     }
 
     let inserted = 0;
