@@ -1,8 +1,15 @@
 import { PredictionsUpload } from "@/components/admin/predictions-upload";
+import { MissingPredictionsCard } from "@/components/admin/missing-predictions-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getAdminStats } from "@/lib/admin-stats";
 import { FileText, Upload } from "lucide-react";
 
-export default function PredictionsPage() {
+export default async function PredictionsPage() {
+  const stats = await getAdminStats().catch((error) => {
+    console.error("Failed to load admin stats for predictions page", error);
+    return null;
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
@@ -45,6 +52,14 @@ B 18:00 Spain 3:0 England
           </p>
         </CardContent>
       </Card>
+
+      {stats ? (
+        <MissingPredictionsCard
+          totalMissingPredictions={stats.total_missing_predictions}
+          byParticipant={stats.missingPredictionsByParticipant}
+          byMatch={stats.missingPredictionsByMatch}
+        />
+      ) : null}
 
       <PredictionsUpload />
     </div>

@@ -1,6 +1,7 @@
 import { getAdminStats } from "@/lib/admin-stats";
 import { formatDateTime } from "@/lib/date";
 import { getMatchTeamNames } from "@/lib/teams";
+import { MissingPredictionsCard } from "@/components/admin/missing-predictions-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Trophy,
@@ -51,6 +52,12 @@ export default async function AdminDashboard() {
       value: stats.total_teams,
       icon: Flag,
       description: "Participating nations",
+    },
+    {
+      label: "Missing",
+      value: stats.total_missing_predictions,
+      icon: Target,
+      description: "Scheduled gaps",
     },
   ];
 
@@ -132,6 +139,12 @@ export default async function AdminDashboard() {
           )}
         </CardContent>
       </Card>
+
+      <MissingPredictionsCard
+        totalMissingPredictions={stats.total_missing_predictions}
+        byParticipant={stats.missingPredictionsByParticipant}
+        byMatch={stats.missingPredictionsByMatch}
+      />
 
       <Card>
         <CardHeader>
