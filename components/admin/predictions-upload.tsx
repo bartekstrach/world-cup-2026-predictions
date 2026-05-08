@@ -34,6 +34,14 @@ interface PreviewData {
 
 const STAGE_OPTIONS = [...SUBMISSION_STAGES] as const;
 
+const STAGE_LABELS: Record<SubmissionStage, string> = {
+  group: "Group Stage",
+  round_16: "Round of 16",
+  quarter: "Quarter-finals",
+  semi: "Semi-finals",
+  final: "Final",
+};
+
 export function PredictionsUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [uploadStage, setUploadStage] = useState<SubmissionStage | "">("");
@@ -242,7 +250,7 @@ export function PredictionsUpload() {
               <option value="">Select stage</option>
               {STAGE_OPTIONS.map((stage) => (
                 <option key={stage} value={stage}>
-                  {stage}
+                  {STAGE_LABELS[stage]}
                 </option>
               ))}
             </select>
@@ -347,7 +355,7 @@ export function PredictionsUpload() {
               )}
           </div>
 
-          {/* PaTournament Stage */}
+          {/* Tournament Stage */}
           <div>
             <label className="block text-sm font-medium text-[#0a192f] mb-2">
               Tournament Stage: <span className="text-red-500">*</span>
@@ -361,7 +369,7 @@ export function PredictionsUpload() {
               <option value="">Select stage</option>
               {STAGE_OPTIONS.map((stage) => (
                 <option key={stage} value={stage}>
-                  {stage}
+                  {STAGE_LABELS[stage]}
                 </option>
               ))}
             </select>
