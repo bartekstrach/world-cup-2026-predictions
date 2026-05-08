@@ -13,17 +13,25 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { participantName, blobUrl, matchPredictions } = await request.json();
+    const { participantName, stage, blobUrl, matchPredictions } =
+      await request.json();
+
+    const allowedStages = ["group", "round_16", "quarter", "semi", "final"];
 
     if (
       !participantName ||
+      !stage ||
       !matchPredictions ||
       matchPredictions.length === 0
     ) {
       return NextResponse.json(
-        { error: "Missing participant name or predictions" },
+        { error: "Missing participant name, stage or predictions" },
         { status: 400 },
       );
+    }
+
+    if (typeof stage !== "string" || !allowedStages.includes(stage)) {
+      return NextResponse.json({ error: "Invalid stage" }, { status: 400 });
     }
 
     // Find or create participant
@@ -41,6 +49,7 @@ export async function POST(request: NextRequest) {
     if (blobUrl && typeof blobUrl === "string" && blobUrl.trim().length > 0) {
       await db.insert(predictionSubmissions).values({
         participantId: participant.id,
+        stage,
         blobUrl: blobUrl.trim(),
       });
     }

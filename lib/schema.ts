@@ -96,6 +96,7 @@ export const predictionSubmissions = pgTable("prediction_submissions", {
   participantId: integer("participant_id")
     .references(() => participants.id)
     .notNull(),
+  stage: varchar("stage", { length: 50 }).notNull(),
   blobUrl: varchar("blob_url", { length: 2048 }).notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });

@@ -24,11 +24,21 @@ interface MatchPrediction {
 interface PreviewData {
   blobUrl: string;
   participantName: string;
+  stage: SubmissionStage | "";
   rawText: string;
   extractedScoresCount: number;
   matchesCount: number;
   matches: MatchPrediction[];
 }
+
+const STAGE_OPTIONS = [
+  "group",
+  "round_16",
+  "quarter",
+  "semi",
+  "final",
+] as const;
+type SubmissionStage = (typeof STAGE_OPTIONS)[number];
 
 export function PredictionsUpload() {
   const [file, setFile] = useState<File | null>(null);
@@ -79,8 +89,8 @@ export function PredictionsUpload() {
         description: `Extracted ${data.preview.extractedScoresCount} scores`,
       });
 
-      setPreviewData(data.preview);
-      setEditedData(data.preview);
+      setPreviewData({ ...data.preview, stage: "" });
+      setEditedData({ ...data.preview, stage: "" });
     } catch (err) {
       toast.error("Upload failed", {
         description: err instanceof Error ? err.message : "Unknown error",
@@ -92,7 +102,7 @@ export function PredictionsUpload() {
   }
 
   async function handleConfirm() {
-    if (!editedData) return;
+    if (!editedData || !editedData.stage) return;
 
     setLoading(true);
     setError(null);
@@ -103,6 +113,7 @@ export function PredictionsUpload() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           participantName: editedData.participantName,
+          stage: editedData.stage,
           blobUrl: editedData.blobUrl,
           matchPredictions: editedData.matches
             .filter((m) => m.homeScore !== null && m.awayScore !== null)
@@ -145,6 +156,11 @@ export function PredictionsUpload() {
   function updateParticipantName(name: string) {
     if (!editedData) return;
     setEditedData({ ...editedData, participantName: name });
+  }
+
+  function updateStage(stage: SubmissionStage) {
+    if (!editedData) return;
+    setEditedData({ ...editedData, stage });
   }
 
   function updateMatchScore(
@@ -266,6 +282,26 @@ export function PredictionsUpload() {
                   ⚠ Some scores missing - please fill manually below
                 </p>
               )}
+          </div>
+
+          {/* PaTournament Stage */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tournament Stage: <span className="text-red-600">*</span>
+            </label>
+            <select
+              value={editedData.stage}
+              onChange={(e) => updateStage(e.target.value as SubmissionStage)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            >
+              <option value="">Select stage</option>
+              {STAGE_OPTIONS.map((stage) => (
+                <option key={stage} value={stage}>
+                  {stage}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Participant Name */}
@@ -392,7 +428,7 @@ export function PredictionsUpload() {
 
             <Button
               onClick={handleConfirm}
-              disabled={loading || filledScores === 0}
+              disabled={loading || filledScores === 0 || !editedData.stage}
             >
               {loading ? "Saving..." : `Save ${filledScores} Predictions`}
             </Button>
