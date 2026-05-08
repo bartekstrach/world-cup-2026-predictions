@@ -6,18 +6,20 @@ export default function PublicLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen overflow-x-hidden bg-gradient-to-b from-slate-50 to-slate-100">
-      <header className="border-b bg-white/70 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-[#f0f4f8] via-white to-[#e6f2ef] text-slate-800 pb-12">
+      <header className="border-b border-slate-200/60">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
           <div className="flex items-center gap-3">
-            <Trophy className="h-6 w-6 text-yellow-500" />
-            <h1 className="text-xl font-bold text-slate-900">
+            <div className="p-2 bg-[#0a192f] rounded-lg shadow-sm">
+              <Trophy className="h-6 w-6 text-[#10b981]" />
+            </div>
+            <h1 className="text-2xl md:text-3xl font-bold text-[#0a192f] tracking-tight">
               2026 FIFA World Cup
             </h1>
           </div>
         </div>
       </header>
-      <main className="max-w-7xl mx-auto w-full min-w-0 px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="max-w-6xl mx-auto w-full min-w-0 px-4 sm:px-6 lg:px-8 pt-8">
         {children}
       </main>
     </div>

@@ -24,7 +24,7 @@ export function NextMatchBanner({ data }: NextMatchBannerProps) {
   })}`;
 
   return (
-    <p className="text-muted-foreground mt-1">
+    <p className="text-[#10b981] font-medium mt-1 text-sm sm:text-base">
       {`Next matches: ${teamsLabel} (${formattedMatchDate})`}
     </p>
   );

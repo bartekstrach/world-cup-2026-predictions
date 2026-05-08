@@ -1,4 +1,3 @@
-import { Radio } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -22,32 +21,34 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
   const { matches, participants, predictions } = data;
 
   return (
-    <Card className="w-full max-w-full overflow-hidden">
+    <Card className="w-full max-w-full overflow-hidden rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
       <div className="overflow-x-auto public-table-scroll">
         <Table className="w-full min-w-max table-auto">
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
               {/* Group/stage */}
-              <TableHead className="hidden sm:table-cell whitespace-nowrap min-w-12">
+              <TableHead className="hidden sm:table-cell whitespace-nowrap min-w-12 p-4 h-auto">
                 Gr.
               </TableHead>
 
               {/* Date */}
-              <TableHead className="whitespace-nowrap min-w-28">Date</TableHead>
+              <TableHead className="whitespace-nowrap min-w-28 p-4 h-auto">
+                Date
+              </TableHead>
 
               {/* Match + result */}
-              <TableHead className="sticky left-0 z-20 bg-background whitespace-nowrap min-w-48 sm:min-w-64">
-                <div className="flex justify-between items-center">
-                  <span>Match</span>
-                  <span>Result</span>
-                </div>
+              <TableHead className="sticky left-0 z-20 bg-slate-50/50 whitespace-nowrap min-w-48 sm:min-w-64 p-4 h-auto">
+                Match
+              </TableHead>
+              <TableHead className="sticky left-48 sm:left-64 z-20 bg-slate-50/50 whitespace-nowrap min-w-24 text-center p-4 h-auto">
+                Result
               </TableHead>
 
               {/* Participants */}
               {participants.map((p) => (
                 <TableHead
                   key={p.id}
-                  className="text-center whitespace-nowrap min-w-24"
+                  className="text-center whitespace-nowrap min-w-24 p-4 h-auto"
                 >
                   {p.name}
                 </TableHead>
@@ -58,59 +59,69 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
             {matches.map((match) => (
               <TableRow key={match.id}>
                 {/* Group/stage */}
-                <TableCell className="hidden sm:table-cell text-center text-muted-foreground whitespace-nowrap">
+                <TableCell className="hidden sm:table-cell text-center text-slate-400 whitespace-nowrap p-4">
                   {match.stage === "group" ? match.homeTeam.group : match.stage}
                 </TableCell>
 
                 {/* Date */}
-                <TableCell className="text-muted-foreground whitespace-nowrap text-xs sm:text-sm">
+                <TableCell className="text-slate-500 whitespace-nowrap text-xs sm:text-sm p-4">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-2">
                     <span>{getShortWeekday({ date: match.matchDate })}</span>
                     <time>{formatDateTime({ date: match.matchDate })}</time>
                   </div>
                 </TableCell>
 
-                {/* Match + result */}
-                <TableCell className="sticky left-0 z-10 bg-background">
-                  <div className="gap-4 flex justify-between items-center">
-                    <>
-                      <div className="block md:hidden">
-                        {getShortMatchTeamNames({
-                          displayFlags: true,
-                          homeTeamCode: match.homeTeam.code,
-                          awayTeamCode: match.awayTeam.code,
-                        })}
-                      </div>
-                      <div className="hidden md:block">
-                        {getMatchTeamNames({
-                          displayFlags: true,
-                          homeTeamCode: match.homeTeam.code,
-                          awayTeamCode: match.awayTeam.code,
-                        })}
-                      </div>
-                    </>
-                    <div className="flex items-center gap-3">
-                      {match.status === "live" && (
-                        <Radio className="h-4 w-4 text-red-700 animate-ping hidden md:block" />
-                      )}
-                      {match.homeScore !== null && match.awayScore !== null ? (
-                        <span
-                          className={`font-bold font-mono ${
-                            match.status === "live" && "text-red-700"
-                          }`}
-                        >
-                          {formatScore({
+                {/* Match */}
+                <TableCell className="sticky left-0 z-10 bg-white p-4">
+                  <div className="block md:hidden font-medium text-slate-700 whitespace-nowrap">
+                    {getShortMatchTeamNames({
+                      displayFlags: true,
+                      homeTeamCode: match.homeTeam.code,
+                      awayTeamCode: match.awayTeam.code,
+                    })}
+                  </div>
+                  <div className="hidden md:block font-medium text-slate-700 whitespace-nowrap">
+                    {getMatchTeamNames({
+                      displayFlags: true,
+                      homeTeamCode: match.homeTeam.code,
+                      awayTeamCode: match.awayTeam.code,
+                    })}
+                  </div>
+                </TableCell>
+
+                {/* Result */}
+                <TableCell className="sticky left-48 sm:left-64 z-10 bg-white p-4 text-center whitespace-nowrap">
+                  {match.status === "live" ? (
+                    <div className="inline-flex items-center gap-1.5 bg-red-50 text-red-600 px-2.5 py-1 rounded-full text-xs font-bold border border-red-100">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                      </span>
+                      <span className="font-mono text-sm">
+                        {match.homeScore !== null && match.awayScore !== null
+                          ? formatScore({
+                              homeScore: match.homeScore,
+                              awayScore: match.awayScore,
+                            })
+                          : NO_RESULT}
+                      </span>
+                    </div>
+                  ) : (
+                    <span
+                      className={`font-mono font-bold ${
+                        match.homeScore !== null && match.awayScore !== null
+                          ? "text-[#0a192f]"
+                          : "text-slate-300"
+                      }`}
+                    >
+                      {match.homeScore !== null && match.awayScore !== null
+                        ? formatScore({
                             homeScore: match.homeScore,
                             awayScore: match.awayScore,
-                          })}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground font-mono">
-                          {NO_RESULT}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                          })
+                        : NO_RESULT}
+                    </span>
+                  )}
                 </TableCell>
 
                 {/* Participants */}
@@ -122,7 +133,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                     return (
                       <TableCell
                         key={p.id}
-                        className="text-center whitespace-nowrap"
+                        className="text-center whitespace-nowrap p-4"
                       >
                         <span className="text-muted-foreground">-</span>
                       </TableCell>
@@ -132,26 +143,44 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                   return (
                     <TableCell
                       key={p.id}
-                      className="text-center whitespace-nowrap"
+                      className="text-center whitespace-nowrap p-4"
                     >
-                      <span className="font-mono">
-                        {formatScore({
-                          homeScore: pred.homeScore,
-                          awayScore: pred.awayScore,
-                        })}
-                        <span className="text-muted-foreground">{` | ${
-                          match.status === "finished"
-                            ? pred.points
-                            : match.status === "live"
-                              ? calculatePoints(
-                                  pred.homeScore,
-                                  pred.awayScore,
-                                  match.homeScore ?? 0,
-                                  match.awayScore ?? 0,
-                                )
-                              : "-"
-                        }`}</span>
-                      </span>
+                      <div className="flex items-center justify-center gap-2">
+                        <span className="font-mono text-slate-700 w-8 text-center">
+                          {formatScore({
+                            homeScore: pred.homeScore,
+                            awayScore: pred.awayScore,
+                          })}
+                        </span>
+                        <span className="text-slate-200">|</span>
+                        {(() => {
+                          const points =
+                            match.status === "finished"
+                              ? pred.points
+                              : match.status === "live"
+                                ? calculatePoints(
+                                    pred.homeScore,
+                                    pred.awayScore,
+                                    match.homeScore ?? 0,
+                                    match.awayScore ?? 0,
+                                  )
+                                : null;
+
+                          return (
+                            <span
+                              className={`text-xs font-mono font-bold w-4 flex justify-center ${
+                                points === 3
+                                  ? "text-[#10b981]"
+                                  : points && points > 0
+                                    ? "text-[#0a192f]"
+                                    : "text-slate-300"
+                              }`}
+                            >
+                              {points ?? "-"}
+                            </span>
+                          );
+                        })()}
+                      </div>
                     </TableCell>
                   );
                 })}

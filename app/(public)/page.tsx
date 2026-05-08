@@ -13,7 +13,6 @@ import { getLeaderboard } from "@/lib/scoring";
 export const revalidate = 60;
 
 export default async function MainPage() {
-  // TODO: can I move these functions inside of child components?
   const [
     leaderboard,
     predictionsData,
@@ -28,33 +27,41 @@ export default async function MainPage() {
 
   return (
     <div className="space-y-6 min-w-0">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <section className="space-y-4">
         <div className="min-w-0 w-full">
-          <h2 className="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2 leading-tight">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#0a192f] leading-tight">
             Results
           </h2>
-          <div className="text-muted-foreground mt-1 text-sm sm:text-base">
+          <div className="text-slate-500 mt-1 text-sm sm:text-base">
             <LastFinishedMatches />
           </div>
           {nextMatchBannerData && (
             <NextMatchBanner data={nextMatchBannerData} />
           )}
         </div>
-      </div>
+      </section>
 
       <LeaderboardTable data={leaderboard} />
 
-      <div className="min-w-0">
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
+      <section className="space-y-4 pt-4">
+        <h2 className="text-xl sm:text-2xl font-bold text-[#0a192f]">
           Predictions
         </h2>
-        <p className="text-muted-foreground mt-1 mb-1 text-sm sm:text-base">
-          Participant-linked uploaded prediction sheets
-        </p>
-        <PredictionSheetsLinks data={predictionSheetLinks} />
-      </div>
 
-      <PredictionsGrid data={predictionsData} />
+        <PredictionsGrid data={predictionsData} />
+
+        <div className="space-y-6 pt-8 border-t border-slate-200/60 mt-8">
+          <div className="space-y-1">
+            <h2 className="text-xl sm:text-2xl font-bold text-[#0a192f]">
+              Uploaded prediction sheets
+            </h2>
+            <p className="text-sm text-slate-500">
+              Participant prediction blobs grouped by stage
+            </p>
+          </div>
+          <PredictionSheetsLinks data={predictionSheetLinks} />
+        </div>
+      </section>
     </div>
   );
 }
