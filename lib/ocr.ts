@@ -1,3 +1,71 @@
+export async function checkVisionApiAccess(): Promise<{
+  hasAccess: boolean;
+  reason: string;
+}> {
+  const apiKey = process.env.GOOGLE_VISION_API_KEY;
+
+  if (!apiKey) {
+    return {
+      hasAccess: false,
+      reason: "GOOGLE_VISION_API_KEY is not configured.",
+    };
+  }
+
+  // A tiny 1x1 pixel transparent PNG encoded in Base64.
+  // This minimizes bandwidth and processing time.
+  const tinyImageBase64 =
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=";
+
+  try {
+    const response = await fetch(
+      `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          requests: [
+            {
+              image: { content: tinyImageBase64 },
+              features: [{ type: "TEXT_DETECTION" }],
+            },
+          ],
+        }),
+      },
+    );
+
+    const data = await response.json();
+
+    // 1. Check for top-level API errors (e.g., Invalid API Key, Billing disabled)
+    if (data.error) {
+      return {
+        hasAccess: false,
+        reason: `API Error [${data.error.code}]: ${data.error.message}`,
+      };
+    }
+
+    // 2. Check for image-specific processing errors
+    if (data.responses?.[0]?.error) {
+      return {
+        hasAccess: false,
+        reason: `Processing Error: ${data.responses[0].error.message}`,
+      };
+    }
+
+    // If we reach here, the API accepted the key, processed the payload,
+    // and successfully returned a (likely empty) result.
+    return {
+      hasAccess: true,
+      reason: "API key is valid and working correctly.",
+    };
+  } catch (error: any) {
+    // Catches network errors or issues with the fetch request itself
+    return {
+      hasAccess: false,
+      reason: `Network/Execution Error: ${error.message}`,
+    };
+  }
+}
+
 export interface ExtractedPrediction {
   participantName: string;
   rawText: string;
@@ -8,7 +76,7 @@ export interface ExtractedPrediction {
 }
 
 export async function extractTextFromImage(
-  imageBase64: string
+  imageBase64: string,
 ): Promise<string> {
   const apiKey = process.env.GOOGLE_VISION_API_KEY;
 
@@ -32,7 +100,7 @@ export async function extractTextFromImage(
           },
         ],
       }),
-    }
+    },
   );
 
   const data = await response.json();
@@ -79,7 +147,7 @@ function extractParticipantName(text: string): string {
 }
 
 function extractScores(
-  text: string
+  text: string,
 ): Array<{ homeScore: number | null; awayScore: number | null }> {
   const scores: Array<{ homeScore: number | null; awayScore: number | null }> =
     [];
@@ -132,8 +200,15 @@ export function parsePredictionsText(text: string): ExtractedPrediction {
 }
 
 export async function processImageToPredictions(
-  imageBase64: string
-): Promise<ExtractedPrediction> {
+  imageBase64: string,
+): Promise<ExtractedPrediction | undefined> {
+  const { hasAccess, reason } = await checkVisionApiAccess();
+
+  if (!hasAccess) {
+    console.error(reason);
+    return;
+  }
+
   const text = await extractTextFromImage(imageBase64);
   return parsePredictionsText(text);
 }
