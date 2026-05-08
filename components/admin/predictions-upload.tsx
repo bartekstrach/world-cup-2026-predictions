@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
+import { SUBMISSION_STAGES, type SubmissionStage } from "@/lib/constants";
 
 interface TeamInfo {
   id: number;
@@ -31,17 +32,11 @@ interface PreviewData {
   matches: MatchPrediction[];
 }
 
-const STAGE_OPTIONS = [
-  "group",
-  "round_16",
-  "quarter",
-  "semi",
-  "final",
-] as const;
-type SubmissionStage = (typeof STAGE_OPTIONS)[number];
+const STAGE_OPTIONS = [...SUBMISSION_STAGES] as const;
 
 export function PredictionsUpload() {
   const [file, setFile] = useState<File | null>(null);
+  const [uploadStage, setUploadStage] = useState<SubmissionStage | "">("");
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
@@ -58,6 +53,7 @@ export function PredictionsUpload() {
     setEditedData(null);
     setError(null);
     setSuccess(false);
+    setUploadStage("");
 
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
@@ -72,6 +68,12 @@ export function PredictionsUpload() {
 
     const formData = new FormData();
     formData.append("file", file);
+    if (editedData?.participantName?.trim()) {
+      formData.append("participantName", editedData.participantName.trim());
+    }
+    if (uploadStage) {
+      formData.append("stage", uploadStage);
+    }
 
     try {
       const response = await fetch("/api/admin/predictions/upload", {
@@ -89,8 +91,14 @@ export function PredictionsUpload() {
         description: `Extracted ${data.preview.extractedScoresCount} scores`,
       });
 
-      setPreviewData({ ...data.preview, stage: "" });
-      setEditedData({ ...data.preview, stage: "" });
+      setPreviewData({
+        ...data.preview,
+        stage: data.preview.stage || uploadStage,
+      });
+      setEditedData({
+        ...data.preview,
+        stage: data.preview.stage || uploadStage,
+      });
     } catch (err) {
       toast.error("Upload failed", {
         description: err instanceof Error ? err.message : "Unknown error",
@@ -138,6 +146,7 @@ export function PredictionsUpload() {
       setSuccess(true);
       setTimeout(() => {
         setFile(null);
+        setUploadStage("");
         setPreview(null);
         setPreviewData(null);
         setEditedData(null);
@@ -193,6 +202,27 @@ export function PredictionsUpload() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tournament Stage: <span className="text-red-600">*</span>
+            </label>
+            <select
+              value={uploadStage}
+              onChange={(e) =>
+                setUploadStage(e.target.value as SubmissionStage | "")
+              }
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            >
+              <option value="">Select stage</option>
+              {STAGE_OPTIONS.map((stage) => (
+                <option key={stage} value={stage}>
+                  {stage}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Select scanned image
             </label>
             <input
@@ -221,7 +251,7 @@ export function PredictionsUpload() {
 
           <button
             onClick={handleUpload}
-            disabled={!file || loading || !!previewData}
+            disabled={!file || !uploadStage || loading || !!previewData}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
           >
             {loading ? "Processing..." : "Extract Scores"}

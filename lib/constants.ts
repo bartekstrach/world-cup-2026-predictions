@@ -24,3 +24,20 @@ export const NON_FINISHED_STATUSES: MatchStatus[] = [
 export const FINISHED_STATUS: MatchStatus = MATCH_STATUSES.FINISHED;
 
 export type MatchStatus = (typeof MATCH_STATUSES)[keyof typeof MATCH_STATUSES];
+
+export const SUBMISSION_STAGES = [
+  "group",
+  "round_16",
+  "quarter",
+  "semi",
+  "final",
+] as const;
+
+export type SubmissionStage = (typeof SUBMISSION_STAGES)[number];
+
+export const DEFAULT_UPLOAD_STAGE: SubmissionStage = "group";
+
+export const DEFAULT_UPLOAD_COMPETITION = {
+  name: process.env.UPLOAD_COMPETITION_NAME ?? "world-cup",
+  year: Number(process.env.UPLOAD_COMPETITION_YEAR ?? "2026"),
+} as const;
