@@ -1,31 +1,19 @@
-import { db } from "@/lib/db";
-import { sql } from "drizzle-orm";
+import { getAdminStats } from "@/lib/admin-stats";
+import { formatDateTime } from "@/lib/date";
+import { getMatchTeamNames } from "@/lib/teams";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trophy, CheckCircle, Radio, Users, Target, Flag } from "lucide-react";
-
-async function getStats() {
-  const result = await db.execute(sql`
-    SELECT 
-      (SELECT COUNT(*) FROM matches) as total_matches,
-      (SELECT COUNT(*) FROM matches WHERE status = 'finished') as finished_matches,
-      (SELECT COUNT(*) FROM matches WHERE status = 'live') as live_matches,
-      (SELECT COUNT(*) FROM participants) as total_participants,
-      (SELECT COUNT(*) FROM predictions) as total_predictions,
-      (SELECT COUNT(*) FROM teams) as total_teams
-  `);
-
-  return result.rows[0] as {
-    total_matches: number;
-    finished_matches: number;
-    live_matches: number;
-    total_participants: number;
-    total_predictions: number;
-    total_teams: number;
-  };
-}
+import {
+  Trophy,
+  CheckCircle,
+  Radio,
+  Users,
+  Target,
+  Flag,
+  CalendarClock,
+} from "lucide-react";
 
 export default async function AdminDashboard() {
-  const stats = await getStats();
+  const stats = await getAdminStats();
 
   const cards = [
     {
@@ -104,6 +92,46 @@ export default async function AdminDashboard() {
           </Card>
         ))}
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">
+            Next Match Insight
+          </CardTitle>
+          <CalendarClock className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          {stats.nextMatch ? (
+            <div className="space-y-1">
+              <div className="text-2xl font-bold">
+                {getMatchTeamNames({
+                  displayFlags: true,
+                  homeTeamCode: stats.nextMatch.homeTeamCode,
+                  awayTeamCode: stats.nextMatch.awayTeamCode,
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Kickoff: {formatDateTime({ date: stats.nextMatch.matchDate })}
+              </p>
+              {stats.nextStageName && (
+                <p className="text-xs text-muted-foreground">
+                  Upcoming stage transition:{" "}
+                  <strong>{stats.nextStageName}</strong>
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <div className="text-lg font-semibold">
+                No upcoming scheduled matches
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Add or schedule future matches to see the next kickoff insight.
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
