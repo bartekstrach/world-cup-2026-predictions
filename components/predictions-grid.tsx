@@ -20,12 +20,42 @@ interface PredictionsGridProps {
 export function PredictionsGrid({ data }: PredictionsGridProps) {
   const { matches, participants, predictions } = data;
 
+  const participantPointTotals = participants.reduce<
+    Record<number, { withoutLive: number; withLive: number }>
+  >((acc, participant) => {
+    let withoutLive = 0;
+    let withLive = 0;
+
+    for (const match of matches) {
+      const prediction = predictions[`${match.id}-${participant.id}`];
+      if (!prediction) continue;
+
+      if (match.status === "finished") {
+        withoutLive += prediction.points;
+        withLive += prediction.points;
+        continue;
+      }
+
+      if (match.status === "live") {
+        withLive += calculatePoints(
+          prediction.homeScore,
+          prediction.awayScore,
+          match.homeScore ?? 0,
+          match.awayScore ?? 0,
+        );
+      }
+    }
+
+    acc[participant.id] = { withoutLive, withLive };
+    return acc;
+  }, {});
+
   return (
     <Card className="w-full max-w-full overflow-hidden rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
       <div className="overflow-x-auto public-table-scroll">
         <Table className="w-full min-w-max table-auto">
           <TableHeader>
-            <TableRow className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+            <TableRow className="bg-slate-50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
               {/* Group/stage */}
               <TableHead className="hidden sm:table-cell whitespace-nowrap min-w-12 p-4 h-auto">
                 Gr.
@@ -37,10 +67,10 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
               </TableHead>
 
               {/* Match + result */}
-              <TableHead className="sticky left-0 z-20 bg-slate-50/50 whitespace-nowrap min-w-48 sm:min-w-64 p-4 h-auto">
+              <TableHead className="sticky left-0 z-20 bg-slate-50 whitespace-nowrap min-w-48 sm:min-w-64 p-4 h-auto">
                 Match
               </TableHead>
-              <TableHead className="sticky left-48 sm:left-64 z-20 bg-slate-50/50 whitespace-nowrap min-w-24 text-center p-4 h-auto">
+              <TableHead className="sticky left-48 sm:left-64 z-20 bg-slate-50 whitespace-nowrap min-w-24 text-center p-4 h-auto">
                 Result
               </TableHead>
 
@@ -186,6 +216,34 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                 })}
               </TableRow>
             ))}
+            <TableRow className="bg-[#f0f7ff] border-b border-slate-100">
+              <TableCell className="hidden sm:table-cell text-center text-slate-400 whitespace-nowrap p-4" />
+              <TableCell className="text-slate-500 whitespace-nowrap text-xs sm:text-sm p-4 font-semibold" />
+              <TableCell className="sticky left-0 z-10 bg-[#f0f7ff] p-4 font-semibold text-[#0a192f] whitespace-nowrap" />
+              <TableCell className="sticky left-48 sm:left-64 z-10 bg-[#f0f7ff] p-4 text-center text-xs text-slate-500 whitespace-nowrap" />
+              {participants.map((participant) => {
+                const totals = participantPointTotals[participant.id] ?? {
+                  withoutLive: 0,
+                  withLive: 0,
+                };
+
+                return (
+                  <TableCell
+                    key={participant.id}
+                    className="text-center whitespace-nowrap p-4"
+                  >
+                    <span className="font-mono font-bold text-[#0a192f]">
+                      {totals.withoutLive}
+                    </span>
+                    <span className="text-slate-300 px-1">(</span>
+                    <span className="font-mono font-bold text-[#10b981]">
+                      {totals.withLive}
+                    </span>
+                    <span className="text-slate-300 px-1">)</span>
+                  </TableCell>
+                );
+              })}
+            </TableRow>
           </TableBody>
         </Table>
       </div>

@@ -78,7 +78,10 @@ export function LeaderboardTable({ data }: LeaderboardTableProps) {
                     key={`${entry.id}+${prediction.matchId}`}
                     className="text-center font-mono text-slate-600 whitespace-nowrap p-4"
                   >
-                    {prediction.homeScore}:{prediction.awayScore}
+                    {prediction.homeScore !== null &&
+                    prediction.awayScore !== null
+                      ? `${prediction.homeScore}:${prediction.awayScore}`
+                      : "-"}
                   </TableCell>
                 ))}
               </TableRow>

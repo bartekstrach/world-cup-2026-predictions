@@ -36,7 +36,10 @@ export function AdminTabsNav({ items }: { items: NavItem[] }) {
         {items.map((item) => {
           const isActive =
             pathname === item.href ||
-            (item.href !== "/admin" && pathname.startsWith(item.href));
+            (item.href === "/admin/predictions" &&
+              pathname.startsWith("/admin/predictions") &&
+              pathname !== "/admin/predictions/manual" &&
+              pathname !== "/admin/predictions/edit");
           const Icon = iconByHref[item.href as keyof typeof iconByHref];
 
           return (

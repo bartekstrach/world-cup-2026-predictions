@@ -37,6 +37,7 @@ const STAGE_OPTIONS = [...SUBMISSION_STAGES] as const;
 export function PredictionsUpload() {
   const [file, setFile] = useState<File | null>(null);
   const [uploadStage, setUploadStage] = useState<SubmissionStage | "">("");
+  const [uploadParticipantName, setUploadParticipantName] = useState("");
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
@@ -45,6 +46,14 @@ export function PredictionsUpload() {
   const [success, setSuccess] = useState(false);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (!uploadParticipantName.trim()) {
+      toast.error("Participant name is required", {
+        description: "Fill participant name before selecting a file.",
+      });
+      e.target.value = "";
+      return;
+    }
+
     const selected = e.target.files?.[0];
     if (!selected) return;
 
@@ -53,7 +62,6 @@ export function PredictionsUpload() {
     setEditedData(null);
     setError(null);
     setSuccess(false);
-    setUploadStage("");
 
     const reader = new FileReader();
     reader.onload = (e) => setPreview(e.target?.result as string);
@@ -68,8 +76,10 @@ export function PredictionsUpload() {
 
     const formData = new FormData();
     formData.append("file", file);
-    if (editedData?.participantName?.trim()) {
-      formData.append("participantName", editedData.participantName.trim());
+    const participantName =
+      editedData?.participantName?.trim() || uploadParticipantName.trim();
+    if (participantName) {
+      formData.append("participantName", participantName);
     }
     if (uploadStage) {
       formData.append("stage", uploadStage);
@@ -93,10 +103,12 @@ export function PredictionsUpload() {
 
       setPreviewData({
         ...data.preview,
+        participantName: data.preview.participantName || participantName,
         stage: data.preview.stage || uploadStage,
       });
       setEditedData({
         ...data.preview,
+        participantName: data.preview.participantName || participantName,
         stage: data.preview.stage || uploadStage,
       });
     } catch (err) {
@@ -147,6 +159,7 @@ export function PredictionsUpload() {
       setTimeout(() => {
         setFile(null);
         setUploadStage("");
+        setUploadParticipantName("");
         setPreview(null);
         setPreviewData(null);
         setEditedData(null);
@@ -202,6 +215,20 @@ export function PredictionsUpload() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[#0a192f] mb-2">
+              Participant Name: <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={uploadParticipantName}
+              onChange={(e) => setUploadParticipantName(e.target.value)}
+              className="w-full max-w-xl px-3 py-2 border border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-[#10b981]/30 focus:border-[#10b981]"
+              placeholder="Enter participant name"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-[#0a192f] mb-2">
               Tournament Stage: <span className="text-red-500">*</span>
             </label>
             <select
@@ -229,8 +256,14 @@ export function PredictionsUpload() {
               type="file"
               accept="image/*"
               onChange={handleFileChange}
+              disabled={!uploadParticipantName.trim()}
               className="block w-full max-w-xl text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-slate-200 file:text-sm file:font-medium file:bg-[#f0f4f8] file:text-[#0a192f] hover:file:bg-slate-100"
             />
+            {!uploadParticipantName.trim() && (
+              <p className="text-xs text-amber-600 mt-1">
+                Fill participant name first to enable file selection.
+              </p>
+            )}
           </div>
 
           {preview && (
@@ -251,7 +284,13 @@ export function PredictionsUpload() {
 
           <button
             onClick={handleUpload}
-            disabled={!file || !uploadStage || loading || !!previewData}
+            disabled={
+              !file ||
+              !uploadStage ||
+              !uploadParticipantName.trim() ||
+              loading ||
+              !!previewData
+            }
             className="bg-slate-300 text-white px-5 py-2.5 rounded-xl text-sm font-medium disabled:cursor-not-allowed enabled:bg-[#0a192f] enabled:hover:bg-[#0a192f]/90 transition-colors"
           >
             {loading ? "Processing..." : "Extract Scores"}
