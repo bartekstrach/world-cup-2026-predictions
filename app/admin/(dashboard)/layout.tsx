@@ -10,6 +10,7 @@ import {
   Users,
   FileText,
   Edit,
+  PencilLine,
   ExternalLink,
   Shield,
   LogOut,
@@ -37,6 +38,11 @@ export default async function AdminDashboardLayout({
     { href: "/admin/participants", label: "Participants", icon: Users },
     { href: "/admin/predictions", label: "Predictions", icon: FileText },
     { href: "/admin/predictions/manual", label: "Manual Entry", icon: Edit },
+    {
+      href: "/admin/predictions/edit",
+      label: "Edit Predictions",
+      icon: PencilLine,
+    },
   ];
 
   return (
