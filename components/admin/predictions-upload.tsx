@@ -194,22 +194,22 @@ export function PredictionsUpload() {
   return (
     <div className="space-y-6">
       {/* Upload Section */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">
+      <div className="bg-white rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 p-6">
+        <h3 className="text-lg font-bold text-[#0a192f] mb-4">
           1. Upload Prediction Sheet
         </h3>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tournament Stage: <span className="text-red-600">*</span>
+            <label className="block text-sm font-medium text-[#0a192f] mb-2">
+              Tournament Stage: <span className="text-red-500">*</span>
             </label>
             <select
               value={uploadStage}
               onChange={(e) =>
                 setUploadStage(e.target.value as SubmissionStage | "")
               }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full max-w-xl border-slate-200 rounded-lg shadow-sm py-2 px-3 focus:ring-[#10b981] focus:border-[#10b981] bg-white text-slate-700 outline-none"
               required
             >
               <option value="">Select stage</option>
@@ -222,14 +222,14 @@ export function PredictionsUpload() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[#0a192f] mb-2">
               Select scanned image
             </label>
             <input
               type="file"
               accept="image/*"
               onChange={handleFileChange}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              className="block w-full max-w-xl text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-slate-200 file:text-sm file:font-medium file:bg-[#f0f4f8] file:text-[#0a192f] hover:file:bg-slate-100"
             />
           </div>
 
@@ -252,7 +252,7 @@ export function PredictionsUpload() {
           <button
             onClick={handleUpload}
             disabled={!file || !uploadStage || loading || !!previewData}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+            className="bg-slate-300 text-white px-5 py-2.5 rounded-xl text-sm font-medium disabled:cursor-not-allowed enabled:bg-[#0a192f] enabled:hover:bg-[#0a192f]/90 transition-colors"
           >
             {loading ? "Processing..." : "Extract Scores"}
           </button>
@@ -261,7 +261,7 @@ export function PredictionsUpload() {
 
       {/* Error Display */}
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <p className="text-red-800 font-semibold">Error:</p>
           <p className="text-red-700 text-sm">{error}</p>
         </div>
@@ -269,7 +269,7 @@ export function PredictionsUpload() {
 
       {/* Success Display */}
       {success && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+        <div className="bg-green-50 border border-green-200 rounded-xl p-4">
           <p className="text-green-800 font-semibold">
             ✓ Predictions saved successfully!
           </p>
@@ -278,37 +278,31 @@ export function PredictionsUpload() {
 
       {/* Preview & Edit Section */}
       {editedData && (
-        <div className="bg-white rounded-lg shadow p-6 space-y-6">
+        <div className="bg-white rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 p-6 space-y-6">
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-bold text-[#0a192f]">
               2. Review & Edit Predictions
             </h3>
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-slate-500">
               {filledScores} / {editedData.matchesCount} scores filled
             </div>
           </div>
 
           {/* Extraction Stats */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="bg-[#f0f7ff] border border-[#dbeafe] rounded-xl p-4">
+            <div className="grid grid-cols-2 gap-4 text-sm text-[#1e3a8a]">
               <div>
-                <span className="font-medium text-blue-900">
-                  Scores extracted:
-                </span>{" "}
-                <span className="text-blue-700">
-                  {previewData?.extractedScoresCount || 0}
-                </span>
+                <span className="font-medium">Scores extracted:</span>{" "}
+                <span>{previewData?.extractedScoresCount || 0}</span>
               </div>
               <div>
-                <span className="font-medium text-blue-900">
-                  Total matches:
-                </span>{" "}
-                <span className="text-blue-700">{editedData.matchesCount}</span>
+                <span className="font-medium">Total matches:</span>{" "}
+                <span>{editedData.matchesCount}</span>
               </div>
             </div>
             {(previewData?.extractedScoresCount || 0) &&
               editedData.matchesCount && (
-                <p className="text-xs text-blue-800 mt-2">
+                <p className="text-xs text-[#1e40af] mt-2">
                   ⚠ Some scores missing - please fill manually below
                 </p>
               )}
@@ -316,13 +310,13 @@ export function PredictionsUpload() {
 
           {/* PaTournament Stage */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tournament Stage: <span className="text-red-600">*</span>
+            <label className="block text-sm font-medium text-[#0a192f] mb-2">
+              Tournament Stage: <span className="text-red-500">*</span>
             </label>
             <select
               value={editedData.stage}
               onChange={(e) => updateStage(e.target.value as SubmissionStage)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full max-w-xl border-slate-200 rounded-lg shadow-sm py-2 px-3 focus:ring-[#10b981] focus:border-[#10b981] bg-white text-slate-700 outline-none"
               required
             >
               <option value="">Select stage</option>
@@ -336,36 +330,36 @@ export function PredictionsUpload() {
 
           {/* Participant Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[#0a192f] mb-2">
               Participant Name:
             </label>
             <input
               type="text"
               value={editedData.participantName}
               onChange={(e) => updateParticipantName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full max-w-xl px-3 py-2 border border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-[#10b981]/30 focus:border-[#10b981]"
             />
           </div>
 
           {/* Matches Table */}
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">
+            <p className="text-sm font-medium text-[#0a192f] mb-2">
               Match Predictions:
             </p>
-            <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
+            <div className="border border-slate-200 rounded-xl overflow-hidden max-h-96 overflow-y-auto">
               <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50 sticky top-0">
+                <thead className="bg-slate-50/90 sticky top-0">
                   <tr>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                       #
                     </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
                       Match
                     </th>
-                    <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-3 py-2 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                       Prediction
                     </th>
-                    <th className="px-3 py-2 text-center text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-3 py-2 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
                       Status
                     </th>
                   </tr>
@@ -377,12 +371,12 @@ export function PredictionsUpload() {
                     return (
                       <tr
                         key={match.matchId}
-                        className={isFilled ? "" : "bg-yellow-50"}
+                        className={isFilled ? "" : "bg-amber-50/40"}
                       >
-                        <td className="px-3 py-2 text-sm text-gray-900 whitespace-nowrap">
+                        <td className="px-3 py-2 text-sm text-slate-900 font-mono whitespace-nowrap">
                           {match.matchNumber}
                         </td>
-                        <td className="px-3 py-2 text-sm text-gray-900 whitespace-nowrap">
+                        <td className="px-3 py-2 text-sm text-slate-700 font-medium whitespace-nowrap">
                           {match.homeTeam.code} vs {match.awayTeam.code}
                         </td>
                         <td className="px-3 py-2">
@@ -399,10 +393,10 @@ export function PredictionsUpload() {
                                   e.target.value,
                                 )
                               }
-                              className="w-12 px-2 py-1 text-sm border rounded text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-12 px-2 py-1 text-sm border border-slate-200 rounded text-center font-mono font-bold focus:ring-2 focus:ring-[#10b981]/30 focus:border-[#10b981]"
                               placeholder="0"
                             />
-                            <span className="text-gray-500">:</span>
+                            <span className="text-slate-300 font-bold">:</span>
                             <input
                               type="number"
                               min="0"
@@ -415,16 +409,18 @@ export function PredictionsUpload() {
                                   e.target.value,
                                 )
                               }
-                              className="w-12 px-2 py-1 text-sm border rounded text-center focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-12 px-2 py-1 text-sm border border-slate-200 rounded text-center font-mono font-bold focus:ring-2 focus:ring-[#10b981]/30 focus:border-[#10b981]"
                               placeholder="0"
                             />
                           </div>
                         </td>
                         <td className="px-3 py-2 text-center">
                           {isFilled ? (
-                            <span className="text-green-600 text-xs">✓</span>
+                            <span className="text-[#10b981] text-xs font-semibold">
+                              ✓
+                            </span>
                           ) : (
-                            <span className="text-yellow-600 text-xs">
+                            <span className="text-amber-600 text-xs font-medium">
                               Empty
                             </span>
                           )}
@@ -438,11 +434,11 @@ export function PredictionsUpload() {
           </div>
 
           {/* Raw Text (Collapsible) */}
-          <details className="bg-gray-50 rounded border">
-            <summary className="px-4 py-2 cursor-pointer text-sm font-medium text-gray-700">
+          <details className="bg-slate-50 rounded border border-slate-200">
+            <summary className="px-4 py-2 cursor-pointer text-sm font-medium text-slate-700">
               Show extracted text
             </summary>
-            <pre className="text-xs p-4 overflow-x-auto">
+            <pre className="text-xs p-4 overflow-x-auto font-mono">
               {previewData?.rawText}
             </pre>
           </details>

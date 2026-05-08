@@ -1,6 +1,7 @@
 import { PredictionsUpload } from "@/components/admin/predictions-upload";
 import { MissingPredictionsCard } from "@/components/admin/missing-predictions-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdminSectionHeader } from "@/components/admin/admin-section-header";
 import { getAdminStats } from "@/lib/admin-stats";
 import { FileText, Upload } from "lucide-react";
 
@@ -11,28 +12,22 @@ export default async function PredictionsPage() {
   });
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Upload className="h-8 w-8 text-primary" />
-        <div>
-          <h2 className="text-3xl font-bold text-slate-900">
-            Predictions Upload
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Upload scanned prediction sheets with OCR
-          </p>
-        </div>
-      </div>
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <AdminSectionHeader
+        title="Predictions Upload"
+        subtitle="Upload scanned prediction sheets with OCR"
+        icon={Upload}
+      />
 
-      <Card className="border-blue-200 bg-blue-50/50">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <FileText className="h-5 w-5 text-blue-600" />
+      <Card className="bg-[#f0f7ff] border-[#dbeafe] rounded-2xl p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] gap-0">
+        <CardHeader className="p-0">
+          <CardTitle className="text-lg flex items-center gap-2 text-[#1e40af] font-bold">
+            <FileText className="h-5 w-5" />
             Expected Format
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <pre className="text-sm text-blue-900 font-mono bg-white rounded-lg p-4 border border-blue-200">
+        <CardContent className="p-0 mt-4">
+          <pre className="text-sm text-[#1e3a8a] font-mono bg-white/60 rounded-xl p-4 border border-white shadow-sm whitespace-pre-wrap">
             {`Name: John Doe
 
 15.06 Monday
@@ -44,12 +39,20 @@ A 15:00 Brazil 2:0 Japan
 B 18:00 Spain 3:0 England
 ...`}
           </pre>
-          <p className="text-sm text-muted-foreground mt-3">
-            • Participant name at the top
-            <br />
-            • One match per line with scores
-            <br />• Handwritten scores in clear boxes work best
-          </p>
+          <ul className="mt-4 space-y-1 text-sm text-[#3b82f6]">
+            <li className="flex items-center gap-2">
+              <span className="w-1 h-1 rounded-full bg-[#3b82f6]" />
+              Participant name at the top
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="w-1 h-1 rounded-full bg-[#3b82f6]" />
+              One match per line with scores
+            </li>
+            <li className="flex items-center gap-2">
+              <span className="w-1 h-1 rounded-full bg-[#3b82f6]" />
+              Handwritten scores in clear boxes work best
+            </li>
+          </ul>
         </CardContent>
       </Card>
 

@@ -1,6 +1,7 @@
 import { PredictionsEditor } from "@/components/admin/predictions-editor";
 import { db } from "@/lib/db";
 import { PencilLine } from "lucide-react";
+import { AdminSectionHeader } from "@/components/admin/admin-section-header";
 
 async function getData() {
   const participants = await db.query.participants.findMany({
@@ -64,19 +65,12 @@ export default async function EditPredictionsPage() {
   const { participants, matches, predictions } = await getData();
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <PencilLine className="h-8 w-8 text-primary" />
-        <div>
-          <h2 className="text-3xl font-bold text-slate-900">
-            Edit Predictions
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Filter by participant or match, update scores, and save selected
-            changes
-          </p>
-        </div>
-      </div>
+    <div className="space-y-6 animate-in fade-in duration-300">
+      <AdminSectionHeader
+        title="Edit Predictions"
+        subtitle="Filter by participant or match, update scores, and save selected changes"
+        icon={PencilLine}
+      />
 
       <PredictionsEditor
         participants={participants}

@@ -34,7 +34,7 @@ export function ManualPredictionForm({
   matches: Match[];
 }) {
   const [participantId, setParticipantId] = useState<string>(
-    participants[0]?.id.toString() || ""
+    participants[0]?.id.toString() || "",
   );
   const [predictions, setPredictions] = useState<
     Record<number, { home: number; away: number }>
@@ -43,7 +43,7 @@ export function ManualPredictionForm({
   function handleScoreChange(
     matchId: number,
     type: "home" | "away",
-    value: string
+    value: string,
   ) {
     const score = parseInt(value) || 0;
     setPredictions((prev) => ({
@@ -61,7 +61,7 @@ export function ManualPredictionForm({
         matchId: parseInt(matchId),
         homeScore: scores.home || 0,
         awayScore: scores.away || 0,
-      })
+      }),
     );
 
     if (predictionsList.length === 0) {
@@ -95,69 +95,89 @@ export function ManualPredictionForm({
   const filledCount = Object.keys(predictions).length;
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Manual Prediction Entry</CardTitle>
+    <Card className="rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] h-[600px] flex flex-col">
+      <CardHeader className="p-6 border-b border-slate-100">
+        <CardTitle className="text-lg font-bold text-[#0a192f]">
+          Manual Prediction Entry
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="participant">Participant</Label>
-          <Select value={participantId} onValueChange={setParticipantId}>
-            <SelectTrigger id="participant">
-              <SelectValue placeholder="Select participant" />
-            </SelectTrigger>
-            <SelectContent>
-              {participants.map((p) => (
-                <SelectItem key={p.id} value={p.id.toString()}>
-                  {p.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2 max-h-96 overflow-y-auto border rounded-lg p-4">
-          {matches.map((match) => (
-            <div
-              key={match.id}
-              className="flex items-center gap-4 p-2 border rounded-lg hover:bg-muted/50 transition"
+      <CardContent className="p-0 flex-1 flex flex-col">
+        <div className="p-6 border-b border-slate-100">
+          <div className="space-y-1.5 max-w-xs">
+            <Label
+              htmlFor="participant"
+              className="text-sm font-medium text-slate-600"
             >
-              <span className="text-sm font-medium w-12">
-                #{match.matchNumber}
-              </span>
-              <span className="text-sm w-32 text-muted-foreground">
-                {match.homeTeam.code} vs {match.awayTeam.code}
-              </span>
-              <Input
-                type="number"
-                min="0"
-                max="9"
-                placeholder="0"
-                className="w-16 text-center"
-                onChange={(e) =>
-                  handleScoreChange(match.id, "home", e.target.value)
-                }
-              />
-              <span className="text-muted-foreground">:</span>
-              <Input
-                type="number"
-                min="0"
-                max="9"
-                placeholder="0"
-                className="w-16 text-center"
-                onChange={(e) =>
-                  handleScoreChange(match.id, "away", e.target.value)
-                }
-              />
-            </div>
-          ))}
+              Participant
+            </Label>
+            <Select value={participantId} onValueChange={setParticipantId}>
+              <SelectTrigger
+                id="participant"
+                className="border-slate-200 rounded-lg shadow-sm py-2.5 px-3 focus:ring-[#10b981] focus:border-[#10b981] bg-white text-slate-800 font-medium"
+              >
+                <SelectValue placeholder="Select participant" />
+              </SelectTrigger>
+              <SelectContent>
+                {participants.map((p) => (
+                  <SelectItem key={p.id} value={p.id.toString()}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
+        <div className="p-6 flex-1 overflow-y-auto bg-slate-50/50">
+          <div className="space-y-3 max-w-3xl">
+            {matches.map((match) => (
+              <div
+                key={match.id}
+                className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-6 shadow-sm"
+              >
+                <span className="w-8 font-mono text-slate-400 font-medium">
+                  #{match.matchNumber}
+                </span>
+                <span className="w-32 font-medium text-slate-700">
+                  {match.homeTeam.code} vs {match.awayTeam.code}
+                </span>
+                <div className="flex items-center gap-3">
+                  <Input
+                    type="number"
+                    min="0"
+                    max="9"
+                    placeholder="0"
+                    className="w-16 h-10 text-center font-mono font-bold text-lg border-slate-200 rounded-lg shadow-sm focus-visible:border-[#10b981] focus-visible:ring-2 focus-visible:ring-[#10b981]/30"
+                    onChange={(e) =>
+                      handleScoreChange(match.id, "home", e.target.value)
+                    }
+                  />
+                  <span className="text-slate-300 font-bold">:</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="9"
+                    placeholder="0"
+                    className="w-16 h-10 text-center font-mono font-bold text-lg border-slate-200 rounded-lg shadow-sm focus-visible:border-[#10b981] focus-visible:ring-2 focus-visible:ring-[#10b981]/30"
+                    onChange={(e) =>
+                      handleScoreChange(match.id, "away", e.target.value)
+                    }
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-6 border-t border-slate-100 flex items-center justify-between bg-white rounded-b-2xl">
+          <p className="text-sm text-slate-500 font-medium">
             {filledCount} predictions entered
           </p>
-          <Button onClick={handleSubmit} disabled={filledCount === 0}>
+          <Button
+            onClick={handleSubmit}
+            disabled={filledCount === 0}
+            className="bg-slate-400 text-white px-5 py-2.5 rounded-xl text-sm font-medium disabled:opacity-100"
+          >
             Save All Predictions
           </Button>
         </div>

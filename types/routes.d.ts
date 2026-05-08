@@ -15,6 +15,8 @@ type Routes =
 
 interface ParamMap {
   "/": {};
+  "/api/cron/sync-matches": {};
+  "/api/matches/live": {};
 }
 
 export type ParamsOf<Route extends Routes> = ParamMap[Route];

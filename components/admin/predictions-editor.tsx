@@ -196,64 +196,84 @@ export function PredictionsEditor({
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Prediction Editor</CardTitle>
+    <Card className="rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] h-[700px] flex flex-col">
+      <CardHeader className="p-6 border-b border-slate-100">
+        <CardTitle className="text-lg font-bold text-[#0a192f]">
+          Prediction Editor
+        </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="participant-filter">Participant</Label>
-            <Select
-              value={participantFilter}
-              onValueChange={setParticipantFilter}
-            >
-              <SelectTrigger id="participant-filter">
-                <SelectValue placeholder="All participants" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All participants</SelectItem>
-                {participants.map((participant) => (
-                  <SelectItem
-                    key={participant.id}
-                    value={participant.id.toString()}
-                  >
-                    {participant.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+      <CardContent className="p-0 flex flex-col flex-1">
+        <div className="p-6 border-b border-slate-100">
+          <div className="flex items-center gap-6">
+            <div className="space-y-1.5 w-64">
+              <Label
+                htmlFor="participant-filter"
+                className="text-sm font-medium text-slate-600"
+              >
+                Participant
+              </Label>
+              <Select
+                value={participantFilter}
+                onValueChange={setParticipantFilter}
+              >
+                <SelectTrigger
+                  id="participant-filter"
+                  className="border-slate-200 rounded-lg shadow-sm py-2 px-3 focus:ring-[#10b981] focus:border-[#10b981] bg-white text-slate-700"
+                >
+                  <SelectValue placeholder="All participants" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All participants</SelectItem>
+                  {participants.map((participant) => (
+                    <SelectItem
+                      key={participant.id}
+                      value={participant.id.toString()}
+                    >
+                      {participant.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="match-filter">Match</Label>
-            <Select value={matchFilter} onValueChange={setMatchFilter}>
-              <SelectTrigger id="match-filter">
-                <SelectValue placeholder="All matches" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All matches</SelectItem>
-                {matches.map((match) => (
-                  <SelectItem key={match.id} value={match.id.toString()}>
-                    #{match.matchNumber} {match.homeTeamCode} vs{" "}
-                    {match.awayTeamCode}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-1.5 w-64">
+              <Label
+                htmlFor="match-filter"
+                className="text-sm font-medium text-slate-600"
+              >
+                Match
+              </Label>
+              <Select value={matchFilter} onValueChange={setMatchFilter}>
+                <SelectTrigger
+                  id="match-filter"
+                  className="border-slate-200 rounded-lg shadow-sm py-2 px-3 focus:ring-[#10b981] focus:border-[#10b981] bg-white text-slate-700"
+                >
+                  <SelectValue placeholder="All matches" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All matches</SelectItem>
+                  {matches.map((match) => (
+                    <SelectItem key={match.id} value={match.id.toString()}>
+                      #{match.matchNumber} {match.homeTeamCode} vs{" "}
+                      {match.awayTeamCode}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
-        <div className="border rounded-lg max-h-[520px] overflow-y-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Participant</TableHead>
-                <TableHead className="w-16">#</TableHead>
-                <TableHead>Match</TableHead>
-                <TableHead className="text-center">Score</TableHead>
-                <TableHead className="text-center">Points</TableHead>
-                <TableHead className="text-right">Updated</TableHead>
+        <div className="flex-1 overflow-x-auto overflow-y-auto">
+          <Table className="min-w-[800px]">
+            <TableHeader className="sticky top-0 bg-white/90 backdrop-blur-sm z-10">
+              <TableRow className="bg-slate-50/90 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                <TableHead className="p-4 h-auto">Participant</TableHead>
+                <TableHead className="w-16 p-4 h-auto">#</TableHead>
+                <TableHead className="p-4 h-auto">Match</TableHead>
+                <TableHead className="text-center p-4 h-auto">Score</TableHead>
+                <TableHead className="text-center p-4 h-auto">Points</TableHead>
+                <TableHead className="text-right p-4 h-auto">Updated</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -261,7 +281,7 @@ export function PredictionsEditor({
                 <TableRow>
                   <TableCell
                     colSpan={6}
-                    className="text-center text-muted-foreground py-8"
+                    className="text-center text-slate-500 py-8"
                   >
                     No predictions found for current filters.
                   </TableCell>
@@ -275,16 +295,22 @@ export function PredictionsEditor({
                   return (
                     <TableRow
                       key={row.id}
-                      className={isDirty ? "bg-blue-50" : ""}
+                      className={
+                        isDirty
+                          ? "bg-[#10b981]/5 hover:bg-[#10b981]/10"
+                          : "hover:bg-slate-50"
+                      }
                     >
-                      <TableCell className="font-medium">
+                      <TableCell className="p-4 font-medium text-[#0a192f]">
                         {row.participantName}
                       </TableCell>
-                      <TableCell>#{row.matchNumber}</TableCell>
-                      <TableCell>
+                      <TableCell className="p-4 font-mono text-slate-400">
+                        #{row.matchNumber}
+                      </TableCell>
+                      <TableCell className="p-4 font-medium text-slate-700">
                         {row.homeTeamCode} vs {row.awayTeamCode}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="p-4 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <Input
                             type="number"
@@ -297,9 +323,9 @@ export function PredictionsEditor({
                                 e.target.value,
                               )
                             }
-                            className="w-16 text-center"
+                            className="w-12 h-8 text-center font-mono font-bold border-slate-200 rounded-md shadow-sm focus-visible:border-[#10b981] focus-visible:ring-1 focus-visible:ring-[#10b981]"
                           />
-                          <span className="text-muted-foreground">:</span>
+                          <span className="text-slate-300 font-bold">:</span>
                           <Input
                             type="number"
                             min="0"
@@ -311,14 +337,14 @@ export function PredictionsEditor({
                                 e.target.value,
                               )
                             }
-                            className="w-16 text-center"
+                            className="w-12 h-8 text-center font-mono font-bold border-slate-200 rounded-md shadow-sm focus-visible:border-[#10b981] focus-visible:ring-1 focus-visible:ring-[#10b981]"
                           />
                         </div>
                       </TableCell>
-                      <TableCell className="text-center">
+                      <TableCell className="p-4 text-center font-mono font-bold text-slate-600">
                         {row.points}
                       </TableCell>
-                      <TableCell className="text-right text-xs text-muted-foreground">
+                      <TableCell className="p-4 text-right font-mono text-xs text-slate-400">
                         {row.updatedAt
                           ? new Date(row.updatedAt).toLocaleString()
                           : "-"}
@@ -331,12 +357,16 @@ export function PredictionsEditor({
           </Table>
         </div>
 
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
+        <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50 rounded-b-2xl">
+          <p className="text-sm text-slate-500 font-medium">
             {editedCount} edited row{editedCount === 1 ? "" : "s"} •{" "}
             {shownCount} shown prediction{shownCount === 1 ? "" : "s"}
           </p>
-          <Button onClick={saveSelected} disabled={saving || editedCount === 0}>
+          <Button
+            onClick={saveSelected}
+            disabled={saving || editedCount === 0}
+            className="bg-slate-400 text-white px-6 py-2 rounded-xl text-sm font-medium disabled:opacity-100"
+          >
             {saving ? "Saving..." : "Save"}
           </Button>
         </div>

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { MatchesTable } from "@/components/admin/matches-table";
 import { Trophy } from "lucide-react";
+import { AdminSectionHeader } from "@/components/admin/admin-section-header";
 
 async function getMatches() {
   return db.query.matches.findMany({
@@ -16,16 +17,12 @@ export default async function MatchesPage() {
   const matches = await getMatches();
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Trophy className="h-8 w-8 text-primary" />
-        <div>
-          <h2 className="text-3xl font-bold text-slate-900">Matches</h2>
-          <p className="text-muted-foreground mt-1">
-            Update match scores, statuses, and calculate points
-          </p>
-        </div>
-      </div>
+    <div className="space-y-8 animate-in fade-in duration-300">
+      <AdminSectionHeader
+        title="Matches"
+        subtitle="Update match scores, statuses, and calculate points"
+        icon={Trophy}
+      />
 
       <MatchesTable matches={matches} />
     </div>

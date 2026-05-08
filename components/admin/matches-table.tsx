@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -91,117 +90,147 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
   }
 
   const getStatusBadge = (status: MatchStatus | null) => {
-    if (status === "finished") return <Badge variant="default">Finished</Badge>;
-    if (status === "live") return <Badge variant="destructive">Live</Badge>;
-    return <Badge variant="secondary">Scheduled</Badge>;
+    if (status === "finished") {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[#0a192f] text-white">
+          Finished
+        </span>
+      );
+    }
+
+    if (status === "live") {
+      return (
+        <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-500 text-white animate-pulse">
+          Live
+        </span>
+      );
+    }
+
+    return (
+      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
+        Scheduled
+      </span>
+    );
   };
 
   return (
-    <Card>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-16">#</TableHead>
-            <TableHead>Match</TableHead>
-            <TableHead className="text-center">Result</TableHead>
-            <TableHead className="text-center">Status</TableHead>
-            <TableHead className="text-center">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((match) => (
-            <TableRow key={match.id}>
-              <TableCell className="font-medium">{match.matchNumber}</TableCell>
-              <TableCell>
-                {match.homeTeam.code} vs {match.awayTeam.code}
-              </TableCell>
-              <TableCell className="text-center">
-                {editing === match.id ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <Input
-                      type="number"
-                      min="0"
-                      value={homeScore}
-                      onChange={(e) => setHomeScore(Number(e.target.value))}
-                      className="w-16 text-center"
-                    />
-                    <span>:</span>
-                    <Input
-                      type="number"
-                      min="0"
-                      value={awayScore}
-                      onChange={(e) => setAwayScore(Number(e.target.value))}
-                      className="w-16 text-center"
-                    />
-                  </div>
-                ) : (
-                  <span className="font-medium">
-                    {match.homeScore !== null && match.awayScore !== null
-                      ? `${match.homeScore}:${match.awayScore}`
-                      : "-"}
-                  </span>
-                )}
-              </TableCell>
-              <TableCell className="text-center">
-                {editing === match.id ? (
-                  <div className="flex justify-center">
-                    <Select
-                      value={status}
-                      onValueChange={(value) => setStatus(value as MatchStatus)}
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue placeholder="Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="scheduled">Scheduled</SelectItem>
-                        <SelectItem value="live">Live</SelectItem>
-                        <SelectItem value="finished">Finished</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : (
-                  getStatusBadge(match.status)
-                )}
-              </TableCell>
-              <TableCell className="text-center">
-                {editing === match.id ? (
-                  <div className="flex justify-center gap-2">
-                    <Button
-                      size="sm"
-                      onClick={() => handleSave(match.id)}
-                      variant="default"
-                      disabled={savingMatchId === match.id}
-                    >
-                      {savingMatchId === match.id ? "Saving..." : "Save"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setEditing(null)}
-                      disabled={savingMatchId === match.id}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                ) : (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setEditing(match.id);
-                      setHomeScore(match.homeScore ?? 0);
-                      setAwayScore(match.awayScore ?? 0);
-                      setStatus(match.status ?? "scheduled");
-                    }}
-                  >
-                    Edit
-                  </Button>
-                )}
-              </TableCell>
+    <Card className="rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] overflow-hidden">
+      <div className="overflow-x-auto public-table-scroll">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+              <TableHead className="w-16 text-center p-4 h-auto">#</TableHead>
+              <TableHead className="p-4 h-auto">Match</TableHead>
+              <TableHead className="text-center p-4 h-auto">Result</TableHead>
+              <TableHead className="text-center p-4 h-auto">Status</TableHead>
+              <TableHead className="text-right p-4 h-auto">Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {rows.map((match) => (
+              <TableRow
+                key={match.id}
+                className="hover:bg-slate-50 transition-colors"
+              >
+                <TableCell className="font-mono text-slate-400 font-medium text-center p-4">
+                  {match.matchNumber}
+                </TableCell>
+                <TableCell className="font-medium text-slate-700 p-4">
+                  {match.homeTeam.code} vs {match.awayTeam.code}
+                </TableCell>
+                <TableCell className="text-center p-4">
+                  {editing === match.id ? (
+                    <div className="flex items-center justify-center gap-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        value={homeScore}
+                        onChange={(e) => setHomeScore(Number(e.target.value))}
+                        className="w-16 text-center font-mono focus-visible:ring-[#10b981]/40"
+                      />
+                      <span className="text-slate-300 font-bold">:</span>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={awayScore}
+                        onChange={(e) => setAwayScore(Number(e.target.value))}
+                        className="w-16 text-center font-mono focus-visible:ring-[#10b981]/40"
+                      />
+                    </div>
+                  ) : (
+                    <span className="font-mono font-bold text-[#0a192f]">
+                      {match.homeScore !== null && match.awayScore !== null
+                        ? `${match.homeScore}:${match.awayScore}`
+                        : "-"}
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell className="text-center p-4">
+                  {editing === match.id ? (
+                    <div className="flex justify-center">
+                      <Select
+                        value={status}
+                        onValueChange={(value) =>
+                          setStatus(value as MatchStatus)
+                        }
+                      >
+                        <SelectTrigger className="w-32 border-slate-200 focus:ring-[#10b981]/40">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="scheduled">Scheduled</SelectItem>
+                          <SelectItem value="live">Live</SelectItem>
+                          <SelectItem value="finished">Finished</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ) : (
+                    getStatusBadge(match.status)
+                  )}
+                </TableCell>
+                <TableCell className="p-4">
+                  {editing === match.id ? (
+                    <div className="flex justify-end gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => handleSave(match.id)}
+                        className="bg-[#0a192f] text-white hover:bg-[#0a192f]/90"
+                        disabled={savingMatchId === match.id}
+                      >
+                        {savingMatchId === match.id ? "Saving..." : "Save"}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setEditing(null)}
+                        disabled={savingMatchId === match.id}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-[#0a192f]"
+                        onClick={() => {
+                          setEditing(match.id);
+                          setHomeScore(match.homeScore ?? 0);
+                          setAwayScore(match.awayScore ?? 0);
+                          setStatus(match.status ?? "scheduled");
+                        }}
+                      >
+                        Edit
+                      </Button>
+                    </div>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </Card>
   );
 }

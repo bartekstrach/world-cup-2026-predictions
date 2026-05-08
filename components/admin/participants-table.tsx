@@ -165,55 +165,77 @@ export function ParticipantsTable({
 
   return (
     <>
-      <Card className="p-4 space-y-4">
+      <Card className="rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] overflow-hidden">
         <div className="flex items-center justify-end">
-          <Button onClick={() => setIsCreateOpen(true)}>
+          <Button
+            onClick={() => setIsCreateOpen(true)}
+            className="m-4 inline-flex items-center justify-center gap-2 bg-[#0a192f] text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-[#0a192f]/90"
+          >
             <UserPlus className="mr-2 h-4 w-4" />
             Add Participant
           </Button>
         </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-16">ID</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead className="text-right w-44">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sortedRows.map((p) => (
-              <TableRow key={p.id}>
-                <TableCell className="font-medium">{p.id}</TableCell>
-                <TableCell>{p.name}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {p.email || "-"}
-                </TableCell>
-                <TableCell>
-                  <div className="flex justify-end gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => setEditingParticipant(p)}
-                    >
-                      <Pencil className="mr-1 h-3.5 w-3.5" />
-                      Edit
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => setDeleteTarget(p)}
-                    >
-                      <Trash2 className="mr-1 h-3.5 w-3.5" />
-                      Delete
-                    </Button>
-                  </div>
-                </TableCell>
+        <div className="overflow-x-auto public-table-scroll">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+                <TableHead className="w-16 p-4 h-auto">ID</TableHead>
+                <TableHead className="p-4 h-auto">Name</TableHead>
+                <TableHead className="p-4 h-auto">Email</TableHead>
+                <TableHead className="text-right p-4 h-auto">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {sortedRows.map((p) => (
+                <TableRow
+                  key={p.id}
+                  className="hover:bg-slate-50 transition-colors"
+                >
+                  <TableCell className="font-mono text-slate-400 font-medium p-4">
+                    {p.id}
+                  </TableCell>
+                  <TableCell className="font-medium text-slate-700 p-4">
+                    {p.name}
+                  </TableCell>
+                  <TableCell className="p-4">
+                    {p.email ? (
+                      <a
+                        href={`mailto:${p.email}`}
+                        className="text-[#10b981] hover:underline"
+                      >
+                        {p.email}
+                      </a>
+                    ) : (
+                      <span className="text-slate-400">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="p-4">
+                    <div className="flex items-center justify-end gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="border-slate-200 text-slate-600 hover:bg-slate-50"
+                        onClick={() => setEditingParticipant(p)}
+                      >
+                        <Pencil className="mr-1 h-3.5 w-3.5" />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="bg-red-500 text-white hover:bg-red-600"
+                        onClick={() => setDeleteTarget(p)}
+                      >
+                        <Trash2 className="mr-1 h-3.5 w-3.5" />
+                        Delete
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </Card>
 
       <ParticipantFormDialog
