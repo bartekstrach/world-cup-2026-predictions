@@ -20,7 +20,11 @@ export async function POST(request: NextRequest) {
     const normalizedParticipantName =
       typeof participantName === "string" ? participantName.trim() : "";
 
-    if (!normalizedParticipantName || !stage || !Array.isArray(matchPredictions)) {
+    if (
+      !normalizedParticipantName ||
+      !stage ||
+      !Array.isArray(matchPredictions)
+    ) {
       return NextResponse.json(
         { error: "Missing participant name, stage or predictions" },
         { status: 400 },

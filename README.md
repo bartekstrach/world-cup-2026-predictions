@@ -109,6 +109,41 @@ This project uses a modern full-stack setup built on Next.js and React, with a f
 
 - Add a Match API to get live scores and live updates
 
+## 🔴 Live score sync foundation
+
+The project now includes a provider-agnostic live score sync service with two endpoints:
+
+- `GET /api/matches/live` → returns normalized provider payload (preview mode)
+- `GET /api/matches/live?mode=sync` → runs a sync (admin-authenticated)
+- `POST /api/cron/sync-matches` → cron-safe sync endpoint (secret required)
+
+### Environment variables
+
+- `LIVE_MATCHES_PROVIDER_NAME` (default: `mock`)
+- `LIVE_MATCHES_API_URL` (provider endpoint URL)
+- `LIVE_MATCHES_API_KEY` (optional bearer token)
+- `LIVE_MATCHES_ID_MAP` (JSON map of external match id -> local match number, e.g. `{"ext-123": 1}`)
+- `LIVE_MATCHES_TIMEOUT_MS` (default: `10000`)
+- `LIVE_SYNC_FREQUENCY_MINUTES` (display-only admin hint; default: `1`)
+- `CRON_SYNC_SECRET` (required for cron endpoint auth)
+
+### Sync behavior
+
+- Incoming provider payload is normalized through adapter logic in `lib/live-matches.ts`.
+- Mapping uses provider `matchNumber` first, then `LIVE_MATCHES_ID_MAP` by external id.
+- Sync updates local `matches.status`, `matches.homeScore`, and `matches.awayScore`.
+- Finished matches are never downgraded to non-finished statuses.
+- If a finished result changes, prediction points are recalculated via existing scoring logic.
+
+### Cron usage
+
+Call `POST /api/cron/sync-matches` with one of:
+
+- `Authorization: Bearer <CRON_SYNC_SECRET>`
+- `x-cron-secret: <CRON_SYNC_SECRET>`
+
+The endpoint is idempotent and returns counts for updated matches and recalculated predictions.
+
 ## 🧠 Diagrams
 
 TBD

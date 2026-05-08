@@ -1,6 +1,7 @@
 import { getAdminStats } from "@/lib/admin-stats";
 import { formatDateTime } from "@/lib/date";
 import { getMatchTeamNames } from "@/lib/teams";
+import { LIVE_SYNC_FREQUENCY_MINUTES } from "@/lib/constants";
 import { MissingPredictionsCard } from "@/components/admin/missing-predictions-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -162,6 +163,10 @@ export default async function AdminDashboard() {
           </p>
           <p>
             • Manual entry available in <strong>Manual Entry</strong>
+          </p>
+          <p>
+            • Live score sync frequency: every{" "}
+            <strong>{LIVE_SYNC_FREQUENCY_MINUTES} minute(s)</strong>
           </p>
         </CardContent>
       </Card>

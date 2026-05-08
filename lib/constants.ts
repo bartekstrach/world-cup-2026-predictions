@@ -23,6 +23,21 @@ export const NON_FINISHED_STATUSES: MatchStatus[] = [
 
 export const FINISHED_STATUS: MatchStatus = MATCH_STATUSES.FINISHED;
 
+// Live matches sync
+export const LIVE_MATCHES_PROVIDER_NAME =
+  process.env.LIVE_MATCHES_PROVIDER_NAME ?? "mock";
+export const LIVE_MATCHES_API_URL = process.env.LIVE_MATCHES_API_URL ?? "";
+export const LIVE_MATCHES_API_KEY = process.env.LIVE_MATCHES_API_KEY ?? "";
+export const LIVE_MATCHES_ID_MAP = process.env.LIVE_MATCHES_ID_MAP ?? "{}";
+export const LIVE_MATCHES_TIMEOUT_MS = Number(
+  process.env.LIVE_MATCHES_TIMEOUT_MS ?? "10000",
+);
+export const LIVE_SYNC_FREQUENCY_MINUTES = Number(
+  process.env.LIVE_SYNC_FREQUENCY_MINUTES ?? "1",
+);
+
+export const CRON_SYNC_SECRET = process.env.CRON_SYNC_SECRET ?? "";
+
 export type MatchStatus = (typeof MATCH_STATUSES)[keyof typeof MATCH_STATUSES];
 
 export const SUBMISSION_STAGES = [

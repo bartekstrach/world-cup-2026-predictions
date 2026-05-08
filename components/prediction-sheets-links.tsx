@@ -45,7 +45,9 @@ export function PredictionSheetsLinks({ data }: PredictionSheetsLinksProps) {
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {(entry.updatedAt ?? entry.createdAt)
-                  ? formatDateTime({ date: entry.updatedAt ?? entry.createdAt! })
+                  ? formatDateTime({
+                      date: entry.updatedAt ?? entry.createdAt!,
+                    })
                   : "-"}
               </TableCell>
               <TableCell>

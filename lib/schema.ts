@@ -91,19 +91,22 @@ export const predictions = pgTable(
   }),
 );
 
-export const predictionSubmissions = pgTable("prediction_submissions", {
-  id: serial("id").primaryKey(),
-  participantId: integer("participant_id")
-    .references(() => participants.id)
-    .notNull(),
-  stage: varchar("stage", { length: 50 }).notNull(),
-  blobUrl: varchar("blob_url", { length: 2048 }).notNull(),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-},
-(table) => ({
-  uniqueParticipantStage: unique().on(table.participantId, table.stage),
-}));
+export const predictionSubmissions = pgTable(
+  "prediction_submissions",
+  {
+    id: serial("id").primaryKey(),
+    participantId: integer("participant_id")
+      .references(() => participants.id)
+      .notNull(),
+    stage: varchar("stage", { length: 50 }).notNull(),
+    blobUrl: varchar("blob_url", { length: 2048 }).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    uniqueParticipantStage: unique().on(table.participantId, table.stage),
+  }),
+);
 
 export const admins = pgTable("admins", {
   id: serial("id").primaryKey(),
