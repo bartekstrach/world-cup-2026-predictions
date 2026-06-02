@@ -8,6 +8,7 @@ export const getShortWeekday = ({
   options?: Intl.DateTimeFormatOptions;
 }) => {
   const weekday = new Intl.DateTimeFormat(locale, {
+    timeZone: "Europe/Warsaw",
     weekday: "short",
     ...options,
   })
@@ -20,11 +21,16 @@ export const getShortWeekday = ({
 };
 
 export const formatDateTime = ({ date }: { date: Date }) => {
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const parts = new Intl.DateTimeFormat("pl-PL", {
+    timeZone: "Europe/Warsaw",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
 
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
 
-  return `${day}.${month} ${hours}:${minutes}`;
+  return `${map.day}.${map.month} ${map.hour}:${map.minute}`;
 };
