@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useTranslation } from "react-i18next";
 
 export interface ParticipantFormValues {
   name: string;
@@ -40,13 +41,17 @@ export function ParticipantFormDialog({
   onOpenChange,
   onSubmit,
 }: ParticipantFormDialogProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState(initialValues?.name ?? "");
   const [email, setEmail] = useState(initialValues?.email ?? "");
   const [error, setError] = useState<string | null>(null);
 
   const title = useMemo(
-    () => (mode === "create" ? "Add Participant" : "Edit Participant"),
-    [mode],
+    () =>
+      mode === "create"
+        ? t("forms.participantDialog.addTitle")
+        : t("forms.participantDialog.editTitle"),
+    [mode, t],
   );
 
   useEffect(() => {
@@ -63,7 +68,7 @@ export function ParticipantFormDialog({
     const normalizedEmail = normalizeEmail(email);
 
     if (!trimmedName) {
-      setError("Name is required.");
+      setError(t("forms.participantDialog.nameRequired"));
       return;
     }
 
@@ -71,7 +76,7 @@ export function ParticipantFormDialog({
       normalizedEmail &&
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
     ) {
-      setError("Email format is invalid.");
+      setError(t("forms.participantDialog.emailInvalid"));
       return;
     }
 
@@ -89,31 +94,35 @@ export function ParticipantFormDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             {mode === "create"
-              ? "Create a new participant for the competition."
-              : "Update participant details."}
+              ? t("forms.participantDialog.createDescription")
+              : t("forms.participantDialog.editDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="participant-name">Name</Label>
+            <Label htmlFor="participant-name">
+              {t("forms.participantDialog.name")}
+            </Label>
             <Input
               id="participant-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="John Doe"
+              placeholder={t("forms.participantDialog.namePlaceholder")}
               disabled={submitting}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="participant-email">Email (optional)</Label>
+            <Label htmlFor="participant-email">
+              {t("forms.participantDialog.emailOptional")}
+            </Label>
             <Input
               id="participant-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="john@example.com"
+              placeholder={t("forms.participantDialog.emailPlaceholder")}
               disabled={submitting}
             />
           </div>
@@ -127,16 +136,16 @@ export function ParticipantFormDialog({
               onClick={() => onOpenChange(false)}
               disabled={submitting}
             >
-              Cancel
+              {t("forms.common.cancel")}
             </Button>
             <Button type="submit" disabled={submitting}>
               {submitting
                 ? mode === "create"
-                  ? "Creating..."
-                  : "Saving..."
+                  ? t("forms.common.creating")
+                  : t("forms.common.saving")
                 : mode === "create"
-                  ? "Create"
-                  : "Save"}
+                  ? t("forms.common.create")
+                  : t("forms.common.save")}
             </Button>
           </DialogFooter>
         </form>

@@ -10,26 +10,23 @@ import {
 } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/date";
 import type { PredictionSheetLink } from "@/lib/types";
+import { getT } from "@/lib/i18n/server";
 
 interface PredictionSheetsLinksProps {
   data: PredictionSheetLink[];
 }
 
-const STAGE_LABELS: Record<string, string> = {
-  group: "Group Stage",
-  round_16: "Round of 16",
-  quarter: "Quarter-finals",
-  semi: "Semi-finals",
-  final: "Final",
-};
-
 const STAGE_ORDER = ["group", "round_16", "quarter", "semi", "final"];
 
-export function PredictionSheetsLinks({ data }: PredictionSheetsLinksProps) {
+export async function PredictionSheetsLinks({
+  data,
+}: PredictionSheetsLinksProps) {
+  const t = await getT();
+
   if (!data.length) {
     return (
       <Card className="p-4 text-sm text-muted-foreground">
-        No prediction sheets available yet.
+        {t("predictionSheets.noSheets")}
       </Card>
     );
   }
@@ -41,7 +38,7 @@ export function PredictionSheetsLinks({ data }: PredictionSheetsLinksProps) {
 
     return {
       stage,
-      label: STAGE_LABELS[stage] ?? stage,
+      label: t(`predictionSheets.stages.${stage}`),
       entries,
     };
   }).filter((group) => group.entries.length > 0);
@@ -61,11 +58,13 @@ export function PredictionSheetsLinks({ data }: PredictionSheetsLinksProps) {
                 <TableHeader>
                   <TableRow className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                     <TableHead className="p-4 h-auto w-1/3">
-                      Participant
+                      {t("predictionSheets.headers.participant")}
                     </TableHead>
-                    <TableHead className="p-4 h-auto w-1/3">Uploaded</TableHead>
+                    <TableHead className="p-4 h-auto w-1/3">
+                      {t("predictionSheets.headers.uploaded")}
+                    </TableHead>
                     <TableHead className="p-4 h-auto w-1/3 text-right">
-                      Sheet
+                      {t("predictionSheets.headers.sheet")}
                     </TableHead>
                   </TableRow>
                 </TableHeader>
@@ -93,7 +92,7 @@ export function PredictionSheetsLinks({ data }: PredictionSheetsLinksProps) {
                           className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0a192f] hover:text-[#10b981] transition-colors group"
                         >
                           <span className="underline decoration-slate-200 group-hover:decoration-[#10b981]/40 underline-offset-4">
-                            Open sheet
+                            {t("predictionSheets.openSheet")}
                           </span>
                           <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#10b981] transition-colors" />
                         </a>

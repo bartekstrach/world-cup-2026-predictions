@@ -9,10 +9,12 @@ import {
   getPredictionsData,
 } from "@/lib/predictions";
 import { getLeaderboard } from "@/lib/scoring";
+import { getT } from "@/lib/i18n/server";
 
 export const revalidate = 60;
 
 export default async function MainPage() {
+  const t = await getT();
   const [
     leaderboard,
     predictionsData,
@@ -30,7 +32,7 @@ export default async function MainPage() {
       <section className="space-y-4">
         <div className="min-w-0 w-full">
           <h2 className="text-xl sm:text-2xl font-bold text-[#0a192f] leading-tight">
-            Results
+            {t("public.results")}
           </h2>
           <div className="text-slate-500 mt-1 text-sm sm:text-base">
             <LastFinishedMatches />
@@ -45,7 +47,7 @@ export default async function MainPage() {
 
       <section className="space-y-4 pt-4">
         <h2 className="text-xl sm:text-2xl font-bold text-[#0a192f]">
-          Predictions
+          {t("public.predictions")}
         </h2>
 
         <PredictionsGrid data={predictionsData} />
@@ -53,10 +55,10 @@ export default async function MainPage() {
         <div className="space-y-6 pt-8 border-t border-slate-200/60 mt-8">
           <div className="space-y-1">
             <h2 className="text-xl sm:text-2xl font-bold text-[#0a192f]">
-              Uploaded prediction sheets
+              {t("public.uploadedPredictionSheets")}
             </h2>
             <p className="text-sm text-slate-500">
-              Participant prediction blobs grouped by stage
+              {t("public.predictionSheetsSubtitle")}
             </p>
           </div>
           <PredictionSheetsLinks data={predictionSheetLinks} />

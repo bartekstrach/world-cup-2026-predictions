@@ -21,6 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface ParticipantOption {
   id: number;
@@ -62,6 +63,7 @@ export function PredictionsEditor({
   matches: MatchOption[];
   predictions: PredictionRow[];
 }) {
+  const { t } = useTranslation();
   const [participantFilter, setParticipantFilter] = useState<string>("all");
   const [matchFilter, setMatchFilter] = useState<string>("all");
   const [saving, setSaving] = useState(false);
@@ -128,8 +130,8 @@ export function PredictionsEditor({
     );
 
     if (updates.length === 0) {
-      toast.error("No changes", {
-        description: "Edit scores before saving.",
+      toast.error(t("predictionsEditor.noChanges"), {
+        description: t("predictionsEditor.editBeforeSaving"),
       });
       return;
     }
@@ -150,7 +152,9 @@ export function PredictionsEditor({
 
           const data = await response.json();
           if (!response.ok) {
-            throw new Error(data?.error || "Failed to update prediction");
+            throw new Error(
+              data?.error || t("predictionsEditor.failedSingleFallback"),
+            );
           }
 
           return data.prediction as {
@@ -182,13 +186,18 @@ export function PredictionsEditor({
         }),
       );
 
-      toast.success("Predictions updated", {
-        description: `${responses.length} prediction${responses.length > 1 ? "s" : ""} saved successfully.`,
+      toast.success(t("predictionsEditor.updated"), {
+        description: t("predictionsEditor.updatedDescription", {
+          count: responses.length,
+          suffix: responses.length > 1 ? "s" : "",
+        }),
       });
     } catch (error) {
-      toast.error("Failed to update predictions", {
+      toast.error(t("predictionsEditor.failed"), {
         description:
-          error instanceof Error ? error.message : "Please try again.",
+          error instanceof Error
+            ? error.message
+            : t("predictionsEditor.tryAgain"),
       });
     } finally {
       setSaving(false);
@@ -199,7 +208,7 @@ export function PredictionsEditor({
     <Card className="rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] h-[700px] flex flex-col">
       <CardHeader className="p-6 border-b border-slate-100">
         <CardTitle className="text-lg font-bold text-[#0a192f]">
-          Prediction Editor
+          {t("predictionsEditor.title")}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0 flex flex-col flex-1">
@@ -210,7 +219,7 @@ export function PredictionsEditor({
                 htmlFor="participant-filter"
                 className="text-sm font-medium text-slate-600"
               >
-                Participant
+                {t("predictionsEditor.participant")}
               </Label>
               <Select
                 value={participantFilter}
@@ -220,10 +229,14 @@ export function PredictionsEditor({
                   id="participant-filter"
                   className="border-slate-200 rounded-lg shadow-sm py-2 px-3 focus:ring-[#10b981] focus:border-[#10b981] bg-white text-slate-700"
                 >
-                  <SelectValue placeholder="All participants" />
+                  <SelectValue
+                    placeholder={t("predictionsEditor.allParticipants")}
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All participants</SelectItem>
+                  <SelectItem value="all">
+                    {t("predictionsEditor.allParticipants")}
+                  </SelectItem>
                   {participants.map((participant) => (
                     <SelectItem
                       key={participant.id}
@@ -241,20 +254,24 @@ export function PredictionsEditor({
                 htmlFor="match-filter"
                 className="text-sm font-medium text-slate-600"
               >
-                Match
+                {t("predictionsEditor.match")}
               </Label>
               <Select value={matchFilter} onValueChange={setMatchFilter}>
                 <SelectTrigger
                   id="match-filter"
                   className="border-slate-200 rounded-lg shadow-sm py-2 px-3 focus:ring-[#10b981] focus:border-[#10b981] bg-white text-slate-700"
                 >
-                  <SelectValue placeholder="All matches" />
+                  <SelectValue
+                    placeholder={t("predictionsEditor.allMatches")}
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All matches</SelectItem>
+                  <SelectItem value="all">
+                    {t("predictionsEditor.allMatches")}
+                  </SelectItem>
                   {matches.map((match) => (
                     <SelectItem key={match.id} value={match.id.toString()}>
-                      #{match.matchNumber} {match.homeTeamCode} vs{" "}
+                      #{match.matchNumber} {match.homeTeamCode} {t("common.vs")}{" "}
                       {match.awayTeamCode}
                     </SelectItem>
                   ))}
@@ -268,12 +285,24 @@ export function PredictionsEditor({
           <Table className="min-w-[800px]">
             <TableHeader className="sticky top-0 bg-white/90 backdrop-blur-sm z-10">
               <TableRow className="bg-slate-50/90 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                <TableHead className="p-4 h-auto">Participant</TableHead>
-                <TableHead className="w-16 p-4 h-auto">#</TableHead>
-                <TableHead className="p-4 h-auto">Match</TableHead>
-                <TableHead className="text-center p-4 h-auto">Score</TableHead>
-                <TableHead className="text-center p-4 h-auto">Points</TableHead>
-                <TableHead className="text-right p-4 h-auto">Updated</TableHead>
+                <TableHead className="p-4 h-auto">
+                  {t("predictionsEditor.headers.participant")}
+                </TableHead>
+                <TableHead className="w-16 p-4 h-auto">
+                  {t("predictionsEditor.headers.matchNumber")}
+                </TableHead>
+                <TableHead className="p-4 h-auto">
+                  {t("predictionsEditor.headers.match")}
+                </TableHead>
+                <TableHead className="text-center p-4 h-auto">
+                  {t("predictionsEditor.headers.score")}
+                </TableHead>
+                <TableHead className="text-center p-4 h-auto">
+                  {t("predictionsEditor.headers.points")}
+                </TableHead>
+                <TableHead className="text-right p-4 h-auto">
+                  {t("predictionsEditor.headers.updated")}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -283,7 +312,7 @@ export function PredictionsEditor({
                     colSpan={6}
                     className="text-center text-slate-500 py-8"
                   >
-                    No predictions found for current filters.
+                    {t("predictionsEditor.noneFound")}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -308,7 +337,7 @@ export function PredictionsEditor({
                         #{row.matchNumber}
                       </TableCell>
                       <TableCell className="p-4 font-medium text-slate-700">
-                        {row.homeTeamCode} vs {row.awayTeamCode}
+                        {row.homeTeamCode} {t("common.vs")} {row.awayTeamCode}
                       </TableCell>
                       <TableCell className="p-4 text-center">
                         <div className="flex items-center justify-center gap-2">
@@ -359,15 +388,24 @@ export function PredictionsEditor({
 
         <div className="p-4 border-t border-slate-100 flex items-center justify-between bg-slate-50 rounded-b-2xl">
           <p className="text-sm text-slate-500 font-medium">
-            {editedCount} edited row{editedCount === 1 ? "" : "s"} •{" "}
-            {shownCount} shown prediction{shownCount === 1 ? "" : "s"}
+            {t("predictionsEditor.editedRows", {
+              count: editedCount,
+              suffix: editedCount === 1 ? "" : "s",
+            })}{" "}
+            •{" "}
+            {t("predictionsEditor.shownPredictions", {
+              count: shownCount,
+              suffix: shownCount === 1 ? "" : "s",
+            })}
           </p>
           <Button
             onClick={saveSelected}
             disabled={saving || editedCount === 0}
             className="bg-slate-400 text-white px-6 py-2 rounded-xl text-sm font-medium disabled:opacity-100"
           >
-            {saving ? "Saving..." : "Save"}
+            {saving
+              ? t("predictionsEditor.saving")
+              : t("predictionsEditor.save")}
           </Button>
         </div>
       </CardContent>

@@ -4,12 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AdminTabsNav } from "@/components/admin/admin-tabs-nav";
 import { Shield, LogOut } from "lucide-react";
+import { getT } from "@/lib/i18n/server";
 
 export default async function AdminDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const t = await getT();
   const session = await auth();
 
   if (!session) {
@@ -22,12 +24,21 @@ export default async function AdminDashboardLayout({
   }
 
   const navItems = [
-    { href: "/admin", label: "Dashboard" },
-    { href: "/admin/matches", label: "Matches" },
-    { href: "/admin/participants", label: "Participants" },
-    { href: "/admin/predictions", label: "Predictions" },
-    { href: "/admin/predictions/manual", label: "Manual Entry" },
-    { href: "/admin/predictions/edit", label: "Edit Predictions" },
+    { href: "/admin", label: t("admin.layout.nav.dashboard") },
+    { href: "/admin/matches", label: t("admin.layout.nav.matches") },
+    {
+      href: "/admin/participants",
+      label: t("admin.layout.nav.participants"),
+    },
+    { href: "/admin/predictions", label: t("admin.layout.nav.predictions") },
+    {
+      href: "/admin/predictions/manual",
+      label: t("admin.layout.nav.manualEntry"),
+    },
+    {
+      href: "/admin/predictions/edit",
+      label: t("admin.layout.nav.editPredictions"),
+    },
   ];
 
   return (
@@ -40,7 +51,7 @@ export default async function AdminDashboardLayout({
                 <Shield className="h-5 w-5 text-[#10b981]" />
               </div>
               <h1 className="text-xl md:text-2xl font-bold text-[#0a192f] tracking-tight">
-                Admin Panel
+                {t("admin.layout.title")}
               </h1>
             </div>
             <div className="flex items-center gap-3">
@@ -58,7 +69,9 @@ export default async function AdminDashboardLayout({
                   className="text-slate-600 hover:text-red-600"
                 >
                   <LogOut className="h-4 w-4 md:h-5 md:w-5" />
-                  <span className="hidden sm:inline">Sign Out</span>
+                  <span className="hidden sm:inline">
+                    {t("admin.layout.signOut")}
+                  </span>
                 </Button>
               </form>
             </div>

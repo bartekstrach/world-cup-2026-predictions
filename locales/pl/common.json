@@ -1,0 +1,300 @@
+{
+  "common": {
+    "and": "i",
+    "close": "Zamknij",
+    "previewAlt": "Podgląd",
+    "vs": "vs"
+  },
+  "app": {
+    "metadata": {
+      "title": "Typowanie FIFA World Cup 2026",
+      "description": "Prywatna liga typerska"
+    }
+  },
+  "public": {
+    "headerTitle": "FIFA World Cup 2026",
+    "results": "Wyniki",
+    "predictions": "Typy",
+    "uploadedPredictionSheets": "Wgrane karty typów",
+    "predictionSheetsSubtitle": "Pliki typów uczestników pogrupowane według etapu"
+  },
+  "lastFinishedMatches": {
+    "after": "Po meczach {{matchesSummary}} ({{formattedMatchDate}})"
+  },
+  "nextMatchBanner": {
+    "label": "Następne mecze: {{teamsLabel}} ({{formattedMatchDate}})"
+  },
+  "leaderboard": {
+    "rank": "Miejsce",
+    "participant": "Uczestnik",
+    "points": "Punkty"
+  },
+  "predictionSheets": {
+    "noSheets": "Brak dostępnych kart typów.",
+    "headers": {
+      "participant": "Uczestnik",
+      "uploaded": "Wgrano",
+      "sheet": "Karta"
+    },
+    "openSheet": "Otwórz kartę",
+    "stages": {
+      "group": "Faza grupowa",
+      "round_16": "1/8 finału",
+      "quarter": "Ćwierćfinały",
+      "semi": "Półfinały",
+      "final": "Finał"
+    }
+  },
+  "predictionsGrid": {
+    "headers": {
+      "group": "Gr.",
+      "date": "Data",
+      "match": "Mecz",
+      "result": "Wynik"
+    }
+  },
+  "admin": {
+    "login": {
+      "title": "Logowanie administratora",
+      "description": "Wprowadź dane, aby wejść do panelu administratora",
+      "email": "E-mail",
+      "password": "Hasło",
+      "emailPlaceholder": "admin@test.com",
+      "signIn": "Zaloguj"
+    },
+    "layout": {
+      "title": "Panel administratora",
+      "signOut": "Wyloguj",
+      "viewPublicSite": "Zobacz stronę publiczną",
+      "nav": {
+        "dashboard": "Dashboard",
+        "matches": "Mecze",
+        "participants": "Uczestnicy",
+        "predictions": "Typy",
+        "manualEntry": "Ręczne wprowadzanie",
+        "editPredictions": "Edytuj typy"
+      }
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "subtitle": "Przegląd rozgrywek",
+      "cards": {
+        "totalMatches": {
+          "label": "Wszystkie mecze",
+          "description": "W turnieju"
+        },
+        "finished": { "label": "Zakończone", "description": "Ukończone mecze" },
+        "live": { "label": "Na żywo", "description": "Trwające mecze" },
+        "participants": {
+          "label": "Uczestnicy",
+          "description": "Aktywni gracze"
+        },
+        "predictions": {
+          "label": "Typy",
+          "description": "Wszystkie przesłane"
+        },
+        "teams": {
+          "label": "Drużyny",
+          "description": "Uczestniczące reprezentacje"
+        },
+        "missing": {
+          "label": "Braki",
+          "description": "Braki dla zaplanowanych"
+        }
+      },
+      "nextMatchInsight": "Podgląd następnego meczu",
+      "kickoff": "Początek: {{date}}",
+      "upcomingStage": "Nadchodząca zmiana etapu: {{stage}}",
+      "noUpcomingTitle": "Brak zaplanowanych nadchodzących meczów",
+      "noUpcomingDescription": "Dodaj lub zaplanuj kolejne mecze, aby zobaczyć najbliższy termin.",
+      "quickActions": "Szybkie akcje",
+      "actions": {
+        "updateResults": "Aktualizuj wyniki meczów w sekcji {{section}}",
+        "addParticipants": "Dodawaj uczestników w sekcji {{section}}",
+        "uploadFiles": "Wgrywaj pliki typów w sekcji {{section}}",
+        "manualEntry": "Ręczne wprowadzanie dostępne w sekcji {{section}}",
+        "liveSync": "Synchronizacja wyników na żywo: co {{minutes}} min"
+      }
+    },
+    "matchesPage": {
+      "title": "Mecze",
+      "subtitle": "Aktualizuj wyniki, statusy i przeliczaj punkty"
+    },
+    "participantsPage": {
+      "title": "Uczestnicy",
+      "subtitle": "Zarządzaj uczestnikami rozgrywek"
+    },
+    "predictionsPage": {
+      "title": "Wgrywanie typów",
+      "subtitle": "Wgrywaj zeskanowane karty typów z OCR",
+      "expectedFormat": "Oczekiwany format",
+      "sampleFormat": "Imię i nazwisko: Jan Kowalski\n\n15.06 Poniedziałek\nA 15:00 Brazylia 2:1 Niemcy\nA 18:00 Japonia 1:1 Meksyk\n\n16.06 Wtorek\nA 15:00 Brazylia 2:0 Japonia\nB 18:00 Hiszpania 3:0 Anglia\n...",
+      "format": {
+        "participantTop": "Imię uczestnika na górze",
+        "oneMatchPerLine": "Jeden mecz w linii z wynikiem",
+        "handwritten": "Najlepiej działają czytelnie napisane wyniki"
+      }
+    },
+    "editPredictionsPage": {
+      "title": "Edycja typów",
+      "subtitle": "Filtruj po uczestniku lub meczu, zmieniaj wyniki i zapisuj zmiany"
+    },
+    "manualPage": {
+      "title": "Ręczne wprowadzanie",
+      "subtitle": "Wprowadzaj typy ręcznie dla uczestników"
+    },
+    "missingPredictions": {
+      "title": "Brakujące typy (zaplanowane mecze)",
+      "gaps": "Luki uczestnik × zaplanowany mecz",
+      "topByParticipant": "Najwięcej wg uczestnika",
+      "topByMatch": "Najwięcej wg meczu",
+      "none": "Brak brakujących typów."
+    }
+  },
+  "forms": {
+    "common": {
+      "cancel": "Anuluj",
+      "save": "Zapisz",
+      "create": "Utwórz",
+      "saving": "Zapisywanie...",
+      "creating": "Tworzenie...",
+      "deleting": "Usuwanie..."
+    },
+    "participantDialog": {
+      "addTitle": "Dodaj uczestnika",
+      "editTitle": "Edytuj uczestnika",
+      "createDescription": "Utwórz nowego uczestnika rozgrywek.",
+      "editDescription": "Zaktualizuj dane uczestnika.",
+      "name": "Nazwa",
+      "emailOptional": "E-mail (opcjonalnie)",
+      "namePlaceholder": "Jan Kowalski",
+      "emailPlaceholder": "jan@example.com",
+      "nameRequired": "Nazwa jest wymagana.",
+      "emailInvalid": "Nieprawidłowy format e-maila."
+    }
+  },
+  "participantsTable": {
+    "addParticipant": "Dodaj uczestnika",
+    "headers": {
+      "id": "ID",
+      "name": "Nazwa",
+      "email": "E-mail",
+      "actions": "Akcje"
+    },
+    "edit": "Edytuj",
+    "delete": "Usuń",
+    "createSuccess": "Uczestnik utworzony",
+    "createFailed": "Tworzenie nieudane",
+    "createFallback": "Nie udało się utworzyć uczestnika",
+    "updateSuccess": "Uczestnik zaktualizowany",
+    "updateFailed": "Aktualizacja nieudana",
+    "updateFallback": "Nie udało się zaktualizować uczestnika",
+    "deleteSuccess": "Uczestnik usunięty",
+    "deleteFailed": "Usuwanie nieudane",
+    "deleteFallback": "Nie udało się usunąć uczestnika",
+    "deleteTitle": "Usunąć uczestnika?",
+    "deleteDescription": "To trwale usunie {{name}}. Usunięcie jest możliwe tylko, gdy nie ma powiązanych typów ani wgranych kart."
+  },
+  "matchesTable": {
+    "headers": {
+      "match": "Mecz",
+      "result": "Wynik",
+      "status": "Status",
+      "actions": "Akcje"
+    },
+    "status": {
+      "finished": "Zakończony",
+      "live": "Na żywo",
+      "scheduled": "Zaplanowany"
+    },
+    "placeholders": { "status": "Status" },
+    "save": "Zapisz",
+    "edit": "Edytuj",
+    "saving": "Zapisywanie...",
+    "cancel": "Anuluj",
+    "updated": "Mecz zaktualizowany!",
+    "updatedFinished": "Punkty zostały przeliczone.",
+    "updatedLive": "Status meczu i wynik zapisane.",
+    "failed": "Nie udało się zaktualizować meczu",
+    "tryAgain": "Spróbuj ponownie.",
+    "requestFailed": "Żądanie nie powiodło się"
+  },
+  "manualPredictionForm": {
+    "title": "Ręczne wprowadzanie typów",
+    "participant": "Uczestnik",
+    "selectParticipant": "Wybierz uczestnika",
+    "noPredictions": "Brak typów",
+    "addAtLeastOne": "Dodaj co najmniej jeden typ",
+    "saved": "Typy zapisane!",
+    "savedDescription": "Zapisano {{count}} typów.",
+    "failed": "Nie udało się zapisać typów",
+    "tryAgainLater": "Spróbuj ponownie później.",
+    "entered": "Wprowadzono {{count}} typów",
+    "saveAll": "Zapisz wszystkie typy"
+  },
+  "predictionsEditor": {
+    "title": "Edytor typów",
+    "participant": "Uczestnik",
+    "match": "Mecz",
+    "allParticipants": "Wszyscy uczestnicy",
+    "allMatches": "Wszystkie mecze",
+    "headers": {
+      "participant": "Uczestnik",
+      "matchNumber": "#",
+      "match": "Mecz",
+      "score": "Wynik",
+      "points": "Punkty",
+      "updated": "Zaktualizowano"
+    },
+    "noneFound": "Brak typów dla bieżących filtrów.",
+    "noChanges": "Brak zmian",
+    "editBeforeSaving": "Zmień wyniki przed zapisem.",
+    "updated": "Typy zaktualizowane",
+    "updatedDescription": "Zapisano {{count}} typ{{suffix}}.",
+    "failed": "Nie udało się zaktualizować typów",
+    "failedSingleFallback": "Nie udało się zaktualizować typu",
+    "tryAgain": "Spróbuj ponownie.",
+    "editedRows": "{{count}} edytowany{{suffix}} wiersz",
+    "shownPredictions": "{{count}} pokazany{{suffix}} typ",
+    "save": "Zapisz",
+    "saving": "Zapisywanie..."
+  },
+  "predictionsUpload": {
+    "step1": "1. Wgraj kartę typów",
+    "participantNameRequired": "Nazwa uczestnika jest wymagana",
+    "fillParticipantBeforeFile": "Uzupełnij nazwę uczestnika przed wyborem pliku.",
+    "participantName": "Nazwa uczestnika",
+    "tournamentStage": "Etap turnieju",
+    "selectStage": "Wybierz etap",
+    "selectScannedImage": "Wybierz zeskanowany obraz",
+    "fillParticipantFirst": "Najpierw wpisz nazwę uczestnika, aby włączyć wybór pliku.",
+    "preview": "Podgląd:",
+    "processing": "Przetwarzanie...",
+    "extractScores": "Wyodrębnij wyniki",
+    "uploadFailed": "Wgrywanie nieudane",
+    "uploadFallback": "Wgrywanie nieudane",
+    "unknownError": "Nieznany błąd",
+    "imageProcessed": "Obraz przetworzony pomyślnie!",
+    "scoresExtracted": "Wyodrębniono {{count}} wyników",
+    "error": "Błąd:",
+    "savedSuccess": "✓ Typy zapisane pomyślnie!",
+    "step2": "2. Sprawdź i popraw typy",
+    "scoresFilled": "{{filled}} / {{total}} uzupełnionych wyników",
+    "scoresExtractedLabel": "Wyodrębnione wyniki:",
+    "totalMatches": "Wszystkie mecze:",
+    "someMissing": "⚠ Brakuje części wyników - uzupełnij je ręcznie poniżej",
+    "matchPredictions": "Typy meczowe:",
+    "headers": {
+      "match": "Mecz",
+      "prediction": "Typ",
+      "status": "Status"
+    },
+    "empty": "Puste",
+    "showExtracted": "Pokaż wyodrębniony tekst",
+    "saveCount": "Zapisz {{count}} typów",
+    "predictionsSaved": "Typy zapisane!",
+    "predictionsSavedDesc": "Zapisano {{count}} typów.",
+    "confirmFailed": "Potwierdzenie nieudane",
+    "saveFailed": "Nie udało się zapisać typów"
+  }
+}

@@ -1,12 +1,14 @@
 import type { NextMatchBannerData } from "@/lib/types";
 import { formatDateTime, getShortWeekday } from "@/lib/date";
 import { getMatchTeamNames } from "@/lib/teams";
+import { getT } from "@/lib/i18n/server";
 
 interface NextMatchBannerProps {
   data: NextMatchBannerData;
 }
 
-export function NextMatchBanner({ data }: NextMatchBannerProps) {
+export async function NextMatchBanner({ data }: NextMatchBannerProps) {
+  const t = await getT();
   const teamsLabel = data.matches
     .map((match) =>
       getMatchTeamNames({
@@ -15,7 +17,7 @@ export function NextMatchBanner({ data }: NextMatchBannerProps) {
         awayTeamCode: match.awayTeamCode,
       }),
     )
-    .join(" and ");
+    .join(` ${t("common.and")} `);
 
   const formattedMatchDate = `${getShortWeekday({
     date: data.matchDate,
@@ -25,7 +27,10 @@ export function NextMatchBanner({ data }: NextMatchBannerProps) {
 
   return (
     <p className="text-[#10b981] font-medium mt-1 text-sm sm:text-base">
-      {`Next matches: ${teamsLabel} (${formattedMatchDate})`}
+      {t("nextMatchBanner.label", {
+        teamsLabel,
+        formattedMatchDate,
+      })}
     </p>
   );
 }

@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { MatchesTable } from "@/components/admin/matches-table";
 import { Trophy } from "lucide-react";
 import { AdminSectionHeader } from "@/components/admin/admin-section-header";
+import { getT } from "@/lib/i18n/server";
 
 async function getMatches() {
   return db.query.matches.findMany({
@@ -14,13 +15,14 @@ async function getMatches() {
 }
 
 export default async function MatchesPage() {
+  const t = await getT();
   const matches = await getMatches();
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
       <AdminSectionHeader
-        title="Matches"
-        subtitle="Update match scores, statuses, and calculate points"
+        title={t("admin.matchesPage.title")}
+        subtitle={t("admin.matchesPage.subtitle")}
         icon={Trophy}
       />
 

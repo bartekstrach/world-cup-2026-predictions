@@ -1,10 +1,12 @@
 import { Trophy } from "lucide-react";
+import { getT } from "@/lib/i18n/server";
 
-export default function PublicLayout({
+export default async function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const t = await getT();
   return (
     <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-[#f0f4f8] via-white to-[#e6f2ef] text-slate-800 pb-12">
       <header className="border-b border-slate-200/60">
@@ -14,7 +16,7 @@ export default function PublicLayout({
               <Trophy className="h-6 w-6 text-[#10b981]" />
             </div>
             <h1 className="text-2xl md:text-3xl font-bold text-[#0a192f] tracking-tight">
-              2026 FIFA World Cup
+              {t("public.headerTitle")}
             </h1>
           </div>
         </div>

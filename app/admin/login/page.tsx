@@ -12,8 +12,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Shield } from "lucide-react";
+import { getT } from "@/lib/i18n/server";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const t = await getT();
+
   async function handleLogin(formData: FormData) {
     "use server";
 
@@ -41,27 +44,25 @@ export default function LoginPage() {
         <CardHeader className="space-y-1">
           <div className="flex items-center gap-2 mb-2">
             <Shield className="h-6 w-6 text-primary" />
-            <CardTitle className="text-2xl">Admin Login</CardTitle>
+            <CardTitle className="text-2xl">{t("admin.login.title")}</CardTitle>
           </div>
-          <CardDescription>
-            Enter your credentials to access the admin panel
-          </CardDescription>
+          <CardDescription>{t("admin.login.description")}</CardDescription>
         </CardHeader>
         <CardContent>
           <form action={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("admin.login.email")}</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
-                placeholder="admin@test.com"
+                placeholder={t("admin.login.emailPlaceholder")}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("admin.login.password")}</Label>
               <Input
                 id="password"
                 name="password"
@@ -72,7 +73,7 @@ export default function LoginPage() {
             </div>
 
             <Button type="submit" className="w-full">
-              Sign In
+              {t("admin.login.signIn")}
             </Button>
           </form>
         </CardContent>

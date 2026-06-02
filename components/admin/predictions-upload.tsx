@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import { SUBMISSION_STAGES, type SubmissionStage } from "@/lib/constants";
+import { useTranslation } from "react-i18next";
 
 interface TeamInfo {
   id: number;
@@ -34,15 +35,8 @@ interface PreviewData {
 
 const STAGE_OPTIONS = [...SUBMISSION_STAGES] as const;
 
-const STAGE_LABELS: Record<SubmissionStage, string> = {
-  group: "Group Stage",
-  round_16: "Round of 16",
-  quarter: "Quarter-finals",
-  semi: "Semi-finals",
-  final: "Final",
-};
-
 export function PredictionsUpload() {
+  const { t } = useTranslation();
   const [file, setFile] = useState<File | null>(null);
   const [uploadStage, setUploadStage] = useState<SubmissionStage | "">("");
   const [uploadParticipantName, setUploadParticipantName] = useState("");
@@ -55,8 +49,8 @@ export function PredictionsUpload() {
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (!uploadParticipantName.trim()) {
-      toast.error("Participant name is required", {
-        description: "Fill participant name before selecting a file.",
+      toast.error(t("predictionsUpload.participantNameRequired"), {
+        description: t("predictionsUpload.fillParticipantBeforeFile"),
       });
       e.target.value = "";
       return;
@@ -102,11 +96,13 @@ export function PredictionsUpload() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Upload failed");
+        throw new Error(data.error || t("predictionsUpload.uploadFallback"));
       }
 
-      toast.success("Image processed successfully!", {
-        description: `Extracted ${data.preview.extractedScoresCount} scores`,
+      toast.success(t("predictionsUpload.imageProcessed"), {
+        description: t("predictionsUpload.scoresExtracted", {
+          count: data.preview.extractedScoresCount,
+        }),
       });
 
       setPreviewData({
@@ -120,10 +116,17 @@ export function PredictionsUpload() {
         stage: data.preview.stage || uploadStage,
       });
     } catch (err) {
-      toast.error("Upload failed", {
-        description: err instanceof Error ? err.message : "Unknown error",
+      toast.error(t("predictionsUpload.uploadFailed"), {
+        description:
+          err instanceof Error
+            ? err.message
+            : t("predictionsUpload.unknownError"),
       });
-      setError(err instanceof Error ? err.message : "Upload failed");
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("predictionsUpload.uploadFallback"),
+      );
     } finally {
       setLoading(false);
     }
@@ -156,11 +159,13 @@ export function PredictionsUpload() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Confirmation failed");
+        throw new Error(data.error || t("predictionsUpload.confirmFailed"));
       }
 
-      toast.success("Predictions saved!", {
-        description: `${data.total} predictions have been saved successfully.`,
+      toast.success(t("predictionsUpload.predictionsSaved"), {
+        description: t("predictionsUpload.predictionsSavedDesc", {
+          count: data.total,
+        }),
       });
 
       setSuccess(true);
@@ -174,10 +179,17 @@ export function PredictionsUpload() {
         setSuccess(false);
       }, 2000);
     } catch (err) {
-      toast.error("Failed to save predictions", {
-        description: err instanceof Error ? err.message : "Unknown error",
+      toast.error(t("predictionsUpload.saveFailed"), {
+        description:
+          err instanceof Error
+            ? err.message
+            : t("predictionsUpload.unknownError"),
       });
-      setError(err instanceof Error ? err.message : "Confirmation failed");
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("predictionsUpload.confirmFailed"),
+      );
     } finally {
       setLoading(false);
     }
@@ -217,27 +229,29 @@ export function PredictionsUpload() {
       {/* Upload Section */}
       <div className="bg-white rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 p-6">
         <h3 className="text-lg font-bold text-[#0a192f] mb-4">
-          1. Upload Prediction Sheet
+          {t("predictionsUpload.step1")}
         </h3>
 
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-[#0a192f] mb-2">
-              Participant Name: <span className="text-red-500">*</span>
+              {t("predictionsUpload.participantName")}:{" "}
+              <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={uploadParticipantName}
               onChange={(e) => setUploadParticipantName(e.target.value)}
               className="w-full max-w-xl px-3 py-2 border border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-[#10b981]/30 focus:border-[#10b981]"
-              placeholder="Enter participant name"
+              placeholder={t("predictionsUpload.participantName")}
               required
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-[#0a192f] mb-2">
-              Tournament Stage: <span className="text-red-500">*</span>
+              {t("predictionsUpload.tournamentStage")}:{" "}
+              <span className="text-red-500">*</span>
             </label>
             <select
               value={uploadStage}
@@ -247,10 +261,10 @@ export function PredictionsUpload() {
               className="w-full max-w-xl border-slate-200 rounded-lg shadow-sm py-2 px-3 focus:ring-[#10b981] focus:border-[#10b981] bg-white text-slate-700 outline-none"
               required
             >
-              <option value="">Select stage</option>
+              <option value="">{t("predictionsUpload.selectStage")}</option>
               {STAGE_OPTIONS.map((stage) => (
                 <option key={stage} value={stage}>
-                  {STAGE_LABELS[stage]}
+                  {t(`predictionSheets.stages.${stage}`)}
                 </option>
               ))}
             </select>
@@ -258,7 +272,7 @@ export function PredictionsUpload() {
 
           <div>
             <label className="block text-sm font-medium text-[#0a192f] mb-2">
-              Select scanned image
+              {t("predictionsUpload.selectScannedImage")}
             </label>
             <input
               type="file"
@@ -269,18 +283,20 @@ export function PredictionsUpload() {
             />
             {!uploadParticipantName.trim() && (
               <p className="text-xs text-amber-600 mt-1">
-                Fill participant name first to enable file selection.
+                {t("predictionsUpload.fillParticipantFirst")}
               </p>
             )}
           </div>
 
           {preview && (
             <div>
-              <p className="text-sm font-medium text-gray-700 mb-2">Preview:</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                {t("predictionsUpload.preview")}
+              </p>
               <div className="relative max-w-md">
                 <Image
                   src={preview}
-                  alt="Preview"
+                  alt={t("common.previewAlt")}
                   width={768}
                   height={1024}
                   className="rounded border border-gray-300"
@@ -301,7 +317,9 @@ export function PredictionsUpload() {
             }
             className="bg-slate-300 text-white px-5 py-2.5 rounded-xl text-sm font-medium disabled:cursor-not-allowed enabled:bg-[#0a192f] enabled:hover:bg-[#0a192f]/90 transition-colors"
           >
-            {loading ? "Processing..." : "Extract Scores"}
+            {loading
+              ? t("predictionsUpload.processing")
+              : t("predictionsUpload.extractScores")}
           </button>
         </div>
       </div>
@@ -309,7 +327,9 @@ export function PredictionsUpload() {
       {/* Error Display */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <p className="text-red-800 font-semibold">Error:</p>
+          <p className="text-red-800 font-semibold">
+            {t("predictionsUpload.error")}
+          </p>
           <p className="text-red-700 text-sm">{error}</p>
         </div>
       )}
@@ -318,7 +338,7 @@ export function PredictionsUpload() {
       {success && (
         <div className="bg-green-50 border border-green-200 rounded-xl p-4">
           <p className="text-green-800 font-semibold">
-            ✓ Predictions saved successfully!
+            {t("predictionsUpload.savedSuccess")}
           </p>
         </div>
       )}
@@ -328,10 +348,13 @@ export function PredictionsUpload() {
         <div className="bg-white rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 p-6 space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-bold text-[#0a192f]">
-              2. Review & Edit Predictions
+              {t("predictionsUpload.step2")}
             </h3>
             <div className="text-sm text-slate-500">
-              {filledScores} / {editedData.matchesCount} scores filled
+              {t("predictionsUpload.scoresFilled", {
+                filled: filledScores,
+                total: editedData.matchesCount,
+              })}
             </div>
           </div>
 
@@ -339,18 +362,22 @@ export function PredictionsUpload() {
           <div className="bg-[#f0f7ff] border border-[#dbeafe] rounded-xl p-4">
             <div className="grid grid-cols-2 gap-4 text-sm text-[#1e3a8a]">
               <div>
-                <span className="font-medium">Scores extracted:</span>{" "}
+                <span className="font-medium">
+                  {t("predictionsUpload.scoresExtractedLabel")}
+                </span>{" "}
                 <span>{previewData?.extractedScoresCount || 0}</span>
               </div>
               <div>
-                <span className="font-medium">Total matches:</span>{" "}
+                <span className="font-medium">
+                  {t("predictionsUpload.totalMatches")}
+                </span>{" "}
                 <span>{editedData.matchesCount}</span>
               </div>
             </div>
             {(previewData?.extractedScoresCount || 0) &&
               editedData.matchesCount && (
                 <p className="text-xs text-[#1e40af] mt-2">
-                  ⚠ Some scores missing - please fill manually below
+                  {t("predictionsUpload.someMissing")}
                 </p>
               )}
           </div>
@@ -358,7 +385,8 @@ export function PredictionsUpload() {
           {/* Tournament Stage */}
           <div>
             <label className="block text-sm font-medium text-[#0a192f] mb-2">
-              Tournament Stage: <span className="text-red-500">*</span>
+              {t("predictionsUpload.tournamentStage")}:{" "}
+              <span className="text-red-500">*</span>
             </label>
             <select
               value={editedData.stage}
@@ -366,10 +394,10 @@ export function PredictionsUpload() {
               className="w-full max-w-xl border-slate-200 rounded-lg shadow-sm py-2 px-3 focus:ring-[#10b981] focus:border-[#10b981] bg-white text-slate-700 outline-none"
               required
             >
-              <option value="">Select stage</option>
+              <option value="">{t("predictionsUpload.selectStage")}</option>
               {STAGE_OPTIONS.map((stage) => (
                 <option key={stage} value={stage}>
-                  {STAGE_LABELS[stage]}
+                  {t(`predictionSheets.stages.${stage}`)}
                 </option>
               ))}
             </select>
@@ -378,7 +406,7 @@ export function PredictionsUpload() {
           {/* Participant Name */}
           <div>
             <label className="block text-sm font-medium text-[#0a192f] mb-2">
-              Participant Name:
+              {t("predictionsUpload.participantName")}:
             </label>
             <input
               type="text"
@@ -391,7 +419,7 @@ export function PredictionsUpload() {
           {/* Matches Table */}
           <div>
             <p className="text-sm font-medium text-[#0a192f] mb-2">
-              Match Predictions:
+              {t("predictionsUpload.matchPredictions")}
             </p>
             <div className="border border-slate-200 rounded-xl overflow-hidden max-h-96 overflow-y-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -401,13 +429,13 @@ export function PredictionsUpload() {
                       #
                     </th>
                     <th className="px-3 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Match
+                      {t("predictionsUpload.headers.match")}
                     </th>
                     <th className="px-3 py-2 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Prediction
+                      {t("predictionsUpload.headers.prediction")}
                     </th>
                     <th className="px-3 py-2 text-center text-xs font-medium text-slate-500 uppercase tracking-wider">
-                      Status
+                      {t("predictionsUpload.headers.status")}
                     </th>
                   </tr>
                 </thead>
@@ -424,7 +452,8 @@ export function PredictionsUpload() {
                           {match.matchNumber}
                         </td>
                         <td className="px-3 py-2 text-sm text-slate-700 font-medium whitespace-nowrap">
-                          {match.homeTeam.code} vs {match.awayTeam.code}
+                          {match.homeTeam.code} {t("common.vs")}{" "}
+                          {match.awayTeam.code}
                         </td>
                         <td className="px-3 py-2">
                           <div className="flex items-center justify-center gap-2">
@@ -468,7 +497,7 @@ export function PredictionsUpload() {
                             </span>
                           ) : (
                             <span className="text-amber-600 text-xs font-medium">
-                              Empty
+                              {t("predictionsUpload.empty")}
                             </span>
                           )}
                         </td>
@@ -483,7 +512,7 @@ export function PredictionsUpload() {
           {/* Raw Text (Collapsible) */}
           <details className="bg-slate-50 rounded border border-slate-200">
             <summary className="px-4 py-2 cursor-pointer text-sm font-medium text-slate-700">
-              Show extracted text
+              {t("predictionsUpload.showExtracted")}
             </summary>
             <pre className="text-xs p-4 overflow-x-auto font-mono">
               {previewData?.rawText}
@@ -496,14 +525,18 @@ export function PredictionsUpload() {
               onClick={handleUpload}
               disabled={!file || loading || !!previewData}
             >
-              {loading ? "Processing..." : "Extract Scores"}
+              {loading
+                ? t("predictionsUpload.processing")
+                : t("predictionsUpload.extractScores")}
             </Button>
 
             <Button
               onClick={handleConfirm}
               disabled={loading || filledScores === 0 || !editedData.stage}
             >
-              {loading ? "Saving..." : `Save ${filledScores} Predictions`}
+              {loading
+                ? t("predictionsEditor.saving")
+                : t("predictionsUpload.saveCount", { count: filledScores })}
             </Button>
 
             <Button
@@ -513,7 +546,7 @@ export function PredictionsUpload() {
                 setEditedData(null);
               }}
             >
-              Cancel
+              {t("forms.common.cancel")}
             </Button>
           </div>
         </div>

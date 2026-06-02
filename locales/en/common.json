@@ -1,0 +1,294 @@
+{
+  "common": {
+    "and": "and",
+    "close": "Close",
+    "previewAlt": "Preview",
+    "vs": "vs"
+  },
+  "app": {
+    "metadata": {
+      "title": "FIFA World Cup 2026 Predictions",
+      "description": "Private betting competition"
+    }
+  },
+  "public": {
+    "headerTitle": "FIFA World Cup 2026",
+    "results": "Results",
+    "predictions": "Predictions",
+    "uploadedPredictionSheets": "Uploaded prediction sheets",
+    "predictionSheetsSubtitle": "Participant prediction blobs grouped by stage"
+  },
+  "lastFinishedMatches": {
+    "after": "After {{matchesSummary}} ({{formattedMatchDate}})"
+  },
+  "nextMatchBanner": {
+    "label": "Next matches: {{teamsLabel}} ({{formattedMatchDate}})"
+  },
+  "leaderboard": {
+    "rank": "Rank",
+    "participant": "Participant",
+    "points": "Points"
+  },
+  "predictionSheets": {
+    "noSheets": "No prediction sheets available yet.",
+    "headers": {
+      "participant": "Participant",
+      "uploaded": "Uploaded",
+      "sheet": "Sheet"
+    },
+    "openSheet": "Open sheet",
+    "stages": {
+      "group": "Group Stage",
+      "round_16": "Round of 16",
+      "quarter": "Quarter-finals",
+      "semi": "Semi-finals",
+      "final": "Final"
+    }
+  },
+  "predictionsGrid": {
+    "headers": {
+      "group": "Gr.",
+      "date": "Date",
+      "match": "Match",
+      "result": "Result"
+    }
+  },
+  "admin": {
+    "login": {
+      "title": "Admin Login",
+      "description": "Enter your credentials to access the admin panel",
+      "email": "Email",
+      "password": "Password",
+      "emailPlaceholder": "admin@test.com",
+      "signIn": "Sign In"
+    },
+    "layout": {
+      "title": "Admin Panel",
+      "signOut": "Sign Out",
+      "viewPublicSite": "View Public Site",
+      "nav": {
+        "dashboard": "Dashboard",
+        "matches": "Matches",
+        "participants": "Participants",
+        "predictions": "Predictions",
+        "manualEntry": "Manual Entry",
+        "editPredictions": "Edit Predictions"
+      }
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "subtitle": "Competition overview",
+      "cards": {
+        "totalMatches": {
+          "label": "Total Matches",
+          "description": "In competition"
+        },
+        "finished": { "label": "Finished", "description": "Completed matches" },
+        "live": { "label": "Live", "description": "Currently playing" },
+        "participants": {
+          "label": "Participants",
+          "description": "Active players"
+        },
+        "predictions": {
+          "label": "Predictions",
+          "description": "Total submitted"
+        },
+        "teams": { "label": "Teams", "description": "Participating nations" },
+        "missing": { "label": "Missing", "description": "Scheduled gaps" }
+      },
+      "nextMatchInsight": "Next Match Insight",
+      "kickoff": "Kickoff: {{date}}",
+      "upcomingStage": "Upcoming stage transition: {{stage}}",
+      "noUpcomingTitle": "No upcoming scheduled matches",
+      "noUpcomingDescription": "Add or schedule future matches to see the next kickoff insight.",
+      "quickActions": "Quick Actions",
+      "actions": {
+        "updateResults": "Update match results in {{section}}",
+        "addParticipants": "Add participants in {{section}}",
+        "uploadFiles": "Upload prediction files in {{section}}",
+        "manualEntry": "Manual entry available in {{section}}",
+        "liveSync": "Live score sync frequency: every {{minutes}} minute(s)"
+      }
+    },
+    "matchesPage": {
+      "title": "Matches",
+      "subtitle": "Update match scores, statuses, and calculate points"
+    },
+    "participantsPage": {
+      "title": "Participants",
+      "subtitle": "Manage competition participants"
+    },
+    "predictionsPage": {
+      "title": "Predictions Upload",
+      "subtitle": "Upload scanned prediction sheets with OCR",
+      "expectedFormat": "Expected Format",
+      "sampleFormat": "Name: John Doe\n\n15.06 Monday\nA 15:00 Brazil 2:1 Germany\nA 18:00 Japan 1:1 Mexico\n\n16.06 Tuesday\nA 15:00 Brazil 2:0 Japan\nB 18:00 Spain 3:0 England\n...",
+      "format": {
+        "participantTop": "Participant name at the top",
+        "oneMatchPerLine": "One match per line with scores",
+        "handwritten": "Handwritten scores in clear boxes work best"
+      }
+    },
+    "editPredictionsPage": {
+      "title": "Edit Predictions",
+      "subtitle": "Filter by participant or match, update scores, and save selected changes"
+    },
+    "manualPage": {
+      "title": "Manual Entry",
+      "subtitle": "Enter predictions manually for participants"
+    },
+    "missingPredictions": {
+      "title": "Missing Predictions (Scheduled Matches)",
+      "gaps": "Participant × scheduled match gaps",
+      "topByParticipant": "Top by participant",
+      "topByMatch": "Top by match",
+      "none": "No missing predictions."
+    }
+  },
+  "forms": {
+    "common": {
+      "cancel": "Cancel",
+      "save": "Save",
+      "create": "Create",
+      "saving": "Saving...",
+      "creating": "Creating...",
+      "deleting": "Deleting..."
+    },
+    "participantDialog": {
+      "addTitle": "Add Participant",
+      "editTitle": "Edit Participant",
+      "createDescription": "Create a new participant for the competition.",
+      "editDescription": "Update participant details.",
+      "name": "Name",
+      "emailOptional": "Email (optional)",
+      "namePlaceholder": "John Doe",
+      "emailPlaceholder": "john@example.com",
+      "nameRequired": "Name is required.",
+      "emailInvalid": "Email format is invalid."
+    }
+  },
+  "participantsTable": {
+    "addParticipant": "Add Participant",
+    "headers": {
+      "id": "ID",
+      "name": "Name",
+      "email": "Email",
+      "actions": "Actions"
+    },
+    "edit": "Edit",
+    "delete": "Delete",
+    "createSuccess": "Participant created",
+    "createFailed": "Create failed",
+    "createFallback": "Failed to create participant",
+    "updateSuccess": "Participant updated",
+    "updateFailed": "Update failed",
+    "updateFallback": "Failed to update participant",
+    "deleteSuccess": "Participant deleted",
+    "deleteFailed": "Delete failed",
+    "deleteFallback": "Failed to delete participant",
+    "deleteTitle": "Delete participant?",
+    "deleteDescription": "This will permanently remove {{name}}. Deletion is only allowed when there are no linked predictions or uploaded sheets."
+  },
+  "matchesTable": {
+    "headers": {
+      "match": "Match",
+      "result": "Result",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "finished": "Finished",
+      "live": "Live",
+      "scheduled": "Scheduled"
+    },
+    "placeholders": { "status": "Status" },
+    "save": "Save",
+    "edit": "Edit",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "updated": "Match updated!",
+    "updatedFinished": "Points have been recalculated.",
+    "updatedLive": "Match status and score saved.",
+    "failed": "Failed to update match",
+    "tryAgain": "Please try again.",
+    "requestFailed": "Request failed"
+  },
+  "manualPredictionForm": {
+    "title": "Manual Prediction Entry",
+    "participant": "Participant",
+    "selectParticipant": "Select participant",
+    "noPredictions": "No predictions",
+    "addAtLeastOne": "Please add at least one prediction",
+    "saved": "Predictions saved!",
+    "savedDescription": "{{count}} predictions have been saved successfully.",
+    "failed": "Failed to save predictions",
+    "tryAgainLater": "Please try again later.",
+    "entered": "{{count}} predictions entered",
+    "saveAll": "Save All Predictions"
+  },
+  "predictionsEditor": {
+    "title": "Prediction Editor",
+    "participant": "Participant",
+    "match": "Match",
+    "allParticipants": "All participants",
+    "allMatches": "All matches",
+    "headers": {
+      "participant": "Participant",
+      "matchNumber": "#",
+      "match": "Match",
+      "score": "Score",
+      "points": "Points",
+      "updated": "Updated"
+    },
+    "noneFound": "No predictions found for current filters.",
+    "noChanges": "No changes",
+    "editBeforeSaving": "Edit scores before saving.",
+    "updated": "Predictions updated",
+    "updatedDescription": "{{count}} prediction{{suffix}} saved successfully.",
+    "failed": "Failed to update predictions",
+    "failedSingleFallback": "Failed to update prediction",
+    "tryAgain": "Please try again.",
+    "editedRows": "{{count}} edited row{{suffix}}",
+    "shownPredictions": "{{count}} shown prediction{{suffix}}",
+    "save": "Save",
+    "saving": "Saving..."
+  },
+  "predictionsUpload": {
+    "step1": "1. Upload Prediction Sheet",
+    "participantNameRequired": "Participant name is required",
+    "fillParticipantBeforeFile": "Fill participant name before selecting a file.",
+    "participantName": "Participant Name",
+    "tournamentStage": "Tournament Stage",
+    "selectStage": "Select stage",
+    "selectScannedImage": "Select scanned image",
+    "fillParticipantFirst": "Fill participant name first to enable file selection.",
+    "preview": "Preview:",
+    "processing": "Processing...",
+    "extractScores": "Extract Scores",
+    "uploadFailed": "Upload failed",
+    "uploadFallback": "Upload failed",
+    "unknownError": "Unknown error",
+    "imageProcessed": "Image processed successfully!",
+    "scoresExtracted": "Extracted {{count}} scores",
+    "error": "Error:",
+    "savedSuccess": "✓ Predictions saved successfully!",
+    "step2": "2. Review & Edit Predictions",
+    "scoresFilled": "{{filled}} / {{total}} scores filled",
+    "scoresExtractedLabel": "Scores extracted:",
+    "totalMatches": "Total matches:",
+    "someMissing": "⚠ Some scores missing - please fill manually below",
+    "matchPredictions": "Match Predictions:",
+    "headers": {
+      "match": "Match",
+      "prediction": "Prediction",
+      "status": "Status"
+    },
+    "empty": "Empty",
+    "showExtracted": "Show extracted text",
+    "saveCount": "Save {{count}} Predictions",
+    "predictionsSaved": "Predictions saved!",
+    "predictionsSavedDesc": "{{count}} predictions have been saved successfully.",
+    "confirmFailed": "Confirmation failed",
+    "saveFailed": "Failed to save predictions"
+  }
+}

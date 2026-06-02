@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { getShortMatchTeamNames } from "@/lib/teams";
+import { getT } from "@/lib/i18n/server";
 
 interface LeaderboardTableProps {
   data: LeaderboardEntry[];
@@ -27,7 +28,8 @@ const getBackground = (rank: number) => {
   }
 };
 
-export function LeaderboardTable({ data }: LeaderboardTableProps) {
+export async function LeaderboardTable({ data }: LeaderboardTableProps) {
+  const t = await getT();
   return (
     <Card className="w-full max-w-full overflow-hidden rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
       <div className="overflow-x-auto public-table-scroll">
@@ -35,13 +37,13 @@ export function LeaderboardTable({ data }: LeaderboardTableProps) {
           <TableHeader>
             <TableRow className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
               <TableHead className="sticky left-0 z-20 bg-slate-50/50 whitespace-nowrap min-w-14 text-center p-4 h-auto">
-                Rank
+                {t("leaderboard.rank")}
               </TableHead>
               <TableHead className="sticky left-14 z-20 bg-slate-50/50 whitespace-nowrap min-w-36 sm:min-w-44 p-4 h-auto">
-                Participant
+                {t("leaderboard.participant")}
               </TableHead>
               <TableHead className="sticky left-[12.5rem] sm:left-[14.5rem] z-20 bg-slate-50/50 text-center whitespace-nowrap min-w-16 p-4 h-auto">
-                Points
+                {t("leaderboard.points")}
               </TableHead>
               {data[0].nextMatches.map((match) => (
                 <TableHead

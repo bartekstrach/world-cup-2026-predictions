@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import {
   ExternalLink,
   LayoutDashboard,
@@ -28,6 +29,7 @@ const iconByHref = {
 } as const;
 
 export function AdminTabsNav({ items }: { items: NavItem[] }) {
+  const { t } = useTranslation();
   const pathname = usePathname();
 
   return (
@@ -65,7 +67,7 @@ export function AdminTabsNav({ items }: { items: NavItem[] }) {
         className="flex items-center gap-2 text-sm font-medium text-[#0a192f] hover:text-[#10b981] transition-colors ml-auto md:ml-0 px-2 py-2 whitespace-nowrap"
       >
         <ExternalLink className="w-4 h-4" />
-        View Public Site
+        {t("admin.layout.viewPublicSite")}
       </Link>
     </div>
   );

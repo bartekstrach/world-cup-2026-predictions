@@ -20,6 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 type MatchStatus = "scheduled" | "live" | "finished";
 
@@ -34,6 +35,7 @@ interface Match {
 }
 
 export function MatchesTable({ matches }: { matches: Match[] }) {
+  const { t } = useTranslation();
   const [rows, setRows] = useState<Match[]>(matches);
   const [editing, setEditing] = useState<number | null>(null);
   const [homeScore, setHomeScore] = useState<number>(0);
@@ -57,7 +59,7 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
       });
 
       if (!response.ok) {
-        throw new Error("Request failed");
+        throw new Error(t("matchesTable.requestFailed"));
       }
 
       setRows((currentRows) =>
@@ -73,16 +75,16 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
         ),
       );
 
-      toast.success("Match updated!", {
+      toast.success(t("matchesTable.updated"), {
         description:
           status === "finished"
-            ? "Points have been recalculated."
-            : "Match status and score saved.",
+            ? t("matchesTable.updatedFinished")
+            : t("matchesTable.updatedLive"),
       });
       setEditing(null);
     } catch {
-      toast.error("Failed to update match", {
-        description: "Please try again.",
+      toast.error(t("matchesTable.failed"), {
+        description: t("matchesTable.tryAgain"),
       });
     } finally {
       setSavingMatchId(null);
@@ -93,7 +95,7 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
     if (status === "finished") {
       return (
         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-[#0a192f] text-white">
-          Finished
+          {t("matchesTable.status.finished")}
         </span>
       );
     }
@@ -101,14 +103,14 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
     if (status === "live") {
       return (
         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-500 text-white animate-pulse">
-          Live
+          {t("matchesTable.status.live")}
         </span>
       );
     }
 
     return (
       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">
-        Scheduled
+        {t("matchesTable.status.scheduled")}
       </span>
     );
   };
@@ -120,10 +122,18 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
           <TableHeader>
             <TableRow className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
               <TableHead className="w-16 text-center p-4 h-auto">#</TableHead>
-              <TableHead className="p-4 h-auto">Match</TableHead>
-              <TableHead className="text-center p-4 h-auto">Result</TableHead>
-              <TableHead className="text-center p-4 h-auto">Status</TableHead>
-              <TableHead className="text-right p-4 h-auto">Actions</TableHead>
+              <TableHead className="p-4 h-auto">
+                {t("matchesTable.headers.match")}
+              </TableHead>
+              <TableHead className="text-center p-4 h-auto">
+                {t("matchesTable.headers.result")}
+              </TableHead>
+              <TableHead className="text-center p-4 h-auto">
+                {t("matchesTable.headers.status")}
+              </TableHead>
+              <TableHead className="text-right p-4 h-auto">
+                {t("matchesTable.headers.actions")}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -136,7 +146,7 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
                   {match.matchNumber}
                 </TableCell>
                 <TableCell className="font-medium text-slate-700 p-4">
-                  {match.homeTeam.code} vs {match.awayTeam.code}
+                  {match.homeTeam.code} {t("common.vs")} {match.awayTeam.code}
                 </TableCell>
                 <TableCell className="text-center p-4">
                   {editing === match.id ? (
@@ -175,12 +185,20 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
                         }
                       >
                         <SelectTrigger className="w-32 border-slate-200 focus:ring-[#10b981]/40">
-                          <SelectValue placeholder="Status" />
+                          <SelectValue
+                            placeholder={t("matchesTable.placeholders.status")}
+                          />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="scheduled">Scheduled</SelectItem>
-                          <SelectItem value="live">Live</SelectItem>
-                          <SelectItem value="finished">Finished</SelectItem>
+                          <SelectItem value="scheduled">
+                            {t("matchesTable.status.scheduled")}
+                          </SelectItem>
+                          <SelectItem value="live">
+                            {t("matchesTable.status.live")}
+                          </SelectItem>
+                          <SelectItem value="finished">
+                            {t("matchesTable.status.finished")}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -197,7 +215,9 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
                         className="bg-[#0a192f] text-white hover:bg-[#0a192f]/90"
                         disabled={savingMatchId === match.id}
                       >
-                        {savingMatchId === match.id ? "Saving..." : "Save"}
+                        {savingMatchId === match.id
+                          ? t("matchesTable.saving")
+                          : t("matchesTable.save")}
                       </Button>
                       <Button
                         size="sm"
@@ -205,7 +225,7 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
                         onClick={() => setEditing(null)}
                         disabled={savingMatchId === match.id}
                       >
-                        Cancel
+                        {t("matchesTable.cancel")}
                       </Button>
                     </div>
                   ) : (
@@ -221,7 +241,7 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
                           setStatus(match.status ?? "scheduled");
                         }}
                       >
-                        Edit
+                        {t("matchesTable.edit")}
                       </Button>
                     </div>
                   )}

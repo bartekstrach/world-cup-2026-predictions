@@ -30,7 +30,7 @@ const FIFA_TO_ISO_ALPHA3: Record<string, string> = {
 
 export function getCountryName(
   isoCode: string,
-  locale: "en" | "pl" = "en",
+  locale: "en" | "pl" = "pl",
 ): string {
   const normalizedCode = isoCode.toUpperCase();
 

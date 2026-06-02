@@ -12,12 +12,14 @@ import { calculatePoints, formatScore } from "@/lib/scoring";
 import { getMatchTeamNames, getShortMatchTeamNames } from "@/lib/teams";
 import type { PredictionsGridData } from "@/lib/types";
 import { NO_RESULT } from "@/lib/constants";
+import { getT } from "@/lib/i18n/server";
 
 interface PredictionsGridProps {
   data: PredictionsGridData;
 }
 
-export function PredictionsGrid({ data }: PredictionsGridProps) {
+export async function PredictionsGrid({ data }: PredictionsGridProps) {
+  const t = await getT();
   const { matches, participants, predictions } = data;
 
   const participantPointTotals = participants.reduce<
@@ -58,20 +60,20 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
             <TableRow className="bg-slate-50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
               {/* Group/stage */}
               <TableHead className="hidden sm:table-cell whitespace-nowrap min-w-12 p-4 h-auto">
-                Gr.
+                {t("predictionsGrid.headers.group")}
               </TableHead>
 
               {/* Date */}
               <TableHead className="whitespace-nowrap min-w-28 p-4 h-auto">
-                Date
+                {t("predictionsGrid.headers.date")}
               </TableHead>
 
               {/* Match + result */}
               <TableHead className="sticky left-0 z-20 bg-slate-50 whitespace-nowrap min-w-48 sm:min-w-64 p-4 h-auto">
-                Match
+                {t("predictionsGrid.headers.match")}
               </TableHead>
               <TableHead className="sticky left-48 sm:left-64 z-20 bg-slate-50 whitespace-nowrap min-w-24 text-center p-4 h-auto">
-                Result
+                {t("predictionsGrid.headers.result")}
               </TableHead>
 
               {/* Participants */}
@@ -90,7 +92,9 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
               <TableRow key={match.id}>
                 {/* Group/stage */}
                 <TableCell className="hidden sm:table-cell text-center text-slate-400 whitespace-nowrap p-4">
-                  {match.stage === "group" ? match.homeTeam.group : match.stage}
+                  {match.stage === "group"
+                    ? match.homeTeam.group
+                    : t(`predictionSheets.stages.${match.stage}`)}
                 </TableCell>
 
                 {/* Date */}

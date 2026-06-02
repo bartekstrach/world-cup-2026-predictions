@@ -2,6 +2,7 @@ import { ManualPredictionForm } from "@/components/admin/manual-prediction-form"
 import { db } from "@/lib/db";
 import { PenTool } from "lucide-react";
 import { AdminSectionHeader } from "@/components/admin/admin-section-header";
+import { getT } from "@/lib/i18n/server";
 
 async function getData() {
   const participants = await db.query.participants.findMany({
@@ -20,13 +21,14 @@ async function getData() {
 }
 
 export default async function ManualPredictionsPage() {
+  const t = await getT();
   const { participants, matches } = await getData();
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <AdminSectionHeader
-        title="Manual Entry"
-        subtitle="Enter predictions manually for participants"
+        title={t("admin.manualPage.title")}
+        subtitle={t("admin.manualPage.subtitle")}
         icon={PenTool}
       />
 

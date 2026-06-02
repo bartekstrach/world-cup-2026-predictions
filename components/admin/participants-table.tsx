@@ -22,6 +22,7 @@ import {
 import { ParticipantFormDialog } from "@/components/admin/participant-form-dialog";
 import { toast } from "sonner";
 import { Pencil, Trash2, UserPlus } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface Participant {
   id: number;
@@ -43,6 +44,7 @@ export function ParticipantsTable({
 }: {
   participants: Participant[];
 }) {
+  const { t } = useTranslation();
   const [rows, setRows] = useState<Participant[]>(participants);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingParticipant, setEditingParticipant] =
@@ -68,20 +70,23 @@ export function ParticipantsTable({
 
       if (!response.ok) {
         throw new Error(
-          await getErrorMessage(response, "Failed to create participant"),
+          await getErrorMessage(
+            response,
+            t("participantsTable.createFallback"),
+          ),
         );
       }
 
       const data = (await response.json()) as { participant: Participant };
       setRows((current) => [...current, data.participant]);
       setIsCreateOpen(false);
-      toast.success("Participant created");
+      toast.success(t("participantsTable.createSuccess"));
     } catch (error) {
-      toast.error("Create failed", {
+      toast.error(t("participantsTable.createFailed"), {
         description:
           error instanceof Error
             ? error.message
-            : "Failed to create participant",
+            : t("participantsTable.createFallback"),
       });
     } finally {
       setSubmitting(false);
@@ -105,7 +110,10 @@ export function ParticipantsTable({
 
       if (!response.ok) {
         throw new Error(
-          await getErrorMessage(response, "Failed to update participant"),
+          await getErrorMessage(
+            response,
+            t("participantsTable.updateFallback"),
+          ),
         );
       }
 
@@ -116,13 +124,13 @@ export function ParticipantsTable({
         ),
       );
       setEditingParticipant(null);
-      toast.success("Participant updated");
+      toast.success(t("participantsTable.updateSuccess"));
     } catch (error) {
-      toast.error("Update failed", {
+      toast.error(t("participantsTable.updateFailed"), {
         description:
           error instanceof Error
             ? error.message
-            : "Failed to update participant",
+            : t("participantsTable.updateFallback"),
       });
     } finally {
       setSubmitting(false);
@@ -144,19 +152,22 @@ export function ParticipantsTable({
 
       if (!response.ok) {
         throw new Error(
-          await getErrorMessage(response, "Failed to delete participant"),
+          await getErrorMessage(
+            response,
+            t("participantsTable.deleteFallback"),
+          ),
         );
       }
 
       setRows((current) => current.filter((row) => row.id !== deleteTarget.id));
-      toast.success("Participant deleted");
+      toast.success(t("participantsTable.deleteSuccess"));
       setDeleteTarget(null);
     } catch (error) {
-      toast.error("Delete failed", {
+      toast.error(t("participantsTable.deleteFailed"), {
         description:
           error instanceof Error
             ? error.message
-            : "Failed to delete participant",
+            : t("participantsTable.deleteFallback"),
       });
     } finally {
       setDeleting(false);
@@ -172,7 +183,7 @@ export function ParticipantsTable({
             className="m-4 inline-flex items-center justify-center gap-2 bg-[#0a192f] text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-[#0a192f]/90"
           >
             <UserPlus className="mr-2 h-4 w-4" />
-            Add Participant
+            {t("participantsTable.addParticipant")}
           </Button>
         </div>
 
@@ -180,10 +191,18 @@ export function ParticipantsTable({
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                <TableHead className="w-16 p-4 h-auto">ID</TableHead>
-                <TableHead className="p-4 h-auto">Name</TableHead>
-                <TableHead className="p-4 h-auto">Email</TableHead>
-                <TableHead className="text-right p-4 h-auto">Actions</TableHead>
+                <TableHead className="w-16 p-4 h-auto">
+                  {t("participantsTable.headers.id")}
+                </TableHead>
+                <TableHead className="p-4 h-auto">
+                  {t("participantsTable.headers.name")}
+                </TableHead>
+                <TableHead className="p-4 h-auto">
+                  {t("participantsTable.headers.email")}
+                </TableHead>
+                <TableHead className="text-right p-4 h-auto">
+                  {t("participantsTable.headers.actions")}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -219,7 +238,7 @@ export function ParticipantsTable({
                         onClick={() => setEditingParticipant(p)}
                       >
                         <Pencil className="mr-1 h-3.5 w-3.5" />
-                        Edit
+                        {t("participantsTable.edit")}
                       </Button>
                       <Button
                         size="sm"
@@ -227,7 +246,7 @@ export function ParticipantsTable({
                         onClick={() => setDeleteTarget(p)}
                       >
                         <Trash2 className="mr-1 h-3.5 w-3.5" />
-                        Delete
+                        {t("participantsTable.delete")}
                       </Button>
                     </div>
                   </TableCell>
@@ -268,11 +287,11 @@ export function ParticipantsTable({
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Delete participant?</DialogTitle>
+            <DialogTitle>{t("participantsTable.deleteTitle")}</DialogTitle>
             <DialogDescription>
-              This will permanently remove <strong>{deleteTarget?.name}</strong>
-              . Deletion is only allowed when there are no linked predictions or
-              uploaded sheets.
+              {t("participantsTable.deleteDescription", {
+                name: deleteTarget?.name ?? "",
+              })}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -281,14 +300,16 @@ export function ParticipantsTable({
               onClick={() => setDeleteTarget(null)}
               disabled={deleting}
             >
-              Cancel
+              {t("forms.common.cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={handleDelete}
               disabled={deleting}
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting
+                ? t("forms.common.deleting")
+                : t("participantsTable.delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

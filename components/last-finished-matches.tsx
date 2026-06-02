@@ -4,16 +4,17 @@ import {
   getLastCompletedMatchDate,
 } from "@/lib/scoring";
 import { getMatchTeamNames } from "@/lib/teams";
+import { getT } from "@/lib/i18n/server";
 
 export const revalidate = 60;
 
 export async function LastFinishedMatches() {
+  const t = await getT();
   const latestCompletedDate = await getLastCompletedMatchDate();
   if (!latestCompletedDate) return null;
 
-  const finishedMatches = await getFinishedMatchesByMatchDate(
-    latestCompletedDate
-  );
+  const finishedMatches =
+    await getFinishedMatchesByMatchDate(latestCompletedDate);
   if (!finishedMatches.length) return null;
 
   const matchesSummary = finishedMatches
@@ -23,9 +24,9 @@ export async function LastFinishedMatches() {
           displayFlags: false,
           homeTeamCode: m.homeTeamCode,
           awayTeamCode: m.awayTeamCode,
-        })}`
+        })}`,
     )
-    .join(" and ");
+    .join(` ${t("common.and")} `);
 
   const formattedMatchDate = `${getShortWeekday({
     date: latestCompletedDate,
@@ -33,5 +34,12 @@ export async function LastFinishedMatches() {
     date: latestCompletedDate,
   })}`;
 
-  return <>{`After ${matchesSummary} (${formattedMatchDate})`}</>;
+  return (
+    <>
+      {t("lastFinishedMatches.after", {
+        matchesSummary,
+        formattedMatchDate,
+      })}
+    </>
+  );
 }

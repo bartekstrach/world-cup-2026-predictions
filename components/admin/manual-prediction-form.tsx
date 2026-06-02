@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface Participant {
   id: number;
@@ -33,6 +34,7 @@ export function ManualPredictionForm({
   participants: Participant[];
   matches: Match[];
 }) {
+  const { t } = useTranslation();
   const [participantId, setParticipantId] = useState<string>(
     participants[0]?.id.toString() || "",
   );
@@ -65,8 +67,8 @@ export function ManualPredictionForm({
     );
 
     if (predictionsList.length === 0) {
-      toast.error("No predictions", {
-        description: "Please add at least one prediction",
+      toast.error(t("manualPredictionForm.noPredictions"), {
+        description: t("manualPredictionForm.addAtLeastOne"),
       });
       return;
     }
@@ -81,13 +83,15 @@ export function ManualPredictionForm({
     });
 
     if (response.ok) {
-      toast.success("Predictions saved!", {
-        description: `${predictionsList.length} predictions have been saved successfully.`,
+      toast.success(t("manualPredictionForm.saved"), {
+        description: t("manualPredictionForm.savedDescription", {
+          count: predictionsList.length,
+        }),
       });
       setPredictions({});
     } else {
-      toast.error("Failed to save predictions", {
-        description: "Please try again later.",
+      toast.error(t("manualPredictionForm.failed"), {
+        description: t("manualPredictionForm.tryAgainLater"),
       });
     }
   }
@@ -98,7 +102,7 @@ export function ManualPredictionForm({
     <Card className="rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] h-[600px] flex flex-col">
       <CardHeader className="p-6 border-b border-slate-100">
         <CardTitle className="text-lg font-bold text-[#0a192f]">
-          Manual Prediction Entry
+          {t("manualPredictionForm.title")}
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0 flex-1 flex flex-col">
@@ -108,14 +112,16 @@ export function ManualPredictionForm({
               htmlFor="participant"
               className="text-sm font-medium text-slate-600"
             >
-              Participant
+              {t("manualPredictionForm.participant")}
             </Label>
             <Select value={participantId} onValueChange={setParticipantId}>
               <SelectTrigger
                 id="participant"
                 className="border-slate-200 rounded-lg shadow-sm py-2.5 px-3 focus:ring-[#10b981] focus:border-[#10b981] bg-white text-slate-800 font-medium"
               >
-                <SelectValue placeholder="Select participant" />
+                <SelectValue
+                  placeholder={t("manualPredictionForm.selectParticipant")}
+                />
               </SelectTrigger>
               <SelectContent>
                 {participants.map((p) => (
@@ -139,7 +145,7 @@ export function ManualPredictionForm({
                   #{match.matchNumber}
                 </span>
                 <span className="w-32 font-medium text-slate-700">
-                  {match.homeTeam.code} vs {match.awayTeam.code}
+                  {match.homeTeam.code} {t("common.vs")} {match.awayTeam.code}
                 </span>
                 <div className="flex items-center gap-3">
                   <Input
@@ -171,14 +177,14 @@ export function ManualPredictionForm({
 
         <div className="p-6 border-t border-slate-100 flex items-center justify-between bg-white rounded-b-2xl">
           <p className="text-sm text-slate-500 font-medium">
-            {filledCount} predictions entered
+            {t("manualPredictionForm.entered", { count: filledCount })}
           </p>
           <Button
             onClick={handleSubmit}
             disabled={filledCount === 0}
             className="bg-slate-400 text-white px-5 py-2.5 rounded-xl text-sm font-medium disabled:opacity-100"
           >
-            Save All Predictions
+            {t("manualPredictionForm.saveAll")}
           </Button>
         </div>
       </CardContent>

@@ -42,17 +42,19 @@ export const getMatchTeamNames = ({
   displayFlags,
   homeTeamCode,
   awayTeamCode,
+  locale = "pl",
 }: {
   displayFlags: boolean;
   homeTeamCode: string;
   awayTeamCode: string;
+  locale?: "en" | "pl";
 }) => {
   const chunks: string[] = [];
 
   if (displayFlags) chunks.push(getCountryFlag(homeTeamCode));
-  chunks.push(getCountryName(homeTeamCode));
+  chunks.push(getCountryName(homeTeamCode, locale));
   chunks.push(TEAMS_SEPARATOR);
-  chunks.push(getCountryName(awayTeamCode));
+  chunks.push(getCountryName(awayTeamCode, locale));
   if (displayFlags) chunks.push(getCountryFlag(awayTeamCode));
 
   return chunks.join(" ");

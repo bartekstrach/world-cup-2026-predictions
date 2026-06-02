@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Geist_Mono, Inter, Lora } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { I18nProvider } from "@/components/i18n-provider";
+import plCommon from "@/locales/pl/common.json";
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -19,8 +21,8 @@ const serif = Lora({
 });
 
 export const metadata: Metadata = {
-  title: "2026 FIFA World Cup Predictions",
-  description: "Private betting competition",
+  title: plCommon.app.metadata.title,
+  description: plCommon.app.metadata.description,
 };
 
 export default function RootLayout({
@@ -29,11 +31,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="pl">
       <body
         className={`${geistMono.variable} ${sans.variable} ${serif.variable} antialiased`}
       >
-        {children}
+        <I18nProvider>{children}</I18nProvider>
         <Toaster />
       </body>
     </html>

@@ -3,6 +3,7 @@ import { ParticipantsTable } from "@/components/admin/participants-table";
 import { Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { AdminSectionHeader } from "@/components/admin/admin-section-header";
+import { getT } from "@/lib/i18n/server";
 
 async function getParticipants() {
   return db.query.participants.findMany({
@@ -11,6 +12,7 @@ async function getParticipants() {
 }
 
 export default async function ParticipantsPage() {
+  const t = await getT();
   const participants = await getParticipants();
 
   return (
@@ -18,8 +20,8 @@ export default async function ParticipantsPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="min-w-0">
           <AdminSectionHeader
-            title="Participants"
-            subtitle="Manage competition participants"
+            title={t("admin.participantsPage.title")}
+            subtitle={t("admin.participantsPage.subtitle")}
             icon={Users}
             className="mb-0"
           />
