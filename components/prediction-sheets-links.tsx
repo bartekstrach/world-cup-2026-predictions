@@ -1,3 +1,5 @@
+"use client";
+
 import { Card } from "@/components/ui/card";
 import { ExternalLink } from "lucide-react";
 import {
@@ -10,7 +12,8 @@ import {
 } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/date";
 import type { PredictionSheetLink } from "@/lib/types";
-import { getT } from "@/lib/i18n/server";
+import { useTranslation } from "react-i18next";
+import { useSelectedParticipant } from "@/components/selected-participant-provider";
 
 interface PredictionSheetsLinksProps {
   data: PredictionSheetLink[];
@@ -27,10 +30,9 @@ const STAGE_ORDER = [
   "final",
 ];
 
-export async function PredictionSheetsLinks({
-  data,
-}: PredictionSheetsLinksProps) {
-  const t = await getT();
+export function PredictionSheetsLinks({ data }: PredictionSheetsLinksProps) {
+  const { t } = useTranslation();
+  const { selectedParticipantName } = useSelectedParticipant();
 
   if (!data.length) {
     return (
@@ -81,7 +83,11 @@ export async function PredictionSheetsLinks({
                   {group.entries.map((entry) => (
                     <TableRow
                       key={entry.id}
-                      className="hover:bg-slate-50 transition-colors"
+                      className={`hover:bg-slate-50 transition-colors ${
+                        selectedParticipantName === entry.participantName
+                          ? "selected-highlight-row"
+                          : ""
+                      }`}
                     >
                       <TableCell className="p-4 font-medium text-slate-700 whitespace-nowrap">
                         {entry.participantName}

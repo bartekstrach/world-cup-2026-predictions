@@ -16,6 +16,7 @@ import { getMatchTeamNames, getShortMatchTeamNames } from "@/lib/teams";
 import type { PredictionsGridData } from "@/lib/types";
 import { MATCH_STAGES, NO_RESULT, type MatchStage } from "@/lib/constants";
 import { useTranslation } from "react-i18next";
+import { useSelectedParticipant } from "@/components/selected-participant-provider";
 
 interface PredictionsGridProps {
   data: PredictionsGridData;
@@ -23,6 +24,7 @@ interface PredictionsGridProps {
 
 export function PredictionsGrid({ data }: PredictionsGridProps) {
   const { t } = useTranslation();
+  const { selectedParticipantId } = useSelectedParticipant();
   const { matches, participants, predictions } = data;
 
   const groupedMatches = useMemo(() => {
@@ -101,7 +103,11 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
               {participants.map((p) => (
                 <TableHead
                   key={p.id}
-                  className="text-center whitespace-nowrap min-w-24 p-4 h-auto"
+                  className={`text-center whitespace-nowrap min-w-24 p-4 h-auto ${
+                    selectedParticipantId === p.id
+                      ? "selected-highlight-col selected-highlight-col-top"
+                      : ""
+                  }`}
                 >
                   {p.name}
                 </TableHead>
@@ -238,7 +244,11 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                             return (
                               <TableCell
                                 key={p.id}
-                                className="text-center whitespace-nowrap p-4"
+                                className={`text-center whitespace-nowrap p-4 ${
+                                  selectedParticipantId === p.id
+                                    ? "selected-highlight-col"
+                                    : ""
+                                }`}
                               >
                                 <span className="text-muted-foreground">-</span>
                               </TableCell>
@@ -248,7 +258,11 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                           return (
                             <TableCell
                               key={p.id}
-                              className="text-center whitespace-nowrap p-4"
+                              className={`text-center whitespace-nowrap p-4 ${
+                                selectedParticipantId === p.id
+                                  ? "selected-highlight-col"
+                                  : ""
+                              }`}
                             >
                               <div className="flex items-center justify-center gap-2">
                                 <span className="font-mono text-slate-700 w-8 text-center">
@@ -308,7 +322,11 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                 return (
                   <TableCell
                     key={participant.id}
-                    className="text-center whitespace-nowrap p-4"
+                    className={`text-center whitespace-nowrap p-4 ${
+                      selectedParticipantId === participant.id
+                        ? "selected-highlight-col selected-highlight-col-bottom"
+                        : ""
+                    }`}
                   >
                     <span className="font-mono font-bold text-[#0a192f]">
                       {totals.withoutLive}

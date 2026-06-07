@@ -1,3 +1,5 @@
+"use client";
+
 import type { LeaderboardEntry } from "@/lib/types";
 import {
   Table,
@@ -9,7 +11,8 @@ import {
 } from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
 import { getShortMatchTeamNames } from "@/lib/teams";
-import { getT } from "@/lib/i18n/server";
+import { useTranslation } from "react-i18next";
+import { useSelectedParticipant } from "@/components/selected-participant-provider";
 
 interface LeaderboardTableProps {
   data: LeaderboardEntry[];
@@ -59,8 +62,9 @@ const getRankGroupsByPoints = (entries: LeaderboardEntry[]) => {
   return groups;
 };
 
-export async function LeaderboardTable({ data }: LeaderboardTableProps) {
-  const t = await getT();
+export function LeaderboardTable({ data }: LeaderboardTableProps) {
+  const { t } = useTranslation();
+  const { selectedParticipantId } = useSelectedParticipant();
   const rankGroupsByPoints = getRankGroupsByPoints(data);
   return (
     <Card className="w-full max-w-full overflow-hidden rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
@@ -96,9 +100,15 @@ export async function LeaderboardTable({ data }: LeaderboardTableProps) {
               const rowRank =
                 rankGroupsByPoints.get(String(entry.total_points)) ??
                 getRankNumber(entry.rank);
+              const isSelected = selectedParticipantId === entry.id;
 
               return (
-                <TableRow key={entry.id} className={getBackground(rowRank)}>
+                <TableRow
+                  key={entry.id}
+                  className={`${getBackground(rowRank)} ${
+                    isSelected ? "selected-highlight-row" : ""
+                  }`}
+                >
                   <TableCell
                     className={`font-medium text-center sticky left-0 z-10 bg-inherit whitespace-nowrap p-4 ${
                       rowRank === 1 ? "border-l-4 border-[#10b981]" : ""
