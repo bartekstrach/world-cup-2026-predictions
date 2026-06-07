@@ -1,11 +1,12 @@
 import { revalidatePath } from "next/cache";
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   CRON_SYNC_SECRET,
   LIVE_MATCHES_API_KEY,
   LIVE_MATCHES_API_URL,
   LIVE_MATCHES_ID_MAP,
+  LIVE_MATCHES_PROVIDERS,
   LIVE_MATCHES_PROVIDER_NAME,
   LIVE_MATCHES_TIMEOUT_MS,
   MATCH_STATUSES,
@@ -20,6 +21,7 @@ export type LiveProviderMatch = {
   homeScore?: number | null;
   awayScore?: number | null;
   status: MatchStatus;
+  minute?: number | null;
   startedAt?: string | null;
   raw?: unknown;
 };
@@ -61,14 +63,46 @@ type ProviderRawMatch = {
   away_score?: number | null;
   status?: string | null;
   state?: string | null;
+  minute?: number | null;
   startedAt?: string | null;
   started_at?: string | null;
+  [key: string]: unknown;
+};
+
+type FootballDataScoreTime = {
+  home?: number | null;
+  away?: number | null;
+};
+
+type FootballDataScore = {
+  fullTime?: FootballDataScoreTime | null;
+  regularTime?: FootballDataScoreTime | null;
+};
+
+type FootballDataRawMatch = {
+  id?: string | number;
+  matchNumber?: number | null;
+  match_number?: number | null;
+  matchday?: number | null;
+  utcDate?: string | null;
+  status?: string | null;
+  minute?: number | null;
+  score?: FootballDataScore | null;
   [key: string]: unknown;
 };
 
 type ExternalIdMap = Record<string, number>;
 
 function parseScore(value: unknown): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return null;
+  }
+
+  const normalized = Math.trunc(value);
+  return normalized >= 0 ? normalized : null;
+}
+
+function parseMinute(value: unknown): number | null {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return null;
   }
@@ -95,6 +129,24 @@ function normalizeProviderStatus(value: unknown): MatchStatus {
   return MATCH_STATUSES.SCHEDULED;
 }
 
+function normalizeFootballDataStatus(value: unknown): MatchStatus {
+  if (typeof value !== "string") {
+    return MATCH_STATUSES.SCHEDULED;
+  }
+
+  const normalized = value.trim().toUpperCase();
+
+  if (["FINISHED", "AWARDED"].includes(normalized)) {
+    return MATCH_STATUSES.FINISHED;
+  }
+
+  if (["IN_PLAY", "PAUSED"].includes(normalized)) {
+    return MATCH_STATUSES.LIVE;
+  }
+
+  return MATCH_STATUSES.SCHEDULED;
+}
+
 function normalizeProviderMatch(raw: ProviderRawMatch): LiveProviderMatch {
   const providerMatchId =
     String(raw.match_id ?? raw.id ?? "").trim() || "unknown";
@@ -111,10 +163,76 @@ function normalizeProviderMatch(raw: ProviderRawMatch): LiveProviderMatch {
     homeScore: parseScore(raw.home_score ?? raw.homeScore),
     awayScore: parseScore(raw.away_score ?? raw.awayScore),
     status: normalizeProviderStatus(raw.status ?? raw.state),
+    minute: parseMinute(raw.minute),
     startedAt:
       typeof (raw.started_at ?? raw.startedAt) === "string"
         ? String(raw.started_at ?? raw.startedAt)
         : null,
+    raw,
+  };
+}
+
+function selectFootballDataScore(
+  score: FootballDataScore | null | undefined,
+  status: MatchStatus,
+) {
+  const regularTimeHome = parseScore(score?.regularTime?.home);
+  const regularTimeAway = parseScore(score?.regularTime?.away);
+  const fullTimeHome = parseScore(score?.fullTime?.home);
+  const fullTimeAway = parseScore(score?.fullTime?.away);
+
+  const hasRegularTimeScore =
+    regularTimeHome !== null && regularTimeAway !== null;
+  const hasFullTimeScore = fullTimeHome !== null && fullTimeAway !== null;
+
+  if (status === MATCH_STATUSES.FINISHED && hasRegularTimeScore) {
+    return {
+      homeScore: regularTimeHome,
+      awayScore: regularTimeAway,
+    };
+  }
+
+  if (hasFullTimeScore) {
+    return {
+      homeScore: fullTimeHome,
+      awayScore: fullTimeAway,
+    };
+  }
+
+  if (hasRegularTimeScore) {
+    return {
+      homeScore: regularTimeHome,
+      awayScore: regularTimeAway,
+    };
+  }
+
+  return {
+    homeScore: null,
+    awayScore: null,
+  };
+}
+
+function normalizeFootballDataMatch(
+  raw: FootballDataRawMatch,
+): LiveProviderMatch {
+  const providerMatchId = String(raw.id ?? "").trim() || "unknown";
+  const status = normalizeFootballDataStatus(raw.status);
+  const selectedScore = selectFootballDataScore(raw.score, status);
+
+  const matchNumberRaw = raw.match_number ?? raw.matchNumber;
+  const matchNumber =
+    typeof matchNumberRaw === "number" && Number.isInteger(matchNumberRaw)
+      ? matchNumberRaw
+      : null;
+
+  return {
+    providerMatchId,
+    matchNumber,
+    homeScore: selectedScore.homeScore,
+    awayScore: selectedScore.awayScore,
+    status,
+    minute: parseMinute(raw.minute),
+    startedAt: typeof raw.utcDate === "string" ? raw.utcDate : null,
     raw,
   };
 }
@@ -229,12 +347,42 @@ function createHttpAdapter(): LiveProviderAdapter {
   };
 }
 
+function createFootballDataAdapter(): LiveProviderAdapter {
+  return {
+    provider: LIVE_MATCHES_PROVIDERS.FOOTBALL_DATA,
+    async fetchMatches() {
+      if (!LIVE_MATCHES_API_URL) {
+        throw new Error("LIVE_MATCHES_API_URL is not configured");
+      }
+
+      const json = await fetchProviderJson(LIVE_MATCHES_API_URL);
+      const payload =
+        typeof json === "object" && json !== null
+          ? (json as Record<string, unknown>)
+          : null;
+
+      const sourceMatches = Array.isArray(payload?.matches)
+        ? (payload?.matches as FootballDataRawMatch[])
+        : [];
+
+      return {
+        provider: LIVE_MATCHES_PROVIDERS.FOOTBALL_DATA,
+        fetchedAt: new Date().toISOString(),
+        matches: sourceMatches.map(normalizeFootballDataMatch),
+      };
+    },
+  };
+}
+
 function getLiveProviderAdapter(): LiveProviderAdapter {
-  if (
-    LIVE_MATCHES_PROVIDER_NAME.trim().toLowerCase() === "mock" ||
-    !LIVE_MATCHES_API_URL
-  ) {
+  const provider = LIVE_MATCHES_PROVIDER_NAME.trim().toLowerCase();
+
+  if (provider === LIVE_MATCHES_PROVIDERS.MOCK || !LIVE_MATCHES_API_URL) {
     return createMockAdapter();
+  }
+
+  if (provider === LIVE_MATCHES_PROVIDERS.FOOTBALL_DATA) {
+    return createFootballDataAdapter();
   }
 
   return createHttpAdapter();

@@ -37,8 +37,13 @@ export const NON_FINISHED_STATUSES: MatchStatus[] = [
 export const FINISHED_STATUS: MatchStatus = MATCH_STATUSES.FINISHED;
 
 // Live matches sync
+export const LIVE_MATCHES_PROVIDERS = {
+  MOCK: "mock",
+  FOOTBALL_DATA: "football-data",
+} as const;
+
 export const LIVE_MATCHES_PROVIDER_NAME =
-  process.env.LIVE_MATCHES_PROVIDER_NAME ?? "mock";
+  process.env.LIVE_MATCHES_PROVIDER_NAME ?? LIVE_MATCHES_PROVIDERS.MOCK;
 export const LIVE_MATCHES_API_URL = process.env.LIVE_MATCHES_API_URL ?? "";
 export const LIVE_MATCHES_API_KEY = process.env.LIVE_MATCHES_API_KEY ?? "";
 export const LIVE_MATCHES_ID_MAP = process.env.LIVE_MATCHES_ID_MAP ?? "{}";
