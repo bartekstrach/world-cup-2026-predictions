@@ -16,7 +16,12 @@
     "results": "Results",
     "predictions": "Predictions",
     "uploadedPredictionSheets": "Uploaded prediction sheets",
-    "predictionSheetsSubtitle": "Participant prediction blobs grouped by stage"
+    "predictionSheetsSubtitle": "Participant prediction blobs grouped by stage",
+    "participantSelector": {
+      "label": "Participant",
+      "placeholder": "Select participant",
+      "all": "All participants"
+    }
   },
   "lastFinishedMatches": {
     "after": "After {{matchesSummary}} ({{formattedMatchDate}})"

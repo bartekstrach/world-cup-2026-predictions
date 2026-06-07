@@ -3,6 +3,8 @@ import { LeaderboardTable } from "@/components/leaderboard-table";
 import { NextMatchBanner } from "@/components/next-match-banner";
 import { PredictionSheetsLinks } from "@/components/prediction-sheets-links";
 import { PredictionsGrid } from "@/components/predictions-grid";
+import { ParticipantSelector } from "@/components/participant-selector";
+import { SelectedParticipantProvider } from "@/components/selected-participant-provider";
 import {
   getNextMatchBannerData,
   getPredictionSheetLinks,
@@ -43,27 +45,31 @@ export default async function MainPage() {
         </div>
       </section>
 
-      <LeaderboardTable data={leaderboard} />
+      <SelectedParticipantProvider>
+        <LeaderboardTable data={leaderboard} />
 
-      <section className="space-y-4 pt-4">
-        <h2 className="text-xl sm:text-2xl font-bold text-[#0a192f]">
-          {t("public.predictions")}
-        </h2>
+        <section className="space-y-4 pt-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-[#0a192f]">
+            {t("public.predictions")}
+          </h2>
 
-        <PredictionsGrid data={predictionsData} />
+          <ParticipantSelector participants={predictionsData.participants} />
 
-        <div className="space-y-6 pt-8 border-t border-slate-200/60 mt-8">
-          <div className="space-y-1">
-            <h2 className="text-xl sm:text-2xl font-bold text-[#0a192f]">
-              {t("public.uploadedPredictionSheets")}
-            </h2>
-            <p className="text-sm text-slate-500">
-              {t("public.predictionSheetsSubtitle")}
-            </p>
+          <PredictionsGrid data={predictionsData} />
+
+          <div className="space-y-6 pt-8 border-t border-slate-200/60 mt-8">
+            <div className="space-y-1">
+              <h2 className="text-xl sm:text-2xl font-bold text-[#0a192f]">
+                {t("public.uploadedPredictionSheets")}
+              </h2>
+              <p className="text-sm text-slate-500">
+                {t("public.predictionSheetsSubtitle")}
+              </p>
+            </div>
+            <PredictionSheetsLinks data={predictionSheetLinks} />
           </div>
-          <PredictionSheetsLinks data={predictionSheetLinks} />
-        </div>
-      </section>
+        </section>
+      </SelectedParticipantProvider>
     </div>
   );
 }

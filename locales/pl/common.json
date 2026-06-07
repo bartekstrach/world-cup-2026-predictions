@@ -16,7 +16,12 @@
     "results": "Wyniki",
     "predictions": "Typy",
     "uploadedPredictionSheets": "Wgrane karty typów",
-    "predictionSheetsSubtitle": "Pliki typów uczestników pogrupowane według etapu"
+    "predictionSheetsSubtitle": "Pliki typów uczestników pogrupowane według etapu",
+    "participantSelector": {
+      "label": "Uczestnik",
+      "placeholder": "Wybierz uczestnika",
+      "all": "Wszyscy uczestnicy"
+    }
   },
   "lastFinishedMatches": {
     "after": "Po meczach {{matchesSummary}} ({{formattedMatchDate}})"
