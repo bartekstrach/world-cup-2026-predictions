@@ -71,6 +71,19 @@ export const SUBMISSION_STAGES = [
 
 export type SubmissionStage = (typeof SUBMISSION_STAGES)[number];
 
+export const STAGE_ORDER: Record<SubmissionStage, number> = {
+  group_1: 0,
+  group_2: 1,
+  group_3: 2,
+  round_32: 3,
+  round_16: 4,
+  quarter: 5,
+  semi: 6,
+  final: 7,
+};
+
+export const PUBLICATION_SETTINGS_SINGLETON_ID = 1;
+
 export const DEFAULT_UPLOAD_STAGE: SubmissionStage = "group_1";
 
 export const DEFAULT_UPLOAD_COMPETITION = {

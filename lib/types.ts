@@ -80,3 +80,20 @@ export interface PredictionSheetLink {
   createdAt: Date | null;
   updatedAt: Date | null;
 }
+
+export interface PublicationStageOption {
+  stage: SubmissionStage;
+  order: number;
+}
+
+export interface PublicationMatchOption {
+  id: number;
+  matchNumber: number;
+  matchDate: Date;
+  stage: MatchStage;
+  stageOrder: number;
+  homeTeamCode: string;
+  awayTeamCode: string;
+  homeTeamName: string;
+  awayTeamName: string;
+}

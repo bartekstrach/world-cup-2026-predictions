@@ -128,6 +128,43 @@ export const liveSyncRuntimeStates = pgTable("live_sync_runtime_states", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const publishedStages = pgTable(
+  "published_stages",
+  {
+    id: serial("id").primaryKey(),
+    competitionId: integer("competition_id")
+      .references(() => competitions.id)
+      .notNull(),
+    stage: varchar("stage", { length: 50 }).$type<SubmissionStage>().notNull(),
+    isPublished: boolean("is_published").default(false).notNull(),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    uniqueCompetitionStage: unique().on(table.competitionId, table.stage),
+  }),
+);
+
+export const publishedMatches = pgTable("published_matches", {
+  id: serial("id").primaryKey(),
+  matchId: integer("match_id")
+    .references(() => matches.id)
+    .notNull()
+    .unique(),
+  isPublished: boolean("is_published").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const publicationSettings = pgTable("publication_settings", {
+  id: serial("id").primaryKey(),
+  allowAllPublishedOverride: boolean("allow_all_published_override")
+    .default(false)
+    .notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const matchesRelations = relations(matches, ({ one }) => ({
   homeTeam: one(teams, {
     fields: [matches.homeTeamId],
@@ -183,6 +220,26 @@ export const liveSyncRuntimeStatesRelations = relations(
   ({ one }) => ({
     match: one(matches, {
       fields: [liveSyncRuntimeStates.matchId],
+      references: [matches.id],
+    }),
+  }),
+);
+
+export const publishedStagesRelations = relations(
+  publishedStages,
+  ({ one }) => ({
+    competition: one(competitions, {
+      fields: [publishedStages.competitionId],
+      references: [competitions.id],
+    }),
+  }),
+);
+
+export const publishedMatchesRelations = relations(
+  publishedMatches,
+  ({ one }) => ({
+    match: one(matches, {
+      fields: [publishedMatches.matchId],
       references: [matches.id],
     }),
   }),

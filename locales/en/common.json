@@ -184,6 +184,15 @@
       },
       "none": "No missing predictions in current or next stage.",
       "noStage": "-"
+    },
+    "publication": {
+      "title": "Publication Controls",
+      "stage": "Stage",
+      "match": "Match",
+      "override": "Temporary full visibility override",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "none": "No unpublished options available."
     }
   },
   "forms": {

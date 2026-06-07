@@ -1,10 +1,17 @@
 import { db } from "./db";
-import { MATCH_STATUSES } from "./constants";
+import { MATCH_STATUSES, STAGE_ORDER, SUBMISSION_STAGES } from "./constants";
 import { Prediction, PredictionsGridData } from "./types";
 import type { NextMatchBannerData } from "./types";
 import type { PredictionSheetLink } from "./types";
+import type { PublicationMatchOption, PublicationStageOption } from "./types";
 import { desc, eq, isNotNull, sql } from "drizzle-orm";
-import { participants, predictionSubmissions } from "./schema";
+import {
+  matches,
+  participants,
+  predictionSubmissions,
+  publishedMatches,
+  publishedStages,
+} from "./schema";
 
 export async function getPredictionsData(): Promise<PredictionsGridData> {
   const matches = await db.query.matches.findMany({
@@ -113,4 +120,78 @@ export async function getPredictionSheetLinks(): Promise<
       return false;
     }
   });
+}
+
+export async function getUnpublishedPublicationOptions(
+  competitionId: number,
+): Promise<{
+  unpublishedStages: PublicationStageOption[];
+  unpublishedMatches: PublicationMatchOption[];
+}> {
+  const publishedStageRows = await db
+    .select({
+      stage: publishedStages.stage,
+      isPublished: publishedStages.isPublished,
+    })
+    .from(publishedStages)
+    .where(eq(publishedStages.competitionId, competitionId));
+
+  const stagePublishedMap = new Map(
+    publishedStageRows.map((row) => [row.stage, row.isPublished]),
+  );
+
+  const unpublishedStages = SUBMISSION_STAGES.filter(
+    (stage) => stagePublishedMap.get(stage) !== true,
+  ).map((stage) => ({
+    stage,
+    order: STAGE_ORDER[stage],
+  }));
+
+  const matchRows = await db.query.matches.findMany({
+    where: eq(matches.competitionId, competitionId),
+    with: {
+      homeTeam: true,
+      awayTeam: true,
+    },
+    orderBy: (matches, { asc }) => [
+      asc(matches.matchDate),
+      asc(matches.matchNumber),
+    ],
+  });
+
+  const publishedMatchRows = await db
+    .select({
+      matchId: publishedMatches.matchId,
+      isPublished: publishedMatches.isPublished,
+    })
+    .from(publishedMatches);
+
+  const matchPublishedMap = new Map(
+    publishedMatchRows.map((row) => [row.matchId, row.isPublished]),
+  );
+
+  const unpublishedMatches = matchRows
+    .filter((match) => matchPublishedMap.get(match.id) !== true)
+    .map((match) => ({
+      id: match.id,
+      matchNumber: match.matchNumber,
+      matchDate: match.matchDate,
+      stage: match.stage,
+      stageOrder: STAGE_ORDER[match.stage],
+      homeTeamCode: match.homeTeam.code,
+      awayTeamCode: match.awayTeam.code,
+      homeTeamName: match.homeTeam.name,
+      awayTeamName: match.awayTeam.name,
+    }))
+    .sort((a, b) => {
+      const byDate = a.matchDate.getTime() - b.matchDate.getTime();
+      if (byDate !== 0) return byDate;
+
+      return a.matchNumber - b.matchNumber;
+    });
+
+  return {
+    unpublishedStages,
+    unpublishedMatches,
+  };
 }

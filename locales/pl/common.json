@@ -187,6 +187,15 @@
       },
       "none": "Brak brakujących typów w bieżącym i następnym etapie.",
       "noStage": "-"
+    },
+    "publication": {
+      "title": "Kontrola publikacji",
+      "stage": "Etap",
+      "match": "Mecz",
+      "override": "Tymczasowe nadpisanie pełnej widoczności",
+      "publish": "Opublikuj",
+      "unpublish": "Cofnij publikację",
+      "none": "Brak nieopublikowanych opcji."
     }
   },
   "forms": {

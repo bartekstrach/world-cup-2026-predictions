@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { participants, predictions, predictionSubmissions } from "@/lib/schema";
-import { eq } from "drizzle-orm";
+import {
+  participants,
+  predictions,
+  predictionSubmissions,
+  publishedMatches,
+  publishedStages,
+} from "@/lib/schema";
+import { desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { normalizeSubmissionStage } from "@/lib/blob-naming";
 import { SUBMISSION_STAGES } from "@/lib/constants";
@@ -73,6 +79,25 @@ export async function POST(request: NextRequest) {
         });
     }
 
+    const activeCompetition = await db.query.competitions.findFirst({
+      where: (competitions, { eq }) => eq(competitions.isActive, true),
+      orderBy: (competitions, { desc }) => [
+        desc(competitions.year),
+        desc(competitions.id),
+      ],
+    });
+
+    if (activeCompetition) {
+      await db
+        .insert(publishedStages)
+        .values({
+          competitionId: activeCompetition.id,
+          stage: normalizedStage,
+          isPublished: false,
+        })
+        .onConflictDoNothing();
+    }
+
     let inserted = 0;
     let updated = 0;
 
@@ -80,6 +105,14 @@ export async function POST(request: NextRequest) {
       if (pred.homeScore === null || pred.awayScore === null || !pred.matchId) {
         continue;
       }
+
+      await db
+        .insert(publishedMatches)
+        .values({
+          matchId: pred.matchId,
+          isPublished: false,
+        })
+        .onConflictDoNothing();
 
       // Check if prediction exists
       const existing = await db.query.predictions.findFirst({
