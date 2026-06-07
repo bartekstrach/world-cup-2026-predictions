@@ -57,12 +57,12 @@ export type AdminStats = {
     awayTeamCode: string;
     missingCount: number;
   }>;
-  nextMatch: {
+  nextMatches: Array<{
     matchDate: Date;
     stage: string;
     homeTeamCode: string;
     awayTeamCode: string;
-  } | null;
+  }>;
   nextStage: string | null;
 };
 
@@ -77,7 +77,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     total_missing_predictions: 0,
     missingPredictionsByParticipant: [],
     missingPredictionsByMatch: [],
-    nextMatch: null,
+    nextMatches: [],
     nextStage: null,
   };
 
@@ -160,6 +160,11 @@ export async function getAdminStats(): Promise<AdminStats> {
   `);
 
     const nextMatchResult = await db.execute(sql`
+    WITH next_kickoff AS (
+      SELECT MIN(match_date) AS match_date
+      FROM matches
+      WHERE status = ${MATCH_STATUSES.SCHEDULED}
+    )
     SELECT
       m.match_date,
       m.stage,
@@ -168,9 +173,9 @@ export async function getAdminStats(): Promise<AdminStats> {
     FROM matches m
     INNER JOIN teams ht ON ht.id = m.home_team_id
     INNER JOIN teams at ON at.id = m.away_team_id
+    INNER JOIN next_kickoff nk ON nk.match_date = m.match_date
     WHERE m.status = ${MATCH_STATUSES.SCHEDULED}
-    ORDER BY m.match_date ASC, m.match_number ASC
-    LIMIT 1
+    ORDER BY m.match_number ASC
   `);
 
     const currentStageResult = await db.execute(sql`
@@ -182,26 +187,26 @@ export async function getAdminStats(): Promise<AdminStats> {
   `);
 
     const baseStats = statsResult.rows[0] as BaseStatsRow;
-    const nextMatchRow =
-      (nextMatchResult.rows[0] as NextMatchRow | undefined) ?? null;
+    const nextMatchRows = nextMatchResult.rows as NextMatchRow[];
     const currentStageRow =
       (currentStageResult.rows[0] as CurrentStageRow | undefined) ?? null;
     const missingByParticipantRows =
       missingByParticipantResult.rows as MissingByParticipantRow[];
     const missingByMatchRows = missingByMatchResult.rows as MissingByMatchRow[];
 
-    const nextMatch = nextMatchRow
-      ? {
-          matchDate: new Date(nextMatchRow.match_date),
-          stage: nextMatchRow.stage,
-          homeTeamCode: nextMatchRow.home_team_code,
-          awayTeamCode: nextMatchRow.away_team_code,
-        }
-      : null;
+    const nextMatches = nextMatchRows.map((row) => ({
+      matchDate: new Date(row.match_date),
+      stage: row.stage,
+      homeTeamCode: row.home_team_code,
+      awayTeamCode: row.away_team_code,
+    }));
 
+    const firstNextMatchStage = nextMatches[0]?.stage;
     const nextStage =
-      nextMatch && currentStageRow && nextMatch.stage !== currentStageRow.stage
-        ? nextMatch.stage
+      firstNextMatchStage &&
+      currentStageRow &&
+      firstNextMatchStage !== currentStageRow.stage
+        ? firstNextMatchStage
         : null;
 
     return {
@@ -228,7 +233,7 @@ export async function getAdminStats(): Promise<AdminStats> {
           missingCount: Number(row.missing_count),
         }))
         .filter((row) => row.missingCount > 0),
-      nextMatch,
+      nextMatches,
       nextStage,
     };
   } catch (error) {

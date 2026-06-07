@@ -128,7 +128,7 @@
           "description": "Braki dla zaplanowanych"
         }
       },
-      "nextMatchInsight": "Podgląd następnego meczu",
+      "nextMatchInsight": "Podgląd najbliższych meczów",
       "kickoff": "Początek: {{date}}",
       "upcomingStage": "Nadchodząca zmiana etapu: {{stage}}",
       "noUpcomingTitle": "Brak zaplanowanych nadchodzących meczów",

@@ -1,8 +1,7 @@
 import { getAdminStats } from "@/lib/admin-stats";
-import { formatDateTime } from "@/lib/date";
-import { getMatchTeamNames } from "@/lib/teams";
 import { LIVE_SYNC_FREQUENCY_MINUTES } from "@/lib/constants";
 import { MissingPredictionsCard } from "@/components/admin/missing-predictions-card";
+import { NextMatchInsightList } from "@/components/admin/next-match-insight-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Trophy,
@@ -11,7 +10,6 @@ import {
   Users,
   Target,
   Flag,
-  Calendar,
   AlertCircle,
 } from "lucide-react";
 import { getT } from "@/lib/i18n/server";
@@ -132,42 +130,10 @@ export default async function AdminDashboard() {
       <div className="grid grid-cols-1 gap-6">
         <Card className="rounded-2xl border-slate-100 p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
           <CardContent className="p-0">
-            {stats.nextMatch ? (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
-                  <Calendar className="w-4 h-4 text-[#10b981]" />{" "}
-                  {t("admin.dashboard.nextMatchInsight")}
-                </div>
-                <div className="text-2xl font-bold text-[#0a192f] flex items-center gap-2">
-                  {getMatchTeamNames({
-                    displayFlags: true,
-                    homeTeamCode: stats.nextMatch.homeTeamCode,
-                    awayTeamCode: stats.nextMatch.awayTeamCode,
-                  })}
-                </div>
-                <p className="text-sm text-slate-500 font-mono">
-                  {t("admin.dashboard.kickoff", {
-                    date: formatDateTime({ date: stats.nextMatch.matchDate }),
-                  })}
-                </p>
-                {stats.nextStage && (
-                  <p className="text-sm text-slate-500">
-                    {t("admin.dashboard.upcomingStage", {
-                      stage: t(`predictionSheets.stages.${stats.nextStage}`),
-                    })}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="text-lg font-semibold text-[#0a192f]">
-                  {t("admin.dashboard.noUpcomingTitle")}
-                </div>
-                <p className="text-sm text-slate-500">
-                  {t("admin.dashboard.noUpcomingDescription")}
-                </p>
-              </div>
-            )}
+            <NextMatchInsightList
+              nextMatches={stats.nextMatches}
+              nextStage={stats.nextStage}
+            />
           </CardContent>
         </Card>
 

@@ -122,7 +122,7 @@
         "teams": { "label": "Teams", "description": "Participating nations" },
         "missing": { "label": "Missing", "description": "Scheduled gaps" }
       },
-      "nextMatchInsight": "Next Match Insight",
+      "nextMatchInsight": "Next Matches Insight",
       "kickoff": "Kickoff: {{date}}",
       "upcomingStage": "Upcoming stage transition: {{stage}}",
       "noUpcomingTitle": "No upcoming scheduled matches",
