@@ -140,4 +140,16 @@
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
   }
+
+  .stage-section-header {
+    background: color-mix(in oklab, #10b981 12%, white);
+  }
+
+  .stage-section-header td {
+    border-bottom-color: color-mix(in oklab, #10b981 20%, white);
+  }
+
+  .stage-section-header button:hover {
+    background: color-mix(in oklab, #10b981 16%, white);
+  }
 }

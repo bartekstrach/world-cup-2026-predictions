@@ -54,6 +54,11 @@
       "date": "Data",
       "match": "Mecz",
       "result": "Wynik"
+    },
+    "stageHeader": {
+      "matches": "{{count}} meczów",
+      "expand": "Rozwiń {{stage}}",
+      "collapse": "Zwiń {{stage}}"
     }
   },
   "admin": {

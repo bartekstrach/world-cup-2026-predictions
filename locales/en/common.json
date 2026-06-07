@@ -54,6 +54,11 @@
       "date": "Date",
       "match": "Match",
       "result": "Result"
+    },
+    "stageHeader": {
+      "matches": "{{count}} matches",
+      "expand": "Expand {{stage}}",
+      "collapse": "Collapse {{stage}}"
     }
   },
   "admin": {

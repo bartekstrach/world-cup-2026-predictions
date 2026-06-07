@@ -3,22 +3,8 @@ import { matches, predictions, teams } from "./schema";
 import { and, desc, eq, sql } from "drizzle-orm";
 import type { LeaderboardEntry } from "./types";
 import { alias } from "drizzle-orm/pg-core";
-import {
-  BAD_PREDICTION,
-  FINISHED_STATUS,
-  GOOD_PREDICTION,
-  NON_FINISHED_STATUSES,
-  PERFECT_PREDICTION,
-  SCORE_SEPARATOR,
-} from "./constants";
-
-export const formatScore = ({
-  homeScore,
-  awayScore,
-}: {
-  homeScore?: number;
-  awayScore?: number;
-}): string => [homeScore ?? "-", SCORE_SEPARATOR, awayScore ?? "-"].join("");
+import { calculatePoints, formatScore } from "./scoring-utils";
+import { FINISHED_STATUS, NON_FINISHED_STATUSES } from "./constants";
 
 /**
  * Calculate points for a single prediction
@@ -27,40 +13,7 @@ export const formatScore = ({
  * - Correct winner/draw: 1 point
  * - Wrong: 0 points
  */
-export function calculatePoints(
-  predictedHome: number,
-  predictedAway: number,
-  actualHome: number,
-  actualAway: number
-): number {
-  // Exact score
-  if (predictedHome === actualHome && predictedAway === actualAway) {
-    return PERFECT_PREDICTION;
-  }
-
-  // Determine outcomes
-  const predictedOutcome =
-    predictedHome > predictedAway
-      ? "home"
-      : predictedHome < predictedAway
-      ? "away"
-      : "draw";
-
-  const actualOutcome =
-    actualHome > actualAway
-      ? "home"
-      : actualHome < actualAway
-      ? "away"
-      : "draw";
-
-  // Correct winner/draw
-  if (predictedOutcome === actualOutcome) {
-    return GOOD_PREDICTION;
-  }
-
-  // Wrong
-  return BAD_PREDICTION;
-}
+export { calculatePoints, formatScore };
 
 /**
  * Update points for all predictions of a finished match
@@ -86,7 +39,7 @@ export async function updateMatchPredictions(matchId: number) {
       prediction.homeScore,
       prediction.awayScore,
       match.homeScore,
-      match.awayScore
+      match.awayScore,
     );
 
     await db
@@ -170,7 +123,7 @@ export async function getLeaderboard(competitionId?: number) {
     where: (matches, { eq, or, and }) =>
       and(
         competitionId ? eq(matches.competitionId, competitionId) : undefined,
-        or(eq(matches.status, "live"), eq(matches.status, "scheduled"))
+        or(eq(matches.status, "live"), eq(matches.status, "scheduled")),
       ),
     with: {
       homeTeam: true,
@@ -195,7 +148,7 @@ export async function getLeaderboard(competitionId?: number) {
         predictions_count: row.predictions_count,
         nextPredictions: [],
         nextMatches: [],
-      }))
+      })),
     ) as LeaderboardEntry[];
   }
 
@@ -208,7 +161,7 @@ export async function getLeaderboard(competitionId?: number) {
       matchesToShow = nextMatches.filter(
         (m) =>
           m.matchDate.getTime() === earliestDate.getTime() &&
-          m.status === "scheduled"
+          m.status === "scheduled",
       );
     }
   }
@@ -226,7 +179,7 @@ export async function getLeaderboard(competitionId?: number) {
         predictions_count: row.predictions_count,
         nextPredictions: [],
         nextMatches: [],
-      }))
+      })),
     ) as LeaderboardEntry[];
   }
 
@@ -355,11 +308,11 @@ export async function getLastCompletedMatchDate() {
           WHERE ${matches.status} IN (
             ${sql.join(
               NON_FINISHED_STATUSES.map((s) => sql`${s}`),
-              sql`, `
+              sql`, `,
             )}
           )
         ) = 0
-      `
+      `,
     )
     .orderBy(desc(matches.matchDate))
     .limit(1);
@@ -383,6 +336,9 @@ export async function getFinishedMatchesByMatchDate(matchDate: Date) {
     .innerJoin(homeTeam, eq(matches.homeTeamId, homeTeam.id))
     .innerJoin(awayTeam, eq(matches.awayTeamId, awayTeam.id))
     .where(
-      and(eq(matches.matchDate, matchDate), eq(matches.status, FINISHED_STATUS))
+      and(
+        eq(matches.matchDate, matchDate),
+        eq(matches.status, FINISHED_STATUS),
+      ),
     );
 }
