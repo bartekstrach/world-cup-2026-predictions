@@ -37,6 +37,19 @@ type CurrentStageRow = {
   stage: string;
 };
 
+type TimelineStageRow = {
+  stage: string;
+};
+
+type HallOfShameRow = {
+  participant_id: number;
+  participant_name: string;
+  current_missing: string | number;
+  current_total: string | number;
+  next_missing: string | number;
+  next_total: string | number;
+};
+
 export type AdminStats = {
   total_matches: number;
   finished_matches: number;
@@ -64,6 +77,16 @@ export type AdminStats = {
     awayTeamCode: string;
   }>;
   nextStage: string | null;
+  hallOfShameCurrentStage: string | null;
+  hallOfShameNextStage: string | null;
+  hallOfShame: Array<{
+    participantId: number;
+    participantName: string;
+    currentMissing: number;
+    currentTotal: number;
+    nextMissing: number;
+    nextTotal: number;
+  }>;
 };
 
 export async function getAdminStats(): Promise<AdminStats> {
@@ -79,6 +102,9 @@ export async function getAdminStats(): Promise<AdminStats> {
     missingPredictionsByMatch: [],
     nextMatches: [],
     nextStage: null,
+    hallOfShameCurrentStage: null,
+    hallOfShameNextStage: null,
+    hallOfShame: [],
   };
 
   try {
@@ -186,6 +212,16 @@ export async function getAdminStats(): Promise<AdminStats> {
     LIMIT 1
   `);
 
+    const timelineStagesResult = await db.execute(sql`
+    SELECT m.stage
+    FROM matches m
+    WHERE m.status IN (${MATCH_STATUSES.LIVE}, ${MATCH_STATUSES.SCHEDULED})
+    ORDER BY
+      CASE WHEN m.status = ${MATCH_STATUSES.LIVE} THEN 0 ELSE 1 END,
+      m.match_date ASC,
+      m.match_number ASC
+  `);
+
     const baseStats = statsResult.rows[0] as BaseStatsRow;
     const nextMatchRows = nextMatchResult.rows as NextMatchRow[];
     const currentStageRow =
@@ -193,6 +229,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     const missingByParticipantRows =
       missingByParticipantResult.rows as MissingByParticipantRow[];
     const missingByMatchRows = missingByMatchResult.rows as MissingByMatchRow[];
+    const timelineStageRows = timelineStagesResult.rows as TimelineStageRow[];
 
     const nextMatches = nextMatchRows.map((row) => ({
       matchDate: new Date(row.match_date),
@@ -208,6 +245,73 @@ export async function getAdminStats(): Promise<AdminStats> {
       firstNextMatchStage !== currentStageRow.stage
         ? firstNextMatchStage
         : null;
+
+    const hallOfShameCurrentStage = timelineStageRows[0]?.stage ?? null;
+    const hallOfShameNextStage =
+      timelineStageRows.find((row) => row.stage !== hallOfShameCurrentStage)
+        ?.stage ?? null;
+
+    const hallOfShameResult = await db.execute(sql`
+    WITH stage_context AS (
+      SELECT
+        ${hallOfShameCurrentStage}::text AS current_stage,
+        ${hallOfShameNextStage}::text AS next_stage
+    ),
+    stage_totals AS (
+      SELECT
+        sc.current_stage,
+        sc.next_stage,
+        COALESCE((
+          SELECT COUNT(*)
+          FROM matches m
+          WHERE m.stage = sc.current_stage
+        ), 0) AS current_total,
+        COALESCE((
+          SELECT COUNT(*)
+          FROM matches m
+          WHERE m.stage = sc.next_stage
+        ), 0) AS next_total
+      FROM stage_context sc
+    ),
+    participant_stage_missing AS (
+      SELECT
+        p.id AS participant_id,
+        p.name AS participant_name,
+        st.current_total,
+        st.next_total,
+        COALESCE(SUM(
+          CASE
+            WHEN m.stage = st.current_stage AND pr.id IS NULL THEN 1
+            ELSE 0
+          END
+        ), 0) AS current_missing,
+        COALESCE(SUM(
+          CASE
+            WHEN m.stage = st.next_stage AND pr.id IS NULL THEN 1
+            ELSE 0
+          END
+        ), 0) AS next_missing
+      FROM participants p
+      CROSS JOIN stage_totals st
+      LEFT JOIN matches m ON m.stage IN (st.current_stage, st.next_stage)
+      LEFT JOIN predictions pr
+        ON pr.participant_id = p.id
+       AND pr.match_id = m.id
+      GROUP BY p.id, p.name, st.current_total, st.next_total
+    )
+    SELECT
+      participant_id,
+      participant_name,
+      current_missing,
+      current_total,
+      next_missing,
+      next_total
+    FROM participant_stage_missing
+    WHERE current_missing > 0 OR next_missing > 0
+    ORDER BY (current_missing + next_missing) DESC, participant_name ASC
+  `);
+
+    const hallOfShameRows = hallOfShameResult.rows as HallOfShameRow[];
 
     return {
       total_matches: Number(baseStats.total_matches),
@@ -235,6 +339,16 @@ export async function getAdminStats(): Promise<AdminStats> {
         .filter((row) => row.missingCount > 0),
       nextMatches,
       nextStage,
+      hallOfShameCurrentStage,
+      hallOfShameNextStage,
+      hallOfShame: hallOfShameRows.map((row) => ({
+        participantId: row.participant_id,
+        participantName: row.participant_name,
+        currentMissing: Number(row.current_missing),
+        currentTotal: Number(row.current_total),
+        nextMissing: Number(row.next_missing),
+        nextTotal: Number(row.next_total),
+      })),
     };
   } catch (error) {
     console.error("Failed to load admin stats", error);

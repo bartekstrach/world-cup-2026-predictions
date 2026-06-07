@@ -1,6 +1,6 @@
 import { getAdminStats } from "@/lib/admin-stats";
 import { LIVE_SYNC_FREQUENCY_MINUTES } from "@/lib/constants";
-import { MissingPredictionsCard } from "@/components/admin/missing-predictions-card";
+import { HallOfShameCard } from "@/components/admin/hall-of-shame-card";
 import { NextMatchInsightList } from "@/components/admin/next-match-insight-list";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -137,10 +137,10 @@ export default async function AdminDashboard() {
           </CardContent>
         </Card>
 
-        <MissingPredictionsCard
-          totalMissingPredictions={stats.total_missing_predictions}
-          byParticipant={stats.missingPredictionsByParticipant}
-          byMatch={stats.missingPredictionsByMatch}
+        <HallOfShameCard
+          currentStage={stats.hallOfShameCurrentStage}
+          nextStage={stats.hallOfShameNextStage}
+          rows={stats.hallOfShame}
         />
 
         <Card className="rounded-2xl border-slate-100 p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">

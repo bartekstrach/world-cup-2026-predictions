@@ -175,6 +175,14 @@
       "topByParticipant": "Najwięcej wg uczestnika",
       "topByMatch": "Najwięcej wg meczu",
       "none": "Brak brakujących typów."
+    },
+    "hallOfShame": {
+      "title": "Galeria wstydu",
+      "headers": {
+        "participant": "Uczestnik"
+      },
+      "none": "Brak brakujących typów w bieżącym i następnym etapie.",
+      "noStage": "-"
     }
   },
   "forms": {

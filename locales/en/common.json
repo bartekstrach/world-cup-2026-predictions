@@ -169,6 +169,14 @@
       "topByParticipant": "Top by participant",
       "topByMatch": "Top by match",
       "none": "No missing predictions."
+    },
+    "hallOfShame": {
+      "title": "Hall of Shame",
+      "headers": {
+        "participant": "Participant"
+      },
+      "none": "No missing predictions in current or next stage.",
+      "noStage": "-"
     }
   },
   "forms": {
