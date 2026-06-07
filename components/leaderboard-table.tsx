@@ -28,8 +28,40 @@ const getBackground = (rank: number) => {
   }
 };
 
+const getRankNumber = (rank: string) => {
+  switch (rank) {
+    case "🥇":
+      return 1;
+    case "🥈":
+      return 2;
+    case "🥉":
+      return 3;
+    default: {
+      const parsed = Number.parseInt(rank, 10);
+      return Number.isNaN(parsed) ? 999 : parsed;
+    }
+  }
+};
+
+const getRankGroupsByPoints = (entries: LeaderboardEntry[]) => {
+  const groups = new Map<string, number>();
+  let groupRank = 0;
+
+  for (const entry of entries) {
+    const pointsKey = String(entry.total_points);
+
+    if (!groups.has(pointsKey)) {
+      groupRank += 1;
+      groups.set(pointsKey, groupRank);
+    }
+  }
+
+  return groups;
+};
+
 export async function LeaderboardTable({ data }: LeaderboardTableProps) {
   const t = await getT();
+  const rankGroupsByPoints = getRankGroupsByPoints(data);
   return (
     <Card className="w-full max-w-full overflow-hidden rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
       <div className="overflow-x-auto public-table-scroll">
@@ -60,34 +92,46 @@ export async function LeaderboardTable({ data }: LeaderboardTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.map((entry, index) => (
-              <TableRow key={entry.id} className={getBackground(index + 1)}>
-                <TableCell className="font-medium text-center sticky left-0 z-10 bg-inherit whitespace-nowrap p-4">
-                  {entry.rank}
-                </TableCell>
-                <TableCell className="font-medium sticky left-14 z-10 bg-inherit whitespace-nowrap max-w-36 sm:max-w-44 truncate p-4 text-slate-700">
-                  {entry.name}
-                </TableCell>
-                <TableCell
-                  className={`text-center font-mono font-bold sticky left-[12.5rem] sm:left-[14.5rem] z-10 bg-inherit whitespace-nowrap p-4 ${
-                    index === 0 ? "text-[#10b981] text-lg" : "text-[#0a192f]"
-                  }`}
-                >
-                  {entry.total_points}
-                </TableCell>
-                {entry.nextPredictions.map((prediction) => (
+            {data.map((entry) => {
+              const rowRank =
+                rankGroupsByPoints.get(String(entry.total_points)) ??
+                getRankNumber(entry.rank);
+
+              return (
+                <TableRow key={entry.id} className={getBackground(rowRank)}>
                   <TableCell
-                    key={`${entry.id}+${prediction.matchId}`}
-                    className="text-center font-mono text-slate-600 whitespace-nowrap p-4"
+                    className={`font-medium text-center sticky left-0 z-10 bg-inherit whitespace-nowrap p-4 ${
+                      rowRank === 1 ? "border-l-4 border-[#10b981]" : ""
+                    }`}
                   >
-                    {prediction.homeScore !== null &&
-                    prediction.awayScore !== null
-                      ? `${prediction.homeScore}:${prediction.awayScore}`
-                      : "-"}
+                    {entry.rank}
                   </TableCell>
-                ))}
-              </TableRow>
-            ))}
+                  <TableCell className="font-medium sticky left-14 z-10 bg-inherit whitespace-nowrap max-w-36 sm:max-w-44 truncate p-4 text-slate-700">
+                    {entry.name}
+                  </TableCell>
+                  <TableCell
+                    className={`text-center font-mono font-bold sticky left-[12.5rem] sm:left-[14.5rem] z-10 bg-inherit whitespace-nowrap p-4 ${
+                      rowRank === 1
+                        ? "text-[#10b981] text-lg"
+                        : "text-[#0a192f]"
+                    }`}
+                  >
+                    {entry.total_points}
+                  </TableCell>
+                  {entry.nextPredictions.map((prediction) => (
+                    <TableCell
+                      key={`${entry.id}+${prediction.matchId}`}
+                      className="text-center font-mono text-slate-600 whitespace-nowrap p-4"
+                    >
+                      {prediction.homeScore !== null &&
+                      prediction.awayScore !== null
+                        ? `${prediction.homeScore}:${prediction.awayScore}`
+                        : "-"}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
