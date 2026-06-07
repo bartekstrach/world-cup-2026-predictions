@@ -4,29 +4,146 @@ import { Prediction, PredictionsGridData } from "./types";
 import type { NextMatchBannerData } from "./types";
 import type { PredictionSheetLink } from "./types";
 import type { PublicationMatchOption, PublicationStageOption } from "./types";
-import { desc, eq, isNotNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, or, sql } from "drizzle-orm";
 import {
+  competitions,
+  publicationSettings,
   matches,
   participants,
   predictionSubmissions,
   publishedMatches,
   publishedStages,
 } from "./schema";
+import {
+  PUBLICATION_SETTINGS_SINGLETON_ID,
+  type SubmissionStage,
+} from "./constants";
+
+type PublicVisibilityContext = {
+  activeCompetitionId: number | null;
+  allowAllPublishedOverride: boolean;
+  publishedStages: Set<SubmissionStage>;
+  publishedMatchIds: Set<number>;
+};
+
+export async function getPublicVisibilityContext(): Promise<PublicVisibilityContext> {
+  const settings = await db.query.publicationSettings.findFirst({
+    where: eq(publicationSettings.id, PUBLICATION_SETTINGS_SINGLETON_ID),
+  });
+
+  const allowAllPublishedOverride =
+    settings?.allowAllPublishedOverride === true;
+
+  const activeCompetition = await db.query.competitions.findFirst({
+    where: eq(competitions.isActive, true),
+    orderBy: (competitions, { desc }) => [
+      desc(competitions.year),
+      desc(competitions.id),
+    ],
+  });
+
+  if (allowAllPublishedOverride) {
+    return {
+      activeCompetitionId: activeCompetition?.id ?? null,
+      allowAllPublishedOverride: true,
+      publishedStages: new Set(),
+      publishedMatchIds: new Set(),
+    };
+  }
+
+  if (!activeCompetition) {
+    return {
+      activeCompetitionId: null,
+      allowAllPublishedOverride: false,
+      publishedStages: new Set(),
+      publishedMatchIds: new Set(),
+    };
+  }
+
+  const [publishedStageRows, publishedMatchRows] = await Promise.all([
+    db
+      .select({
+        stage: publishedStages.stage,
+      })
+      .from(publishedStages)
+      .where(
+        and(
+          eq(publishedStages.competitionId, activeCompetition.id),
+          eq(publishedStages.isPublished, true),
+        ),
+      ),
+    db
+      .select({
+        matchId: publishedMatches.matchId,
+      })
+      .from(publishedMatches)
+      .innerJoin(matches, eq(matches.id, publishedMatches.matchId))
+      .where(
+        and(
+          eq(matches.competitionId, activeCompetition.id),
+          eq(publishedMatches.isPublished, true),
+        ),
+      ),
+  ]);
+
+  return {
+    activeCompetitionId: activeCompetition.id,
+    allowAllPublishedOverride: false,
+    publishedStages: new Set(
+      publishedStageRows.map((row) => row.stage as SubmissionStage),
+    ),
+    publishedMatchIds: new Set(publishedMatchRows.map((row) => row.matchId)),
+  };
+}
 
 export async function getPredictionsData(): Promise<PredictionsGridData> {
-  const matches = await db.query.matches.findMany({
-    with: {
-      homeTeam: true,
-      awayTeam: true,
-    },
-    orderBy: (matches, { asc }) => [asc(matches.matchNumber)],
-  });
+  const visibility = await getPublicVisibilityContext();
+
+  const publishedStageList = Array.from(visibility.publishedStages);
+  const publishedMatchIdList = Array.from(visibility.publishedMatchIds);
+
+  const visibleMatches = visibility.allowAllPublishedOverride
+    ? await db.query.matches.findMany({
+        with: {
+          homeTeam: true,
+          awayTeam: true,
+        },
+        orderBy: (matches, { asc }) => [asc(matches.matchNumber)],
+      })
+    : visibility.activeCompetitionId === null ||
+        (publishedStageList.length === 0 && publishedMatchIdList.length === 0)
+      ? []
+      : await db.query.matches.findMany({
+          where: and(
+            eq(matches.competitionId, visibility.activeCompetitionId),
+            or(
+              publishedStageList.length > 0
+                ? inArray(matches.stage, publishedStageList)
+                : undefined,
+              publishedMatchIdList.length > 0
+                ? inArray(matches.id, publishedMatchIdList)
+                : undefined,
+            ),
+          ),
+          with: {
+            homeTeam: true,
+            awayTeam: true,
+          },
+          orderBy: (matches, { asc }) => [asc(matches.matchNumber)],
+        });
 
   const participants = await db.query.participants.findMany({
     orderBy: (participants, { asc }) => [asc(participants.name)],
   });
 
-  const allPredictions = await db.query.predictions.findMany();
+  const visibleMatchIds = visibleMatches.map((match) => match.id);
+  const allPredictions =
+    visibleMatchIds.length > 0
+      ? await db.query.predictions.findMany({
+          where: (predictions, { inArray }) =>
+            inArray(predictions.matchId, visibleMatchIds),
+        })
+      : [];
 
   const predictions: Record<string, Prediction> = {};
   allPredictions.forEach((pred) => {
@@ -40,7 +157,7 @@ export async function getPredictionsData(): Promise<PredictionsGridData> {
     };
   });
 
-  return { matches, participants, predictions };
+  return { matches: visibleMatches, participants, predictions };
 }
 
 export async function getNextMatchBannerData(): Promise<NextMatchBannerData | null> {
@@ -90,6 +207,37 @@ export async function getNextMatchBannerData(): Promise<NextMatchBannerData | nu
 export async function getPredictionSheetLinks(): Promise<
   PredictionSheetLink[]
 > {
+  const visibility = await getPublicVisibilityContext();
+
+  let visibleStages = new Set<SubmissionStage>();
+
+  if (visibility.allowAllPublishedOverride) {
+    visibleStages = new Set(SUBMISSION_STAGES);
+  } else {
+    const publishedMatchStageRows = await db
+      .select({
+        stage: matches.stage,
+      })
+      .from(matches)
+      .where(
+        inArray(
+          matches.id,
+          visibility.publishedMatchIds.size > 0
+            ? Array.from(visibility.publishedMatchIds)
+            : [-1],
+        ),
+      );
+
+    visibleStages = new Set<SubmissionStage>([
+      ...Array.from(visibility.publishedStages),
+      ...publishedMatchStageRows.map((row) => row.stage as SubmissionStage),
+    ]);
+  }
+
+  if (visibleStages.size === 0) {
+    return [];
+  }
+
   const rows = await db
     .select({
       id: predictionSubmissions.id,
@@ -105,7 +253,10 @@ export async function getPredictionSheetLinks(): Promise<
       eq(participants.id, predictionSubmissions.participantId),
     )
     .where(
-      sql`${isNotNull(predictionSubmissions.blobUrl)} AND ${predictionSubmissions.blobUrl} <> ''`,
+      and(
+        inArray(predictionSubmissions.stage, Array.from(visibleStages)),
+        sql`${isNotNull(predictionSubmissions.blobUrl)} AND ${predictionSubmissions.blobUrl} <> ''`,
+      ),
     )
     .orderBy(
       desc(predictionSubmissions.updatedAt),

@@ -1,10 +1,11 @@
-import { db, sql as neonSql } from "./db";
+import { db } from "./db";
 import { matches, predictions, teams } from "./schema";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, or, sql } from "drizzle-orm";
 import type { LeaderboardEntry } from "./types";
 import { alias } from "drizzle-orm/pg-core";
 import { calculatePoints, formatScore } from "./scoring-utils";
 import { FINISHED_STATUS, NON_FINISHED_STATUSES } from "./constants";
+import { getPublicVisibilityContext } from "./predictions";
 
 /**
  * Calculate points for a single prediction
@@ -82,66 +83,164 @@ export async function recalculateAllPoints() {
  * Get leaderboard with total points per participant
  */
 export async function getLeaderboard(competitionId?: number) {
-  // 1. Get base leaderboard (same as before)
-  const leaderboardQuery = competitionId
-    ? neonSql`
-        SELECT 
-          p.id,
-          p.name,
-          p.email,
-          COALESCE(SUM(pred.points), 0) as total_points,
-          COUNT(pred.id) as predictions_count,
-          COUNT(CASE WHEN pred.points = 3 THEN 1 END) as exact_scores,
-          COUNT(CASE WHEN pred.points = 1 THEN 1 END) as correct_outcomes
-        FROM participants p
-        LEFT JOIN predictions pred ON p.id = pred.participant_id
-        LEFT JOIN matches m ON pred.match_id = m.id
-        WHERE m.competition_id = ${competitionId}
-        GROUP BY p.id, p.name, p.email
-        ORDER BY total_points DESC, exact_scores DESC
-      `
-    : neonSql`
-        SELECT 
-          p.id,
-          p.name,
-          p.email,
-          COALESCE(SUM(pred.points), 0) as total_points,
-          COUNT(pred.id) as predictions_count,
-          COUNT(CASE WHEN pred.points = 3 THEN 1 END) as exact_scores,
-          COUNT(CASE WHEN pred.points = 1 THEN 1 END) as correct_outcomes
-        FROM participants p
-        LEFT JOIN predictions pred ON p.id = pred.participant_id
-        GROUP BY p.id, p.name, p.email
-        ORDER BY total_points DESC, exact_scores DESC
-      `;
+  const visibility = await getPublicVisibilityContext();
 
-  const leaderboardResults = await leaderboardQuery;
+  const matchScopeCompetitionId =
+    competitionId ?? visibility.activeCompetitionId ?? undefined;
 
-  // 2. Get next matches WITH team data using Drizzle relations
-  // This is ONE query with JOINs instead of N queries
-  const nextMatches = await db.query.matches.findMany({
-    where: (matches, { eq, or, and }) =>
-      and(
-        competitionId ? eq(matches.competitionId, competitionId) : undefined,
-        or(eq(matches.status, "live"), eq(matches.status, "scheduled")),
-      ),
-    with: {
-      homeTeam: true,
-      awayTeam: true,
-    },
-    orderBy: (matches, { asc }) => [
-      sql`CASE WHEN ${matches.status} = 'live' THEN 0 ELSE 1 END`,
-      asc(matches.matchDate),
-      asc(matches.matchNumber),
-    ],
-    limit: 10,
+  const publishedStageList = Array.from(visibility.publishedStages);
+  const publishedMatchIdList = Array.from(visibility.publishedMatchIds);
+
+  const visibleMatchIds = visibility.allowAllPublishedOverride
+    ? (
+        await db.query.matches.findMany({
+          where:
+            matchScopeCompetitionId !== undefined
+              ? eq(matches.competitionId, matchScopeCompetitionId)
+              : undefined,
+          columns: {
+            id: true,
+          },
+        })
+      ).map((match) => match.id)
+    : matchScopeCompetitionId === undefined ||
+        (publishedStageList.length === 0 && publishedMatchIdList.length === 0)
+      ? []
+      : (
+          await db.query.matches.findMany({
+            where: and(
+              eq(matches.competitionId, matchScopeCompetitionId),
+              or(
+                publishedStageList.length > 0
+                  ? inArray(matches.stage, publishedStageList)
+                  : undefined,
+                publishedMatchIdList.length > 0
+                  ? inArray(matches.id, publishedMatchIdList)
+                  : undefined,
+              ),
+            ),
+            columns: {
+              id: true,
+            },
+          })
+        ).map((match) => match.id);
+
+  const visiblePredictions =
+    visibleMatchIds.length > 0
+      ? await db.query.predictions.findMany({
+          where: inArray(predictions.matchId, visibleMatchIds),
+        })
+      : [];
+
+  const participantsRows = await db.query.participants.findMany({
+    orderBy: (participants, { asc }) => [asc(participants.name)],
   });
 
-  if (nextMatches.length === 0) {
+  const scoreByParticipant = new Map<
+    number,
+    {
+      total_points: number;
+      predictions_count: number;
+      exact_scores: number;
+      correct_outcomes: number;
+    }
+  >();
+
+  for (const prediction of visiblePredictions) {
+    const current = scoreByParticipant.get(prediction.participantId) ?? {
+      total_points: 0,
+      predictions_count: 0,
+      exact_scores: 0,
+      correct_outcomes: 0,
+    };
+
+    current.total_points += prediction.points ?? 0;
+    current.predictions_count += 1;
+    if ((prediction.points ?? 0) === 3) current.exact_scores += 1;
+    if ((prediction.points ?? 0) === 1) current.correct_outcomes += 1;
+
+    scoreByParticipant.set(prediction.participantId, current);
+  }
+
+  const leaderboardResults = participantsRows
+    .map((participant) => {
+      const score = scoreByParticipant.get(participant.id) ?? {
+        total_points: 0,
+        predictions_count: 0,
+        exact_scores: 0,
+        correct_outcomes: 0,
+      };
+
+      return {
+        id: participant.id,
+        name: participant.name,
+        email: participant.email,
+        total_points: score.total_points,
+        predictions_count: score.predictions_count,
+        exact_scores: score.exact_scores,
+        correct_outcomes: score.correct_outcomes,
+      };
+    })
+    .sort(
+      (a, b) =>
+        b.total_points - a.total_points || b.exact_scores - a.exact_scores,
+    );
+
+  const nextMatches = visibility.allowAllPublishedOverride
+    ? await db.query.matches.findMany({
+        where: (matches, { and, eq, inArray }) =>
+          and(
+            matchScopeCompetitionId !== undefined
+              ? eq(matches.competitionId, matchScopeCompetitionId)
+              : undefined,
+            inArray(matches.status, ["live", "scheduled"]),
+          ),
+        with: {
+          homeTeam: true,
+          awayTeam: true,
+        },
+        orderBy: (matches, { asc }) => [
+          sql`CASE WHEN ${matches.status} = 'live' THEN 0 ELSE 1 END`,
+          asc(matches.matchDate),
+          asc(matches.matchNumber),
+        ],
+        limit: 10,
+      })
+    : matchScopeCompetitionId === undefined ||
+        (publishedStageList.length === 0 && publishedMatchIdList.length === 0)
+      ? []
+      : await db.query.matches.findMany({
+          where: (matches, { and, eq, inArray, or }) =>
+            and(
+              eq(matches.competitionId, matchScopeCompetitionId),
+              inArray(matches.status, ["live", "scheduled"]),
+              or(
+                publishedStageList.length > 0
+                  ? inArray(matches.stage, publishedStageList)
+                  : undefined,
+                publishedMatchIdList.length > 0
+                  ? inArray(matches.id, publishedMatchIdList)
+                  : undefined,
+              ),
+            ),
+          with: {
+            homeTeam: true,
+            awayTeam: true,
+          },
+          orderBy: (matches, { asc }) => [
+            sql`CASE WHEN ${matches.status} = 'live' THEN 0 ELSE 1 END`,
+            asc(matches.matchDate),
+            asc(matches.matchNumber),
+          ],
+          limit: 10,
+        });
+
+  if (leaderboardResults.length === 0 || nextMatches.length === 0) {
     return assignRanks(
       leaderboardResults.map((row) => ({
         id: row.id,
         name: row.name,
+        email: row.email,
         total_points: row.total_points,
         exact_scores: row.exact_scores,
         correct_outcomes: row.correct_outcomes,
@@ -173,6 +272,7 @@ export async function getLeaderboard(competitionId?: number) {
       leaderboardResults.map((row) => ({
         id: row.id,
         name: row.name,
+        email: row.email,
         total_points: row.total_points,
         exact_scores: row.exact_scores,
         correct_outcomes: row.correct_outcomes,
@@ -223,6 +323,7 @@ export async function getLeaderboard(competitionId?: number) {
     return {
       id: row.id,
       name: row.name,
+      email: row.email,
       total_points: row.total_points,
       exact_scores: row.exact_scores,
       correct_outcomes: row.correct_outcomes,

@@ -34,6 +34,10 @@
       "label": "Uczestnik",
       "placeholder": "Wybierz uczestnika",
       "all": "Wszyscy uczestnicy"
+    },
+    "visibility": {
+      "noPredictions": "Typy pojawią się tutaj po publikacji.",
+      "noSheets": "Karty typów pojawią się tutaj po publikacji."
     }
   },
   "lastFinishedMatches": {

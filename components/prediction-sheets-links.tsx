@@ -37,7 +37,7 @@ export function PredictionSheetsLinks({ data }: PredictionSheetsLinksProps) {
   if (!data.length) {
     return (
       <Card className="p-4 text-sm text-muted-foreground">
-        {t("predictionSheets.noSheets")}
+        {t("public.visibility.noSheets")}
       </Card>
     );
   }

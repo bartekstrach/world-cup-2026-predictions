@@ -34,6 +34,10 @@
       "label": "Participant",
       "placeholder": "Select participant",
       "all": "All participants"
+    },
+    "visibility": {
+      "noPredictions": "Predictions will appear here after publication.",
+      "noSheets": "Prediction sheets will appear here after publication."
     }
   },
   "lastFinishedMatches": {

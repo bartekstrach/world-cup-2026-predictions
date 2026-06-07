@@ -30,6 +30,8 @@ export default async function MainPage() {
     getPredictionSheetLinks(),
   ]);
 
+  const hasVisiblePredictions = predictionsData.matches.length > 0;
+
   return (
     <div className="space-y-6 min-w-0">
       <section className="space-y-4">
@@ -54,9 +56,18 @@ export default async function MainPage() {
             {t("public.predictions")}
           </h2>
 
-          <ParticipantSelector participants={predictionsData.participants} />
-
-          <PredictionsGrid data={predictionsData} />
+          {hasVisiblePredictions ? (
+            <>
+              <ParticipantSelector
+                participants={predictionsData.participants}
+              />
+              <PredictionsGrid data={predictionsData} />
+            </>
+          ) : (
+            <p className="text-sm text-slate-500">
+              {t("public.visibility.noPredictions")}
+            </p>
+          )}
 
           <HallOfFameTable
             hallOfFameTitle={t("public.hallOfFame.title")}
