@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { MATCH_STATUSES } from "@/lib/constants";
 import { sql } from "drizzle-orm";
+import { getWarsawCountdownParts } from "@/lib/date";
 
 type BaseStatsRow = {
   total_matches: string | number;
@@ -38,6 +39,11 @@ type CurrentStageRow = {
 };
 
 type TimelineStageRow = {
+  stage: string;
+};
+
+type NextEventRow = {
+  match_date: Date;
   stage: string;
 };
 
@@ -87,6 +93,16 @@ export type AdminStats = {
     nextMissing: number;
     nextTotal: number;
   }>;
+  nextMatchCountdown: {
+    days: number;
+    hours: number;
+    minutes: number;
+  } | null;
+  nextStageCountdown: {
+    days: number;
+    hours: number;
+    minutes: number;
+  } | null;
 };
 
 export async function getAdminStats(): Promise<AdminStats> {
@@ -105,6 +121,8 @@ export async function getAdminStats(): Promise<AdminStats> {
     hallOfShameCurrentStage: null,
     hallOfShameNextStage: null,
     hallOfShame: [],
+    nextMatchCountdown: null,
+    nextStageCountdown: null,
   };
 
   try {
@@ -222,6 +240,16 @@ export async function getAdminStats(): Promise<AdminStats> {
       m.match_number ASC
   `);
 
+    const nextEventsResult = await db.execute(sql`
+    SELECT
+      m.match_date,
+      m.stage
+    FROM matches m
+    WHERE m.status = ${MATCH_STATUSES.SCHEDULED}
+      AND m.match_date > NOW()
+    ORDER BY m.match_date ASC, m.match_number ASC
+  `);
+
     const baseStats = statsResult.rows[0] as BaseStatsRow;
     const nextMatchRows = nextMatchResult.rows as NextMatchRow[];
     const currentStageRow =
@@ -230,6 +258,7 @@ export async function getAdminStats(): Promise<AdminStats> {
       missingByParticipantResult.rows as MissingByParticipantRow[];
     const missingByMatchRows = missingByMatchResult.rows as MissingByMatchRow[];
     const timelineStageRows = timelineStagesResult.rows as TimelineStageRow[];
+    const nextEventRows = nextEventsResult.rows as NextEventRow[];
 
     const nextMatches = nextMatchRows.map((row) => ({
       matchDate: new Date(row.match_date),
@@ -313,6 +342,23 @@ export async function getAdminStats(): Promise<AdminStats> {
 
     const hallOfShameRows = hallOfShameResult.rows as HallOfShameRow[];
 
+    const nextMatchDate = nextEventRows[0]?.match_date
+      ? new Date(nextEventRows[0].match_date)
+      : null;
+    const nextMatchCountdown = nextMatchDate
+      ? getWarsawCountdownParts({ targetDate: nextMatchDate })
+      : null;
+
+    const currentStage = hallOfShameCurrentStage;
+    const nextStageDate =
+      currentStage && nextEventRows.length
+        ? nextEventRows.find((row) => row.stage !== currentStage)?.match_date
+        : nextEventRows[0]?.match_date;
+
+    const nextStageCountdown = nextStageDate
+      ? getWarsawCountdownParts({ targetDate: new Date(nextStageDate) })
+      : null;
+
     return {
       total_matches: Number(baseStats.total_matches),
       finished_matches: Number(baseStats.finished_matches),
@@ -349,6 +395,8 @@ export async function getAdminStats(): Promise<AdminStats> {
         nextMissing: Number(row.next_missing),
         nextTotal: Number(row.next_total),
       })),
+      nextMatchCountdown,
+      nextStageCountdown,
     };
   } catch (error) {
     console.error("Failed to load admin stats", error);

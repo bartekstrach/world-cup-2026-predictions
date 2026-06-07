@@ -133,6 +133,14 @@
         "uploadFiles": "Upload prediction files in {{section}}",
         "manualEntry": "Manual entry available in {{section}}",
         "liveSync": "Live score sync frequency: every {{minutes}} minute(s)"
+      },
+      "nextEvents": {
+        "title": "Next event countdowns",
+        "nextStageLabel": "Next stage starts in",
+        "nextMatchLabel": "Next match kicks off in",
+        "countdownPattern": "{{days}} days {{hours}} h {{minutes}} min",
+        "emptyNextStage": "No upcoming stage",
+        "emptyNextMatch": "No upcoming match"
       }
     },
     "matchesPage": {

@@ -2,6 +2,7 @@ import { getAdminStats } from "@/lib/admin-stats";
 import { LIVE_SYNC_FREQUENCY_MINUTES } from "@/lib/constants";
 import { HallOfShameCard } from "@/components/admin/hall-of-shame-card";
 import { NextMatchInsightList } from "@/components/admin/next-match-insight-list";
+import { NextEventCountersCard } from "@/components/admin/next-event-counters-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Trophy,
@@ -129,6 +130,11 @@ export default async function AdminDashboard() {
             />
           </CardContent>
         </Card>
+
+        <NextEventCountersCard
+          nextStageCountdown={stats.nextStageCountdown}
+          nextMatchCountdown={stats.nextMatchCountdown}
+        />
 
         <HallOfShameCard
           currentStage={stats.hallOfShameCurrentStage}

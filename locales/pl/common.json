@@ -136,6 +136,14 @@
         "uploadFiles": "Wgrywaj pliki typów w sekcji {{section}}",
         "manualEntry": "Ręczne wprowadzanie dostępne w sekcji {{section}}",
         "liveSync": "Synchronizacja wyników na żywo: co {{minutes}} min"
+      },
+      "nextEvents": {
+        "title": "Odliczanie do kolejnych wydarzeń",
+        "nextStageLabel": "Start kolejnego etapu za",
+        "nextMatchLabel": "Start najbliższego meczu za",
+        "countdownPattern": "{{days}} dni {{hours}} h {{minutes}} min",
+        "emptyNextStage": "Brak nadchodzącego etapu",
+        "emptyNextMatch": "Brak nadchodzącego meczu"
       }
     },
     "matchesPage": {
