@@ -16,7 +16,16 @@ interface PredictionSheetsLinksProps {
   data: PredictionSheetLink[];
 }
 
-const STAGE_ORDER = ["group", "round_16", "quarter", "semi", "final"];
+const STAGE_ORDER = [
+  "group_1",
+  "group_2",
+  "group_3",
+  "round_32",
+  "round_16",
+  "quarter",
+  "semi",
+  "final",
+];
 
 export async function PredictionSheetsLinks({
   data,

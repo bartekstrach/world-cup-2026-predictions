@@ -150,10 +150,10 @@ export default async function AdminDashboard() {
                     date: formatDateTime({ date: stats.nextMatch.matchDate }),
                   })}
                 </p>
-                {stats.nextStageName && (
+                {stats.nextStage && (
                   <p className="text-sm text-slate-500">
                     {t("admin.dashboard.upcomingStage", {
-                      stage: stats.nextStageName,
+                      stage: t(`predictionSheets.stages.${stats.nextStage}`),
                     })}
                   </p>
                 )}

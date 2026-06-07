@@ -92,7 +92,7 @@ export async function PredictionsGrid({ data }: PredictionsGridProps) {
               <TableRow key={match.id}>
                 {/* Group/stage */}
                 <TableCell className="hidden sm:table-cell text-center text-slate-400 whitespace-nowrap p-4">
-                  {match.stage === "group"
+                  {match.stage.startsWith("group_")
                     ? match.homeTeam.group
                     : t(`predictionSheets.stages.${match.stage}`)}
                 </TableCell>

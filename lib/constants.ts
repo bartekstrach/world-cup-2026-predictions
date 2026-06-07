@@ -16,6 +16,19 @@ export const MATCH_STATUSES = {
   FINISHED: "finished",
 } as const;
 
+export const MATCH_STAGES = [
+  "group_1",
+  "group_2",
+  "group_3",
+  "round_32",
+  "round_16",
+  "quarter",
+  "semi",
+  "final",
+] as const;
+
+export type MatchStage = (typeof MATCH_STAGES)[number];
+
 export const NON_FINISHED_STATUSES: MatchStatus[] = [
   MATCH_STATUSES.LIVE,
   MATCH_STATUSES.SCHEDULED,
@@ -41,7 +54,10 @@ export const CRON_SYNC_SECRET = process.env.CRON_SYNC_SECRET ?? "";
 export type MatchStatus = (typeof MATCH_STATUSES)[keyof typeof MATCH_STATUSES];
 
 export const SUBMISSION_STAGES = [
-  "group",
+  "group_1",
+  "group_2",
+  "group_3",
+  "round_32",
   "round_16",
   "quarter",
   "semi",
@@ -50,7 +66,7 @@ export const SUBMISSION_STAGES = [
 
 export type SubmissionStage = (typeof SUBMISSION_STAGES)[number];
 
-export const DEFAULT_UPLOAD_STAGE: SubmissionStage = "group";
+export const DEFAULT_UPLOAD_STAGE: SubmissionStage = "group_1";
 
 export const DEFAULT_UPLOAD_COMPETITION = {
   name: process.env.UPLOAD_COMPETITION_NAME ?? "world-cup",

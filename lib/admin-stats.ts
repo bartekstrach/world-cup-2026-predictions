@@ -63,20 +63,8 @@ export type AdminStats = {
     homeTeamCode: string;
     awayTeamCode: string;
   } | null;
-  nextStageName: string | null;
+  nextStage: string | null;
 };
-
-const STAGE_LABELS: Record<string, string> = {
-  group: "Group Stage",
-  round_16: "Round of 16",
-  quarter: "Quarter-finals",
-  semi: "Semi-finals",
-  final: "Final",
-};
-
-function getStageLabel(stage: string) {
-  return STAGE_LABELS[stage] ?? stage;
-}
 
 export async function getAdminStats(): Promise<AdminStats> {
   const fallback: AdminStats = {
@@ -90,7 +78,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     missingPredictionsByParticipant: [],
     missingPredictionsByMatch: [],
     nextMatch: null,
-    nextStageName: null,
+    nextStage: null,
   };
 
   try {
@@ -211,9 +199,9 @@ export async function getAdminStats(): Promise<AdminStats> {
         }
       : null;
 
-    const nextStageName =
+    const nextStage =
       nextMatch && currentStageRow && nextMatch.stage !== currentStageRow.stage
-        ? getStageLabel(nextMatch.stage)
+        ? nextMatch.stage
         : null;
 
     return {
@@ -241,7 +229,7 @@ export async function getAdminStats(): Promise<AdminStats> {
         }))
         .filter((row) => row.missingCount > 0),
       nextMatch,
-      nextStageName,
+      nextStage,
     };
   } catch (error) {
     console.error("Failed to load admin stats", error);

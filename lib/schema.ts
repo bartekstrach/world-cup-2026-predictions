@@ -9,7 +9,7 @@ import {
   text,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { MatchStatus } from "./constants";
+import { MatchStage, MatchStatus, SubmissionStage } from "./constants";
 
 export const competitions = pgTable("competitions", {
   id: serial("id").primaryKey(),
@@ -53,7 +53,7 @@ export const matches = pgTable(
       .notNull(),
     homeScore: integer("home_score"),
     awayScore: integer("away_score"),
-    stage: varchar("stage", { length: 50 }).notNull(), // group, round_16, quarter, semi, final
+    stage: varchar("stage", { length: 50 }).$type<MatchStage>().notNull(), // group_1, group_2, group_3, round_32, round_16, quarter, semi, final
     matchDate: timestamp("match_date").notNull(),
     status: text("status").$type<MatchStatus>(),
     matchNumber: integer("match_number").notNull(),
@@ -98,7 +98,7 @@ export const predictionSubmissions = pgTable(
     participantId: integer("participant_id")
       .references(() => participants.id)
       .notNull(),
-    stage: varchar("stage", { length: 50 }).notNull(),
+    stage: varchar("stage", { length: 50 }).$type<SubmissionStage>().notNull(),
     blobUrl: varchar("blob_url", { length: 2048 }).notNull(),
     createdAt: timestamp("created_at").defaultNow(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),

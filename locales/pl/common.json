@@ -38,7 +38,10 @@
     },
     "openSheet": "Otwórz kartę",
     "stages": {
-      "group": "Faza grupowa",
+      "group_1": "Faza grupowa - kolejka 1",
+      "group_2": "Faza grupowa - kolejka 2",
+      "group_3": "Faza grupowa - kolejka 3",
+      "round_32": "1/16 finału",
       "round_16": "1/8 finału",
       "quarter": "Ćwierćfinały",
       "semi": "Półfinały",

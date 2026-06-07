@@ -46,13 +46,20 @@ export function normalizeSubmissionStage(
   }
 
   if (
-    normalizedStage === "group" ||
+    normalizedStage === "group_1" ||
+    normalizedStage === "group_2" ||
+    normalizedStage === "group_3" ||
+    normalizedStage === "round_32" ||
     normalizedStage === "round_16" ||
     normalizedStage === "quarter" ||
     normalizedStage === "semi" ||
     normalizedStage === "final"
   ) {
     return normalizedStage;
+  }
+
+  if (normalizedStage === "group") {
+    return "group_1";
   }
 
   return DEFAULT_UPLOAD_STAGE;

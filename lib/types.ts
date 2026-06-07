@@ -1,3 +1,5 @@
+import type { MatchStage, SubmissionStage } from "./constants";
+
 export interface LeaderboardEntry {
   id: number;
   rank: string;
@@ -37,7 +39,7 @@ export interface Match {
   status: string | null;
   homeScore: number | null;
   awayScore: number | null;
-  stage: string;
+  stage: MatchStage;
   homeTeam: Team;
   awayTeam: Team;
 }
@@ -73,7 +75,7 @@ export interface NextMatchBannerData {
 export interface PredictionSheetLink {
   id: number;
   participantName: string;
-  stage: string;
+  stage: SubmissionStage;
   blobUrl: string;
   createdAt: Date | null;
   updatedAt: Date | null;
