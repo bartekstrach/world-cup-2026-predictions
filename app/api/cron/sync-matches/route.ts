@@ -22,6 +22,15 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      contract: {
+        cadenceSeconds: 30,
+      },
+      monitoring: {
+        activeLiveMatches: result.activeLiveMatches,
+        polledMatches: result.polledMatches,
+        halftimePausedMatches: result.halftimePausedMatches,
+        finalizedMatches: result.finalizedMatches,
+      },
       ...result,
     });
   } catch (error) {

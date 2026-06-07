@@ -7,5 +7,9 @@ export async function GET() {
   return NextResponse.json({
     status: dbOk ? "healthy" : "unhealthy",
     timestamp: new Date().toISOString(),
+    cron: {
+      syncEndpoint: "/api/cron/sync-matches",
+      expectedCadenceSeconds: 30,
+    },
   });
 }
