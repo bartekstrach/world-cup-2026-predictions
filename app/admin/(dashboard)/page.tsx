@@ -3,6 +3,7 @@ import { LIVE_SYNC_FREQUENCY_MINUTES } from "@/lib/constants";
 import { HallOfShameCard } from "@/components/admin/hall-of-shame-card";
 import { NextMatchInsightList } from "@/components/admin/next-match-insight-list";
 import { NextEventCountersCard } from "@/components/admin/next-event-counters-card";
+import { PublishControlsCard } from "@/components/admin/publish-controls-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Trophy,
@@ -141,6 +142,8 @@ export default async function AdminDashboard() {
           nextStage={stats.hallOfShameNextStage}
           rows={stats.hallOfShame}
         />
+
+        <PublishControlsCard />
 
         <Card className="rounded-2xl border-slate-100 p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
           <CardHeader className="p-0">

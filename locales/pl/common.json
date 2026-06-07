@@ -195,7 +195,23 @@
       "override": "Tymczasowe nadpisanie pełnej widoczności",
       "publish": "Opublikuj",
       "unpublish": "Cofnij publikację",
-      "none": "Brak nieopublikowanych opcji."
+      "none": "Brak nieopublikowanych opcji.",
+      "selectStage": "Wybierz etap",
+      "selectMatch": "Wybierz mecz",
+      "publishStageAction": "Opublikuj {{stage}}",
+      "publishMatchAction": "Opublikuj {{match}}",
+      "saving": "Zapisywanie...",
+      "loadFailed": "Nie udało się wczytać opcji publikacji",
+      "loadFailedFallback": "Nie udało się wczytać opcji publikacji.",
+      "stagePublished": "Etap opublikowany",
+      "stagePublishFailed": "Nie udało się opublikować etapu",
+      "matchPublished": "Mecz opublikowany",
+      "matchPublishFailed": "Nie udało się opublikować meczu",
+      "overrideSaved": "Nadpisanie zaktualizowane",
+      "overrideSaveFailed": "Nie udało się zaktualizować nadpisania",
+      "overrideEnabled": "Tymczasowa pełna widoczność jest włączona.",
+      "overrideDisabled": "Tymczasowa pełna widoczność jest wyłączona.",
+      "saveFailedFallback": "Spróbuj ponownie."
     }
   },
   "forms": {

@@ -192,7 +192,23 @@
       "override": "Temporary full visibility override",
       "publish": "Publish",
       "unpublish": "Unpublish",
-      "none": "No unpublished options available."
+      "none": "No unpublished options available.",
+      "selectStage": "Select stage",
+      "selectMatch": "Select match",
+      "publishStageAction": "Publish {{stage}}",
+      "publishMatchAction": "Publish {{match}}",
+      "saving": "Saving...",
+      "loadFailed": "Failed to load publication options",
+      "loadFailedFallback": "Could not load publication options.",
+      "stagePublished": "Stage published",
+      "stagePublishFailed": "Failed to publish stage",
+      "matchPublished": "Match published",
+      "matchPublishFailed": "Failed to publish match",
+      "overrideSaved": "Override updated",
+      "overrideSaveFailed": "Failed to update override",
+      "overrideEnabled": "Temporary full visibility is enabled.",
+      "overrideDisabled": "Temporary full visibility is disabled.",
+      "saveFailedFallback": "Please try again."
     }
   },
   "forms": {
