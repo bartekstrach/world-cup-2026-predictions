@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await syncLiveMatches("sync");
+    const result = await syncLiveMatches("sync", { useRuntimeCadence: true });
 
     return NextResponse.json({
       success: true,

@@ -115,6 +115,19 @@ export const admins = pgTable("admins", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+export const liveSyncRuntimeStates = pgTable("live_sync_runtime_states", {
+  id: serial("id").primaryKey(),
+  matchId: integer("match_id")
+    .references(() => matches.id)
+    .notNull()
+    .unique(),
+  halftimeStartedAt: timestamp("halftime_started_at"),
+  lastPolledAt: timestamp("last_polled_at"),
+  finalizedAt: timestamp("finalized_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const matchesRelations = relations(matches, ({ one }) => ({
   homeTeam: one(teams, {
     fields: [matches.homeTeamId],
@@ -161,6 +174,16 @@ export const predictionSubmissionsRelations = relations(
     participant: one(participants, {
       fields: [predictionSubmissions.participantId],
       references: [participants.id],
+    }),
+  }),
+);
+
+export const liveSyncRuntimeStatesRelations = relations(
+  liveSyncRuntimeStates,
+  ({ one }) => ({
+    match: one(matches, {
+      fields: [liveSyncRuntimeStates.matchId],
+      references: [matches.id],
     }),
   }),
 );

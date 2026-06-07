@@ -12,7 +12,7 @@ import {
   MATCH_STATUSES,
 } from "@/lib/constants";
 import { updateMatchPredictions } from "@/lib/scoring";
-import { matches } from "@/lib/schema";
+import { liveSyncRuntimeStates, matches } from "@/lib/schema";
 import type { MatchStatus } from "@/lib/constants";
 
 export type LiveProviderMatch = {
@@ -45,6 +45,14 @@ export type LiveSyncResult = {
   skippedMatches: number;
   predictionsRecalculated: number;
   updatedMatchIds: number[];
+  activeLiveMatches: number;
+  polledMatches: number;
+  halftimePausedMatches: number;
+  finalizedMatches: number;
+};
+
+type SyncLiveMatchesOptions = {
+  useRuntimeCadence?: boolean;
 };
 
 type LiveProviderAdapter = {
@@ -92,6 +100,16 @@ type FootballDataRawMatch = {
 };
 
 type ExternalIdMap = Record<string, number>;
+
+type LiveRuntimeState = {
+  matchId: number;
+  halftimeStartedAt: Date | null;
+  lastPolledAt: Date | null;
+  finalizedAt: Date | null;
+};
+
+const LIVE_POLL_INTERVAL_MS = 30 * 1000;
+const HALFTIME_PAUSE_MS = 15 * 60 * 1000;
 
 function parseScore(value: unknown): number | null {
   if (typeof value !== "number" || !Number.isFinite(value)) {
@@ -402,6 +420,97 @@ function hasScoreChanged({
   return previousHome !== nextHome || previousAway !== nextAway;
 }
 
+function isHalftimeSignal(match: LiveProviderMatch): boolean {
+  const raw =
+    typeof match.raw === "object" && match.raw !== null
+      ? (match.raw as Record<string, unknown>)
+      : null;
+
+  const rawStatus = raw?.status;
+  const rawState = raw?.state;
+
+  const normalizedRawStatus =
+    typeof rawStatus === "string" ? rawStatus.trim().toLowerCase() : "";
+  const normalizedRawState =
+    typeof rawState === "string" ? rawState.trim().toLowerCase() : "";
+
+  if (["paused", "halftime", "half_time", "ht"].includes(normalizedRawStatus)) {
+    return true;
+  }
+
+  if (["paused", "halftime", "half_time", "ht"].includes(normalizedRawState)) {
+    return true;
+  }
+
+  return false;
+}
+
+async function upsertRuntimeState(
+  current: LiveRuntimeState | null,
+  matchId: number,
+  changes: Partial<
+    Pick<LiveRuntimeState, "halftimeStartedAt" | "lastPolledAt" | "finalizedAt">
+  >,
+): Promise<LiveRuntimeState> {
+  const now = new Date();
+
+  if (!current) {
+    const next: LiveRuntimeState = {
+      matchId,
+      halftimeStartedAt:
+        changes.halftimeStartedAt === undefined
+          ? null
+          : changes.halftimeStartedAt,
+      lastPolledAt:
+        changes.lastPolledAt === undefined ? null : changes.lastPolledAt,
+      finalizedAt:
+        changes.finalizedAt === undefined ? null : changes.finalizedAt,
+    };
+
+    await db.insert(liveSyncRuntimeStates).values({
+      matchId,
+      halftimeStartedAt: next.halftimeStartedAt,
+      lastPolledAt: next.lastPolledAt,
+      finalizedAt: next.finalizedAt,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return next;
+  }
+
+  const next: LiveRuntimeState = {
+    ...current,
+    ...(changes.halftimeStartedAt === undefined
+      ? {}
+      : { halftimeStartedAt: changes.halftimeStartedAt }),
+    ...(changes.lastPolledAt === undefined
+      ? {}
+      : { lastPolledAt: changes.lastPolledAt }),
+    ...(changes.finalizedAt === undefined
+      ? {}
+      : { finalizedAt: changes.finalizedAt }),
+  };
+
+  await db
+    .update(liveSyncRuntimeStates)
+    .set({
+      ...(changes.halftimeStartedAt === undefined
+        ? {}
+        : { halftimeStartedAt: changes.halftimeStartedAt }),
+      ...(changes.lastPolledAt === undefined
+        ? {}
+        : { lastPolledAt: changes.lastPolledAt }),
+      ...(changes.finalizedAt === undefined
+        ? {}
+        : { finalizedAt: changes.finalizedAt }),
+      updatedAt: now,
+    })
+    .where(eq(liveSyncRuntimeStates.matchId, matchId));
+
+  return next;
+}
+
 export async function fetchLiveMatchesNormalized(): Promise<LiveProviderPayload> {
   const adapter = getLiveProviderAdapter();
   return adapter.fetchMatches();
@@ -409,7 +518,9 @@ export async function fetchLiveMatchesNormalized(): Promise<LiveProviderPayload>
 
 export async function syncLiveMatches(
   mode: LiveSyncMode,
+  options?: SyncLiveMatchesOptions,
 ): Promise<LiveSyncResult> {
+  const useRuntimeCadence = mode === "sync" && options?.useRuntimeCadence;
   const payload = await fetchLiveMatchesNormalized();
   const externalIdMap = parseExternalIdMap();
 
@@ -436,10 +547,36 @@ export async function syncLiveMatches(
     localMatches.map((m) => [m.matchNumber, m]),
   );
 
+  const localMatchIds = localMatches.map((m) => m.id);
+
+  const runtimeRows = useRuntimeCadence
+    ? localMatchIds.length
+      ? await db.query.liveSyncRuntimeStates.findMany({
+          where: (table, { inArray }) => inArray(table.matchId, localMatchIds),
+        })
+      : []
+    : [];
+
+  const runtimeByMatchId = new Map<number, LiveRuntimeState>(
+    runtimeRows.map((row) => [
+      row.matchId,
+      {
+        matchId: row.matchId,
+        halftimeStartedAt: row.halftimeStartedAt,
+        lastPolledAt: row.lastPolledAt,
+        finalizedAt: row.finalizedAt,
+      },
+    ]),
+  );
+
   let updatedMatches = 0;
   let unchangedMatches = 0;
   let skippedMatches = 0;
   let predictionsRecalculated = 0;
+  let activeLiveMatches = 0;
+  let polledMatches = 0;
+  let halftimePausedMatches = 0;
+  let finalizedMatches = 0;
   const updatedMatchIds: number[] = [];
 
   for (const incoming of mappedMatches) {
@@ -448,6 +585,81 @@ export async function syncLiveMatches(
     if (!local) {
       skippedMatches += 1;
       continue;
+    }
+
+    const now = new Date();
+    let runtime = runtimeByMatchId.get(local.id) ?? null;
+
+    if (useRuntimeCadence && incoming.status === MATCH_STATUSES.LIVE) {
+      activeLiveMatches += 1;
+    }
+
+    if (
+      useRuntimeCadence &&
+      (runtime?.finalizedAt || local.status === MATCH_STATUSES.FINISHED)
+    ) {
+      finalizedMatches += 1;
+
+      if (!runtime?.finalizedAt && mode === "sync") {
+        runtime = await upsertRuntimeState(runtime, local.id, {
+          finalizedAt: now,
+          halftimeStartedAt: null,
+        });
+        runtimeByMatchId.set(local.id, runtime);
+      }
+
+      continue;
+    }
+
+    if (useRuntimeCadence && incoming.status === MATCH_STATUSES.LIVE) {
+      const halftimeSignal = isHalftimeSignal(incoming);
+
+      if (halftimeSignal) {
+        const halftimeStartedAt = runtime?.halftimeStartedAt ?? now;
+
+        if (mode === "sync" && !runtime?.halftimeStartedAt) {
+          runtime = await upsertRuntimeState(runtime, local.id, {
+            halftimeStartedAt,
+          });
+          runtimeByMatchId.set(local.id, runtime);
+        }
+
+        if (now.getTime() - halftimeStartedAt.getTime() < HALFTIME_PAUSE_MS) {
+          halftimePausedMatches += 1;
+          continue;
+        }
+      } else if (mode === "sync" && runtime?.halftimeStartedAt) {
+        runtime = await upsertRuntimeState(runtime, local.id, {
+          halftimeStartedAt: null,
+        });
+        runtimeByMatchId.set(local.id, runtime);
+      }
+
+      if (
+        runtime?.lastPolledAt &&
+        now.getTime() - runtime.lastPolledAt.getTime() < LIVE_POLL_INTERVAL_MS
+      ) {
+        continue;
+      }
+    }
+
+    if (
+      useRuntimeCadence &&
+      incoming.status !== MATCH_STATUSES.LIVE &&
+      incoming.status !== MATCH_STATUSES.FINISHED
+    ) {
+      continue;
+    }
+
+    if (useRuntimeCadence) {
+      polledMatches += 1;
+    }
+
+    if (mode === "sync" && useRuntimeCadence) {
+      runtime = await upsertRuntimeState(runtime, local.id, {
+        lastPolledAt: now,
+      });
+      runtimeByMatchId.set(local.id, runtime);
     }
 
     const nextHomeScore =
@@ -498,6 +710,15 @@ export async function syncLiveMatches(
         predictionsRecalculated += updatedPredictions;
       }
 
+      if (useRuntimeCadence && nextStatus === MATCH_STATUSES.FINISHED) {
+        runtime = await upsertRuntimeState(runtime, local.id, {
+          finalizedAt: now,
+          halftimeStartedAt: null,
+        });
+        runtimeByMatchId.set(local.id, runtime);
+        finalizedMatches += 1;
+      }
+
       updatedMatchIds.push(local.id);
     }
 
@@ -521,6 +742,10 @@ export async function syncLiveMatches(
     skippedMatches,
     predictionsRecalculated,
     updatedMatchIds,
+    activeLiveMatches,
+    polledMatches,
+    halftimePausedMatches,
+    finalizedMatches,
   };
 }
 
