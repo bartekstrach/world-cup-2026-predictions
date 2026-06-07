@@ -235,17 +235,28 @@
   },
   "matchesTable": {
     "headers": {
+      "kickoff": "Start",
+      "stage": "Etap",
       "match": "Mecz",
       "result": "Wynik",
       "status": "Status",
       "actions": "Akcje"
+    },
+    "filters": {
+      "stage": "Etap",
+      "status": "Status",
+      "allStages": "Wszystkie etapy",
+      "allStatuses": "Wszystkie statusy"
     },
     "status": {
       "finished": "Zakończony",
       "live": "Na żywo",
       "scheduled": "Zaplanowany"
     },
-    "placeholders": { "status": "Status" },
+    "placeholders": {
+      "stage": "Etap",
+      "status": "Status"
+    },
     "save": "Zapisz",
     "edit": "Edytuj",
     "saving": "Zapisywanie...",

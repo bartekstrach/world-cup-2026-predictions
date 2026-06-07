@@ -232,17 +232,28 @@
   },
   "matchesTable": {
     "headers": {
+      "kickoff": "Kickoff",
+      "stage": "Stage",
       "match": "Match",
       "result": "Result",
       "status": "Status",
       "actions": "Actions"
+    },
+    "filters": {
+      "stage": "Stage",
+      "status": "Status",
+      "allStages": "All stages",
+      "allStatuses": "All statuses"
     },
     "status": {
       "finished": "Finished",
       "live": "Live",
       "scheduled": "Scheduled"
     },
-    "placeholders": { "status": "Status" },
+    "placeholders": {
+      "stage": "Stage",
+      "status": "Status"
+    },
     "save": "Save",
     "edit": "Edit",
     "saving": "Saving...",

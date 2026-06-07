@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -21,14 +21,20 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-
-type MatchStatus = "scheduled" | "live" | "finished";
+import {
+  MATCH_STAGES,
+  type MatchStage,
+  type MatchStatus,
+} from "@/lib/constants";
+import { formatDateTime } from "@/lib/date";
 
 interface Match {
   id: number;
   matchNumber: number;
   homeScore: number | null;
   awayScore: number | null;
+  stage: MatchStage;
+  matchDate: Date | string;
   status: MatchStatus | null;
   homeTeam: { name: string; code: string };
   awayTeam: { name: string; code: string };
@@ -37,6 +43,8 @@ interface Match {
 export function MatchesTable({ matches }: { matches: Match[] }) {
   const { t } = useTranslation();
   const [rows, setRows] = useState<Match[]>(matches);
+  const [stageFilter, setStageFilter] = useState<MatchStage | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<MatchStatus | "all">("all");
   const [editing, setEditing] = useState<number | null>(null);
   const [homeScore, setHomeScore] = useState<number>(0);
   const [awayScore, setAwayScore] = useState<number>(0);
@@ -91,6 +99,17 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
     }
   }
 
+  const filteredRows = useMemo(() => {
+    return rows.filter((row) => {
+      const effectiveStatus = row.status ?? "scheduled";
+      const matchesStage = stageFilter === "all" || row.stage === stageFilter;
+      const matchesStatus =
+        statusFilter === "all" || effectiveStatus === statusFilter;
+
+      return matchesStage && matchesStatus;
+    });
+  }, [rows, stageFilter, statusFilter]);
+
   const getStatusBadge = (status: MatchStatus | null) => {
     if (status === "finished") {
       return (
@@ -117,11 +136,81 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
 
   return (
     <Card className="rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] overflow-hidden">
+      <div className="border-b border-slate-100 bg-slate-50/40 p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              {t("matchesTable.filters.stage")}
+            </span>
+            <Select
+              value={stageFilter}
+              onValueChange={(value) =>
+                setStageFilter(value as MatchStage | "all")
+              }
+            >
+              <SelectTrigger className="w-48 border-slate-200 bg-white">
+                <SelectValue
+                  placeholder={t("matchesTable.placeholders.stage")}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t("matchesTable.filters.allStages")}
+                </SelectItem>
+                {MATCH_STAGES.map((stage) => (
+                  <SelectItem key={stage} value={stage}>
+                    {t(`predictionSheets.stages.${stage}`)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+              {t("matchesTable.filters.status")}
+            </span>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) =>
+                setStatusFilter(value as MatchStatus | "all")
+              }
+            >
+              <SelectTrigger className="w-44 border-slate-200 bg-white">
+                <SelectValue
+                  placeholder={t("matchesTable.placeholders.status")}
+                />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">
+                  {t("matchesTable.filters.allStatuses")}
+                </SelectItem>
+                <SelectItem value="scheduled">
+                  {t("matchesTable.status.scheduled")}
+                </SelectItem>
+                <SelectItem value="live">
+                  {t("matchesTable.status.live")}
+                </SelectItem>
+                <SelectItem value="finished">
+                  {t("matchesTable.status.finished")}
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
       <div className="overflow-x-auto public-table-scroll">
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
               <TableHead className="w-16 text-center p-4 h-auto">#</TableHead>
+              <TableHead className="text-center p-4 h-auto">
+                {t("matchesTable.headers.kickoff")}
+              </TableHead>
+              <TableHead className="p-4 h-auto">
+                {t("matchesTable.headers.stage")}
+              </TableHead>
               <TableHead className="p-4 h-auto">
                 {t("matchesTable.headers.match")}
               </TableHead>
@@ -137,13 +226,21 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.map((match) => (
+            {filteredRows.map((match) => (
               <TableRow
                 key={match.id}
                 className="hover:bg-slate-50 transition-colors"
               >
                 <TableCell className="font-mono text-slate-400 font-medium text-center p-4">
                   {match.matchNumber}
+                </TableCell>
+                <TableCell className="text-center p-4">
+                  <time className="font-mono text-slate-600 whitespace-nowrap">
+                    {formatDateTime({ date: new Date(match.matchDate) })}
+                  </time>
+                </TableCell>
+                <TableCell className="font-medium text-slate-600 p-4 whitespace-nowrap">
+                  {t(`predictionSheets.stages.${match.stage}`)}
                 </TableCell>
                 <TableCell className="font-medium text-slate-700 p-4">
                   {match.homeTeam.code} {t("common.vs")} {match.awayTeam.code}

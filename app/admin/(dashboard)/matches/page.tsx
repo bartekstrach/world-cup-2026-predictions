@@ -10,7 +10,10 @@ async function getMatches() {
       homeTeam: true,
       awayTeam: true,
     },
-    orderBy: (matches, { asc }) => [asc(matches.matchNumber)],
+    orderBy: (matches, { asc }) => [
+      asc(matches.matchDate),
+      asc(matches.matchNumber),
+    ],
   });
 }
 
