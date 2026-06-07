@@ -15,6 +15,19 @@
     "headerTitle": "FIFA World Cup 2026",
     "results": "Results",
     "predictions": "Predictions",
+    "hallOfFame": {
+      "title": "Hall of Fame",
+      "headers": {
+        "name": "Name",
+        "medals": "Medals"
+      }
+    },
+    "hallOfShame": {
+      "title": "Hall of Shame",
+      "headers": {
+        "hero": "Hero"
+      }
+    },
     "uploadedPredictionSheets": "Uploaded prediction sheets",
     "predictionSheetsSubtitle": "Participant prediction blobs grouped by stage",
     "participantSelector": {

@@ -1,4 +1,5 @@
 import { LastFinishedMatches } from "@/components/last-finished-matches";
+import { HallOfFameTable } from "@/components/hall-of-fame-table";
 import { LeaderboardTable } from "@/components/leaderboard-table";
 import { NextMatchBanner } from "@/components/next-match-banner";
 import { PredictionSheetsLinks } from "@/components/prediction-sheets-links";
@@ -56,6 +57,14 @@ export default async function MainPage() {
           <ParticipantSelector participants={predictionsData.participants} />
 
           <PredictionsGrid data={predictionsData} />
+
+          <HallOfFameTable
+            hallOfFameTitle={t("public.hallOfFame.title")}
+            hallOfShameTitle={t("public.hallOfShame.title")}
+            nameHeader={t("public.hallOfFame.headers.name")}
+            medalsHeader={t("public.hallOfFame.headers.medals")}
+            heroHeader={t("public.hallOfShame.headers.hero")}
+          />
 
           <div className="space-y-6 pt-8 border-t border-slate-200/60 mt-8">
             <div className="space-y-1">
