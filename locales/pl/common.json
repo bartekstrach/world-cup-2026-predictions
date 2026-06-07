@@ -119,10 +119,6 @@
           "label": "Typy",
           "description": "Wszystkie przesłane"
         },
-        "teams": {
-          "label": "Drużyny",
-          "description": "Uczestniczące reprezentacje"
-        },
         "missing": {
           "label": "Braki",
           "description": "Braki dla zaplanowanych"

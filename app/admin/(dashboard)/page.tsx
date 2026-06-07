@@ -9,7 +9,6 @@ import {
   Radio,
   Users,
   Target,
-  Flag,
   AlertCircle,
 } from "lucide-react";
 import { getT } from "@/lib/i18n/server";
@@ -50,12 +49,6 @@ export default async function AdminDashboard() {
       value: stats.total_predictions,
       icon: Target,
       description: t("admin.dashboard.cards.predictions.description"),
-    },
-    {
-      label: t("admin.dashboard.cards.teams.label"),
-      value: stats.total_teams,
-      icon: Flag,
-      description: t("admin.dashboard.cards.teams.description"),
     },
     {
       label: t("admin.dashboard.cards.missing.label"),

@@ -119,7 +119,6 @@
           "label": "Predictions",
           "description": "Total submitted"
         },
-        "teams": { "label": "Teams", "description": "Participating nations" },
         "missing": { "label": "Missing", "description": "Scheduled gaps" }
       },
       "nextMatchInsight": "Next Matches Insight",
