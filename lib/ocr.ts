@@ -1,4 +1,4 @@
-export async function checkVisionApiAccess(): Promise<{
+async function checkVisionApiAccess(): Promise<{
   hasAccess: boolean;
   reason: string;
 }> {
@@ -66,7 +66,7 @@ export async function checkVisionApiAccess(): Promise<{
   }
 }
 
-export interface ExtractedPrediction {
+interface ExtractedPrediction {
   participantName: string;
   rawText: string;
   scores: Array<{
@@ -75,9 +75,7 @@ export interface ExtractedPrediction {
   }>;
 }
 
-export async function extractTextFromImage(
-  imageBase64: string,
-): Promise<string> {
+async function extractTextFromImage(imageBase64: string): Promise<string> {
   const apiKey = process.env.GOOGLE_VISION_API_KEY;
 
   if (!apiKey) {
@@ -188,7 +186,7 @@ function extractScores(
   return scores;
 }
 
-export function parsePredictionsText(text: string): ExtractedPrediction {
+function parsePredictionsText(text: string): ExtractedPrediction {
   const participantName = extractParticipantName(text);
   const scores = extractScores(text);
 
