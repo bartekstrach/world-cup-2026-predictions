@@ -4,6 +4,7 @@ import { HallOfShameCard } from "@/components/admin/hall-of-shame-card";
 import { NextMatchInsightList } from "@/components/admin/next-match-insight-list";
 import { NextEventCountersCard } from "@/components/admin/next-event-counters-card";
 import { PublishControlsCard } from "@/components/admin/publish-controls-card";
+import { AiModelSelector } from "@/components/admin/ai-model-selector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Trophy,
@@ -14,10 +15,12 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { getT } from "@/lib/i18n/server";
+import { getActiveAiModel } from "@/actions/settings";
 
 export default async function AdminDashboard() {
   const t = await getT();
   const stats = await getAdminStats();
+  const activeAiModel = await getActiveAiModel();
   const liveLabel = t("admin.dashboard.cards.live.label");
   const missingLabel = t("admin.dashboard.cards.missing.label");
 
@@ -144,6 +147,8 @@ export default async function AdminDashboard() {
         />
 
         <PublishControlsCard />
+
+        <AiModelSelector initialModel={activeAiModel} />
 
         <Card className="rounded-2xl border-slate-100 p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
           <CardHeader className="p-0">

@@ -165,6 +165,14 @@ export const publicationSettings = pgTable("publication_settings", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const systemSettings = pgTable("system_settings", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: varchar("value", { length: 255 }).notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const matchesRelations = relations(matches, ({ one }) => ({
   homeTeam: one(teams, {
     fields: [matches.homeTeamId],
