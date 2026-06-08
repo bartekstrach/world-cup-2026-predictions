@@ -71,6 +71,13 @@ export const SUBMISSION_STAGES = [
 
 export type SubmissionStage = (typeof SUBMISSION_STAGES)[number];
 
+export const TWO_PAGE_SUBMISSION_STAGES = [
+  "group_1",
+  "group_2",
+  "group_3",
+  "round_32",
+] as const;
+
 export const STAGE_ORDER: Record<SubmissionStage, number> = {
   group_1: 0,
   group_2: 1,

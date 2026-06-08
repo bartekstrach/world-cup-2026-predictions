@@ -402,3 +402,39 @@ export async function processImageToPredictions(
 
   return parsePredictionsText(rawText);
 }
+
+export async function processImagesToPredictions(
+  imagesBase64: string[],
+): Promise<ExtractedPrediction | undefined> {
+  const validImages = imagesBase64.filter(
+    (image) => typeof image === "string" && image.length > 0,
+  );
+
+  if (validImages.length === 0) {
+    throw new Error("No images provided");
+  }
+
+  const extractedResults = await Promise.all(
+    validImages.map((imageBase64) => processImageToPredictions(imageBase64)),
+  );
+
+  const parsedResults = extractedResults.filter(
+    (result): result is ExtractedPrediction => Boolean(result),
+  );
+
+  if (parsedResults.length === 0) {
+    return;
+  }
+
+  const participantName = parsedResults.find(
+    (result) => result.participantName && result.participantName !== "Unknown",
+  )?.participantName;
+
+  return {
+    participantName: participantName ?? parsedResults[0].participantName,
+    rawText: parsedResults
+      .map((result) => result.rawText)
+      .join("\n\n--- PAGE BREAK ---\n\n"),
+    scores: parsedResults.flatMap((result) => result.scores),
+  };
+}

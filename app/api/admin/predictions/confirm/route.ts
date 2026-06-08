@@ -12,6 +12,7 @@ import { desc, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { normalizeSubmissionStage } from "@/lib/blob-naming";
 import { SUBMISSION_STAGES } from "@/lib/constants";
+import { encodePredictionSheetUrls } from "@/lib/prediction-sheet-urls";
 
 export async function POST(request: NextRequest) {
   const session = await auth();
@@ -21,7 +22,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { participantName, stage, blobUrl, matchPredictions } =
+    const { participantName, stage, blobUrl, blobUrls, matchPredictions } =
       await request.json();
     const normalizedParticipantName =
       typeof participantName === "string" ? participantName.trim() : "";
@@ -59,13 +60,31 @@ export async function POST(request: NextRequest) {
         .returning();
     }
 
-    if (blobUrl && typeof blobUrl === "string" && blobUrl.trim().length > 0) {
+    const normalizedBlobUrls = Array.isArray(blobUrls)
+      ? blobUrls
+          .filter((item): item is string => typeof item === "string")
+          .map((item) => item.trim())
+          .filter((item) => item.length > 0)
+      : [];
+
+    if (
+      normalizedBlobUrls.length === 0 &&
+      blobUrl &&
+      typeof blobUrl === "string" &&
+      blobUrl.trim().length > 0
+    ) {
+      normalizedBlobUrls.push(blobUrl.trim());
+    }
+
+    const encodedBlobUrls = encodePredictionSheetUrls(normalizedBlobUrls);
+
+    if (encodedBlobUrls) {
       await db
         .insert(predictionSubmissions)
         .values({
           participantId: participant.id,
           stage: normalizedStage,
-          blobUrl: blobUrl.trim(),
+          blobUrl: encodedBlobUrls,
         })
         .onConflictDoUpdate({
           target: [
@@ -73,7 +92,7 @@ export async function POST(request: NextRequest) {
             predictionSubmissions.stage,
           ],
           set: {
-            blobUrl: blobUrl.trim(),
+            blobUrl: encodedBlobUrls,
             updatedAt: new Date(),
           },
         });

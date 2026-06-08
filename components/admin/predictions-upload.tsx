@@ -4,7 +4,11 @@ import { useState } from "react";
 import Image from "next/image";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
-import { SUBMISSION_STAGES, type SubmissionStage } from "@/lib/constants";
+import {
+  SUBMISSION_STAGES,
+  TWO_PAGE_SUBMISSION_STAGES,
+  type SubmissionStage,
+} from "@/lib/constants";
 import { useTranslation } from "react-i18next";
 
 interface TeamInfo {
@@ -25,6 +29,7 @@ interface MatchPrediction {
 
 interface PreviewData {
   blobUrl: string;
+  blobUrls: string[];
   participantName: string;
   stage: SubmissionStage | "";
   rawText: string;
@@ -33,14 +38,32 @@ interface PreviewData {
   matches: MatchPrediction[];
 }
 
+interface ParticipantOption {
+  id: number;
+  name: string;
+}
+
 const STAGE_OPTIONS = [...SUBMISSION_STAGES] as const;
 
-export function PredictionsUpload() {
+function isTwoPageStage(stage: SubmissionStage | ""): stage is SubmissionStage {
+  return (
+    stage !== "" &&
+    TWO_PAGE_SUBMISSION_STAGES.includes(
+      stage as (typeof TWO_PAGE_SUBMISSION_STAGES)[number],
+    )
+  );
+}
+
+export function PredictionsUpload({
+  participants,
+}: {
+  participants: ParticipantOption[];
+}) {
   const { t } = useTranslation();
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [uploadStage, setUploadStage] = useState<SubmissionStage | "">("");
   const [uploadParticipantName, setUploadParticipantName] = useState("");
-  const [preview, setPreview] = useState<string | null>(null);
+  const [previews, setPreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
   const [editedData, setEditedData] = useState<PreviewData | null>(null);
@@ -56,28 +79,54 @@ export function PredictionsUpload() {
       return;
     }
 
-    const selected = e.target.files?.[0];
-    if (!selected) return;
+    const selectedFiles = Array.from(e.target.files ?? []);
+    if (!selectedFiles.length) return;
 
-    setFile(selected);
+    const requiredFilesCount = isTwoPageStage(uploadStage) ? 2 : 1;
+    if (selectedFiles.length !== requiredFilesCount) {
+      toast.error(t("predictionsUpload.invalidPagesCount"), {
+        description: t("predictionsUpload.requiredPagesCount", {
+          count: requiredFilesCount,
+        }),
+      });
+      e.target.value = "";
+      return;
+    }
+
+    setFiles(selectedFiles);
     setPreviewData(null);
     setEditedData(null);
     setError(null);
     setSuccess(false);
 
-    const reader = new FileReader();
-    reader.onload = (e) => setPreview(e.target?.result as string);
-    reader.readAsDataURL(selected);
+    Promise.all(
+      selectedFiles.map(
+        (selected) =>
+          new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => resolve(event.target?.result as string);
+            reader.onerror = () => reject(new Error("File preview error"));
+            reader.readAsDataURL(selected);
+          }),
+      ),
+    )
+      .then((nextPreviews) => setPreviews(nextPreviews))
+      .catch(() => {
+        setPreviews([]);
+        toast.error(t("predictionsUpload.uploadFailed"));
+      });
   }
 
   async function handleUpload() {
-    if (!file) return;
+    if (!files.length) return;
 
     setLoading(true);
     setError(null);
 
     const formData = new FormData();
-    formData.append("file", file);
+    files.forEach((file) => {
+      formData.append("files", file);
+    });
     const participantName =
       editedData?.participantName?.trim() || uploadParticipantName.trim();
     if (participantName) {
@@ -107,11 +156,23 @@ export function PredictionsUpload() {
 
       setPreviewData({
         ...data.preview,
+        blobUrls:
+          Array.isArray(data.preview.blobUrls) && data.preview.blobUrls.length
+            ? data.preview.blobUrls
+            : data.preview.blobUrl
+              ? [data.preview.blobUrl]
+              : [],
         participantName: data.preview.participantName || participantName,
         stage: data.preview.stage || uploadStage,
       });
       setEditedData({
         ...data.preview,
+        blobUrls:
+          Array.isArray(data.preview.blobUrls) && data.preview.blobUrls.length
+            ? data.preview.blobUrls
+            : data.preview.blobUrl
+              ? [data.preview.blobUrl]
+              : [],
         participantName: data.preview.participantName || participantName,
         stage: data.preview.stage || uploadStage,
       });
@@ -146,6 +207,7 @@ export function PredictionsUpload() {
           participantName: editedData.participantName,
           stage: editedData.stage,
           blobUrl: editedData.blobUrl,
+          blobUrls: editedData.blobUrls,
           matchPredictions: editedData.matches
             .filter((m) => m.homeScore !== null && m.awayScore !== null)
             .map((m) => ({
@@ -170,10 +232,10 @@ export function PredictionsUpload() {
 
       setSuccess(true);
       setTimeout(() => {
-        setFile(null);
+        setFiles([]);
         setUploadStage("");
         setUploadParticipantName("");
-        setPreview(null);
+        setPreviews([]);
         setPreviewData(null);
         setEditedData(null);
         setSuccess(false);
@@ -238,14 +300,19 @@ export function PredictionsUpload() {
               {t("predictionsUpload.participantName")}:{" "}
               <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
+            <select
               value={uploadParticipantName}
               onChange={(e) => setUploadParticipantName(e.target.value)}
-              className="w-full max-w-xl px-3 py-2 border border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-[#10b981]/30 focus:border-[#10b981]"
-              placeholder={t("predictionsUpload.participantName")}
+              className="w-full max-w-xl border-slate-200 rounded-lg shadow-sm py-2 px-3 focus:ring-[#10b981] focus:border-[#10b981] bg-white text-slate-700 outline-none"
               required
-            />
+            >
+              <option value="">{t("predictionsUpload.participantName")}</option>
+              {participants.map((participant) => (
+                <option key={participant.id} value={participant.name}>
+                  {participant.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
@@ -255,9 +322,16 @@ export function PredictionsUpload() {
             </label>
             <select
               value={uploadStage}
-              onChange={(e) =>
-                setUploadStage(e.target.value as SubmissionStage | "")
-              }
+              onChange={(e) => {
+                const nextStage = e.target.value as SubmissionStage | "";
+                setUploadStage(nextStage);
+                setFiles([]);
+                setPreviews([]);
+                setPreviewData(null);
+                setEditedData(null);
+                setSuccess(false);
+                setError(null);
+              }}
               className="w-full max-w-xl border-slate-200 rounded-lg shadow-sm py-2 px-3 focus:ring-[#10b981] focus:border-[#10b981] bg-white text-slate-700 outline-none"
               required
             >
@@ -277,10 +351,16 @@ export function PredictionsUpload() {
             <input
               type="file"
               accept="image/*"
+              multiple={isTwoPageStage(uploadStage)}
               onChange={handleFileChange}
               disabled={!uploadParticipantName.trim()}
               className="block w-full max-w-xl text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-slate-200 file:text-sm file:font-medium file:bg-[#f0f4f8] file:text-[#0a192f] hover:file:bg-slate-100"
             />
+            <p className="text-xs text-slate-500 mt-1">
+              {t("predictionsUpload.requiredPagesCount", {
+                count: isTwoPageStage(uploadStage) ? 2 : 1,
+              })}
+            </p>
             {!uploadParticipantName.trim() && (
               <p className="text-xs text-amber-600 mt-1">
                 {t("predictionsUpload.fillParticipantFirst")}
@@ -288,20 +368,31 @@ export function PredictionsUpload() {
             )}
           </div>
 
-          {preview && (
+          {previews.length > 0 && (
             <div>
               <p className="text-sm font-medium text-gray-700 mb-2">
                 {t("predictionsUpload.preview")}
               </p>
-              <div className="relative max-w-md">
-                <Image
-                  src={preview}
-                  alt={t("common.previewAlt")}
-                  width={768}
-                  height={1024}
-                  className="rounded border border-gray-300"
-                  style={{ width: "auto", height: "auto", maxWidth: "100%" }}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+                {previews.map((preview, index) => (
+                  <div key={index} className="relative">
+                    <p className="text-xs text-slate-500 mb-1">
+                      {t("predictionsUpload.pageLabel", { page: index + 1 })}
+                    </p>
+                    <Image
+                      src={preview}
+                      alt={t("common.previewAlt")}
+                      width={768}
+                      height={1024}
+                      className="rounded border border-gray-300"
+                      style={{
+                        width: "auto",
+                        height: "auto",
+                        maxWidth: "100%",
+                      }}
+                    />
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -309,7 +400,7 @@ export function PredictionsUpload() {
           <button
             onClick={handleUpload}
             disabled={
-              !file ||
+              files.length === 0 ||
               !uploadStage ||
               !uploadParticipantName.trim() ||
               loading ||
@@ -523,7 +614,7 @@ export function PredictionsUpload() {
           <div className="flex gap-3">
             <Button
               onClick={handleUpload}
-              disabled={!file || loading || !!previewData}
+              disabled={files.length === 0 || loading || !!previewData}
             >
               {loading
                 ? t("predictionsUpload.processing")

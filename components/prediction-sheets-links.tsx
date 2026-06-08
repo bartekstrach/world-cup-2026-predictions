@@ -100,17 +100,38 @@ export function PredictionSheetsLinks({ data }: PredictionSheetsLinksProps) {
                           : "-"}
                       </TableCell>
                       <TableCell className="p-4 text-right whitespace-nowrap">
-                        <a
-                          href={entry.blobUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0a192f] hover:text-[#10b981] transition-colors group"
-                        >
-                          <span className="underline decoration-slate-200 group-hover:decoration-[#10b981]/40 underline-offset-4">
-                            {t("predictionSheets.openSheet")}
-                          </span>
-                          <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#10b981] transition-colors" />
-                        </a>
+                        <div className="inline-flex items-center gap-3">
+                          {entry.blobUrls.length > 1 ? (
+                            entry.blobUrls.map((url, index) => (
+                              <a
+                                key={`${entry.id}-${index}`}
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0a192f] hover:text-[#10b981] transition-colors group"
+                              >
+                                <span className="underline decoration-slate-200 group-hover:decoration-[#10b981]/40 underline-offset-4">
+                                  {t("predictionSheets.openSheetPage", {
+                                    page: index + 1,
+                                  })}
+                                </span>
+                                <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#10b981] transition-colors" />
+                              </a>
+                            ))
+                          ) : (
+                            <a
+                              href={entry.blobUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-sm font-medium text-[#0a192f] hover:text-[#10b981] transition-colors group"
+                            >
+                              <span className="underline decoration-slate-200 group-hover:decoration-[#10b981]/40 underline-offset-4">
+                                {t("predictionSheets.openSheet")}
+                              </span>
+                              <ExternalLink className="w-3.5 h-3.5 text-slate-400 group-hover:text-[#10b981] transition-colors" />
+                            </a>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

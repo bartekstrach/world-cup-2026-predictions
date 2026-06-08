@@ -18,6 +18,7 @@ import {
   PUBLICATION_SETTINGS_SINGLETON_ID,
   type SubmissionStage,
 } from "./constants";
+import { decodePredictionSheetUrls } from "./prediction-sheet-urls";
 
 type PublicVisibilityContext = {
   activeCompetitionId: number | null;
@@ -263,14 +264,37 @@ export async function getPredictionSheetLinks(): Promise<
       desc(predictionSubmissions.createdAt),
     );
 
-  return rows.filter((row) => {
-    try {
-      const url = new URL(row.blobUrl);
-      return url.protocol === "http:" || url.protocol === "https:";
-    } catch {
-      return false;
-    }
-  });
+  return rows
+    .filter((row) => {
+      const urls = decodePredictionSheetUrls(row.blobUrl);
+
+      return urls.some((candidateUrl) => {
+        try {
+          const url = new URL(candidateUrl);
+          return url.protocol === "http:" || url.protocol === "https:";
+        } catch {
+          return false;
+        }
+      });
+    })
+    .map((row) => {
+      const blobUrls = decodePredictionSheetUrls(row.blobUrl).filter(
+        (candidateUrl) => {
+          try {
+            const url = new URL(candidateUrl);
+            return url.protocol === "http:" || url.protocol === "https:";
+          } catch {
+            return false;
+          }
+        },
+      );
+
+      return {
+        ...row,
+        blobUrl: blobUrls[0] ?? "",
+        blobUrls,
+      };
+    });
 }
 
 export async function getUnpublishedPublicationOptions(

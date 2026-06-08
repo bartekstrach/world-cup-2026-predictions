@@ -77,6 +77,7 @@ export interface PredictionSheetLink {
   participantName: string;
   stage: SubmissionStage;
   blobUrl: string;
+  blobUrls: string[];
   createdAt: Date | null;
   updatedAt: Date | null;
 }

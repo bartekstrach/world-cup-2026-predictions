@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { put } from "@vercel/blob";
-import { processImageToPredictions } from "@/lib/ocr";
+import { processImagesToPredictions } from "@/lib/ocr";
 import { db } from "@/lib/db";
 import {
   buildPredictionBlobPath,
   normalizeSubmissionStage,
 } from "@/lib/blob-naming";
-import { SUBMISSION_STAGES } from "@/lib/constants";
+import { SUBMISSION_STAGES, TWO_PAGE_SUBMISSION_STAGES } from "@/lib/constants";
 import { predictionSubmissions } from "@/lib/schema";
 import { and, eq } from "drizzle-orm";
 
@@ -149,15 +149,22 @@ export async function POST(request: NextRequest) {
 
   try {
     const formData = await request.formData();
-    const file = formData.get("file") as File;
+    const files = formData
+      .getAll("files")
+      .filter((entry): entry is File => entry instanceof File);
+
+    const singleFile = formData.get("file");
+    const allFiles =
+      files.length > 0 ? files : singleFile instanceof File ? [singleFile] : [];
+
     const participantNameFromForm = formData.get("participantName");
     const stageFromForm = formData.get("stage");
 
-    if (!file) {
+    if (allFiles.length === 0) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    if (!file.type.startsWith("image/")) {
+    if (allFiles.some((file) => !file.type.startsWith("image/"))) {
       return NextResponse.json(
         { error: "File must be an image" },
         { status: 400 },
@@ -180,13 +187,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid stage" }, { status: 400 });
     }
 
-    // Convert to base64 for OCR
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const base64 = buffer.toString("base64");
+    const resolvedStage = normalizeSubmissionStage(rawStage);
+    const requiresTwoPages = TWO_PAGE_SUBMISSION_STAGES.includes(
+      resolvedStage as (typeof TWO_PAGE_SUBMISSION_STAGES)[number],
+    );
 
-    // Process with OCR
-    const extracted = await processImageToPredictions(base64);
+    if (requiresTwoPages && allFiles.length !== 2) {
+      return NextResponse.json(
+        { error: "This stage requires exactly 2 scanned pages" },
+        { status: 400 },
+      );
+    }
+
+    if (!requiresTwoPages && allFiles.length !== 1) {
+      return NextResponse.json(
+        { error: "This stage requires exactly 1 scanned page" },
+        { status: 400 },
+      );
+    }
+
+    // Convert all pages to base64 for OCR
+    const base64Pages = await Promise.all(
+      allFiles.map(async (file) => {
+        const arrayBuffer = await file.arrayBuffer();
+        return Buffer.from(arrayBuffer).toString("base64");
+      }),
+    );
+
+    // Process with OCR (single or multi-page)
+    const extracted = await processImagesToPredictions(base64Pages);
     if (!extracted) {
       return NextResponse.json(
         { error: "Couldn't extract image" },
@@ -199,8 +228,6 @@ export async function POST(request: NextRequest) {
         ? participantNameFromForm
         : extracted.participantName
       )?.trim() || "Unknown";
-
-    const resolvedStage = normalizeSubmissionStage(rawStage);
 
     const existingParticipant = await db.query.participants.findFirst({
       where: (participants, { eq }) =>
@@ -224,25 +251,39 @@ export async function POST(request: NextRequest) {
       ],
     });
 
-    const blobPath = buildPredictionBlobPath({
-      participantName: resolvedParticipantName,
-      stage: resolvedStage,
-      competitionName: activeCompetition?.name,
-      originalFileName: file.name,
-    });
+    const uploadedBlobs = await Promise.all(
+      allFiles.map(async (file, index) => {
+        const blobPath = buildPredictionBlobPath({
+          participantName: resolvedParticipantName,
+          stage: resolvedStage,
+          competitionName: activeCompetition?.name,
+          originalFileName: `p${index + 1}-${file.name}`,
+        });
 
-    // Upload to Vercel Blob
-    const blob = await put(blobPath, file, {
-      access: "public",
-    });
+        return put(blobPath, file, {
+          access: "public",
+          addRandomSuffix: true,
+        });
+      }),
+    );
 
-    // Get all matches in order for this competition
+    // Get only matches for selected stage (and active competition when available)
     const matches = await db.query.matches.findMany({
+      where: (matches, { and, eq }) =>
+        activeCompetition
+          ? and(
+              eq(matches.competitionId, activeCompetition.id),
+              eq(matches.stage, resolvedStage),
+            )
+          : eq(matches.stage, resolvedStage),
       with: {
         homeTeam: true,
         awayTeam: true,
       },
-      orderBy: (matches, { asc }) => [asc(matches.matchNumber)],
+      orderBy: (matches, { asc }) => [
+        asc(matches.matchDate),
+        asc(matches.matchNumber),
+      ],
     });
 
     // Match OCR lines to DB matches by team names (with fuzzy OCR tolerance)
@@ -282,7 +323,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       preview: {
-        blobUrl: blob.url,
+        blobUrl: uploadedBlobs[0]?.url ?? "",
+        blobUrls: uploadedBlobs.map((item) => item.url),
         participantName: resolvedParticipantName,
         stage: resolvedStage,
         willReplaceExisting: !!existingSubmission,

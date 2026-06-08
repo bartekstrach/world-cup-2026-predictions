@@ -59,6 +59,7 @@
       "sheet": "Karta"
     },
     "openSheet": "Otwórz kartę",
+    "openSheetPage": "Otwórz kartę str. {{page}}",
     "stages": {
       "group_1": "Faza grupowa - kolejka 1",
       "group_2": "Faza grupowa - kolejka 2",
@@ -346,6 +347,9 @@
     "selectStage": "Wybierz etap",
     "selectScannedImage": "Wybierz zeskanowany obraz",
     "fillParticipantFirst": "Najpierw wpisz nazwę uczestnika, aby włączyć wybór pliku.",
+    "requiredPagesCount": "Wymagana liczba stron dla tego etapu: {{count}}",
+    "invalidPagesCount": "Wybrano nieprawidłową liczbę stron",
+    "pageLabel": "Strona {{page}}",
     "preview": "Podgląd:",
     "processing": "Przetwarzanie...",
     "extractScores": "Wyodrębnij wyniki",

@@ -59,6 +59,7 @@
       "sheet": "Sheet"
     },
     "openSheet": "Open sheet",
+    "openSheetPage": "Open sheet p.{{page}}",
     "stages": {
       "group_1": "Group stage - round 1",
       "group_2": "Group stage - round 2",
@@ -343,6 +344,9 @@
     "selectStage": "Select stage",
     "selectScannedImage": "Select scanned image",
     "fillParticipantFirst": "Fill participant name first to enable file selection.",
+    "requiredPagesCount": "Required pages for this stage: {{count}}",
+    "invalidPagesCount": "Wrong number of pages selected",
+    "pageLabel": "Page {{page}}",
     "preview": "Preview:",
     "processing": "Processing...",
     "extractScores": "Extract Scores",

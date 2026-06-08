@@ -3,11 +3,20 @@ import { MissingPredictionsCard } from "@/components/admin/missing-predictions-c
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdminSectionHeader } from "@/components/admin/admin-section-header";
 import { getAdminStats } from "@/lib/admin-stats";
+import { db } from "@/lib/db";
 import { FileText, Upload } from "lucide-react";
 import { getT } from "@/lib/i18n/server";
 
 export default async function PredictionsPage() {
   const t = await getT();
+  const participants = await db.query.participants.findMany({
+    columns: {
+      id: true,
+      name: true,
+    },
+    orderBy: (participants, { asc }) => [asc(participants.name)],
+  });
+
   const stats = await getAdminStats().catch((error) => {
     console.error("Failed to load admin stats for predictions page", error);
     return null;
@@ -57,7 +66,7 @@ export default async function PredictionsPage() {
         />
       ) : null}
 
-      <PredictionsUpload />
+      <PredictionsUpload participants={participants} />
     </div>
   );
 }
