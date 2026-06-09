@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { syncLiveMatches, isValidCronSyncSecret } from "@/lib/live-matches";
+import { isValidCronSyncSecret } from "@/lib/live-matches";
+import { fetchWorldCupLiveMatches } from "@/lib/football-data-live";
 
 function getSecretFromRequest(request: NextRequest): string | null {
   const bearer = request.headers.get("authorization");
@@ -18,20 +19,15 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const result = await syncLiveMatches("sync", { useRuntimeCadence: true });
+    const liveMatches = await fetchWorldCupLiveMatches();
 
     return NextResponse.json({
       success: true,
-      contract: {
-        cadenceSeconds: 30,
-      },
-      monitoring: {
-        activeLiveMatches: result.activeLiveMatches,
-        polledMatches: result.polledMatches,
-        halftimePausedMatches: result.halftimePausedMatches,
-        finalizedMatches: result.finalizedMatches,
-      },
-      ...result,
+      source: "football-data.org/v4",
+      competition: "WC",
+      fetchedAt: new Date().toISOString(),
+      liveMatchesCount: liveMatches.length,
+      liveMatches,
     });
   } catch (error) {
     console.error("Cron sync failed", error);
