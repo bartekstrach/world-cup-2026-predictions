@@ -51,18 +51,12 @@ export function HallOfFameTable({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full">
       <section className="space-y-3">
-        <h3 className="text-lg sm:text-xl font-bold text-[#0a192f]">
+        <h2 className="text-[clamp(1rem,4.8vw,1.45rem)] sm:text-2xl font-bold text-[#0a192f]">
           {hallOfFameTitle}
-        </h3>
+        </h2>
         <Card className="w-full rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
           <div className="overflow-x-auto public-table-scroll">
             <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                  <TableHead className="p-4 h-auto">{nameHeader}</TableHead>
-                  <TableHead className="p-4 h-auto">{medalsHeader}</TableHead>
-                </TableRow>
-              </TableHeader>
               <TableBody>
                 {HALL_OF_FAME_DATA.map((entry) => (
                   <TableRow key={entry.name} className="hover:bg-slate-50">
@@ -81,18 +75,12 @@ export function HallOfFameTable({
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-lg sm:text-xl font-bold text-[#0a192f]">
+        <h2 className="text-[clamp(1rem,4.8vw,1.45rem)] sm:text-2xl font-bold text-[#0a192f]">
           {hallOfShameTitle}
-        </h3>
+        </h2>
         <Card className="w-full rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
           <div className="overflow-x-auto public-table-scroll">
             <Table>
-              <TableHeader>
-                <TableRow className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
-                  <TableHead className="p-4 h-auto">{heroHeader}</TableHead>
-                  <TableHead className="p-4 h-auto" />
-                </TableRow>
-              </TableHeader>
               <TableBody>
                 {HALL_OF_SHAME_DATA.map((entry) => (
                   <TableRow key={entry.name} className="hover:bg-slate-50">
