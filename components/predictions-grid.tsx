@@ -2,14 +2,6 @@
 
 import { Fragment, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { formatDateTime, getShortWeekday } from "@/lib/date";
 import { calculatePoints, formatScore } from "@/lib/scoring-utils";
 import { getMatchTeamNames, getShortMatchTeamNames } from "@/lib/teams";
@@ -26,17 +18,71 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
   const { t } = useTranslation();
   const { selectedParticipantId } = useSelectedParticipant();
   const { matches, participants, predictions } = data;
+  const hasLiveMatch = useMemo(
+    () => matches.some((match) => match.status === "live"),
+    [matches],
+  );
+
+  const sortedMatches = useMemo(() => {
+    return [...matches].sort((a, b) => {
+      const byDate = a.matchDate.getTime() - b.matchDate.getTime();
+      if (byDate !== 0) return byDate;
+
+      return a.matchNumber - b.matchNumber;
+    });
+  }, [matches]);
 
   const groupedMatches = useMemo(() => {
-    return MATCH_STAGES.map((stage) => ({
+    const groups = new Map<MatchStage, typeof sortedMatches>();
+
+    for (const match of sortedMatches) {
+      const stage = match.stage;
+      const existing = groups.get(stage);
+
+      if (existing) {
+        existing.push(match);
+      } else {
+        groups.set(stage, [match]);
+      }
+    }
+
+    return Array.from(groups.entries()).map(([stage, stageMatches]) => ({
       stage,
-      matches: matches.filter((match) => match.stage === stage),
-    })).filter((group) => group.matches.length > 0);
-  }, [matches]);
+      matches: stageMatches,
+    }));
+  }, [sortedMatches]);
 
   const [collapsedStages, setCollapsedStages] = useState<
     Partial<Record<MatchStage, boolean>>
-  >({});
+  >(() => {
+    const initial: Partial<Record<MatchStage, boolean>> = {};
+    const now = Date.now();
+    const firstMatch = sortedMatches[0] ?? null;
+    const shouldKeepFirstGroupOpen =
+      firstMatch !== null && now < firstMatch.matchDate.getTime();
+
+    for (const stage of MATCH_STAGES) {
+      const stageMatches = sortedMatches.filter(
+        (match) => match.stage === stage,
+      );
+      if (stageMatches.length === 0) continue;
+
+      const allFinished = stageMatches.every(
+        (match) => match.status === "finished",
+      );
+      const allUpcoming = stageMatches.every(
+        (match) => match.status === "scheduled",
+      );
+
+      const defaultCollapsed = allFinished || allUpcoming;
+      initial[stage] =
+        stage === "group_1" && shouldKeepFirstGroupOpen
+          ? false
+          : defaultCollapsed;
+    }
+
+    return initial;
+  });
 
   function toggleStage(stage: MatchStage) {
     setCollapsedStages((prev) => ({
@@ -51,7 +97,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
     let withoutLive = 0;
     let withLive = 0;
 
-    for (const match of matches) {
+    for (const match of sortedMatches) {
       const prediction = predictions[`${match.id}-${participant.id}`];
       if (!prediction) continue;
 
@@ -76,63 +122,63 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
   }, {});
 
   return (
-    <Card className="w-full max-w-full overflow-hidden rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
-      <div className="overflow-x-auto public-table-scroll">
-        <Table className="w-full min-w-max table-auto">
-          <TableHeader>
-            <TableRow className="bg-slate-50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+    <Card className="w-full max-w-full rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
+      <div className="relative overflow-auto max-h-[80vh] w-full predictions-grid-table public-table-scroll">
+        <table className="w-full border-collapse table-auto min-w-max text-sm">
+          <thead>
+            <tr className="border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
               {/* Group/stage */}
-              <TableHead className="hidden sm:table-cell whitespace-nowrap min-w-12 p-4 h-auto">
+              <th className="sticky top-0 z-50 bg-slate-50 hidden sm:table-cell whitespace-nowrap min-w-12 p-4 h-auto text-left align-middle">
                 {t("predictionsGrid.headers.group")}
-              </TableHead>
+              </th>
 
               {/* Date */}
-              <TableHead className="whitespace-nowrap min-w-28 p-4 h-auto">
+              <th className="sticky top-0 z-50 bg-slate-50 whitespace-nowrap min-w-28 p-4 h-auto text-left align-middle">
                 {t("predictionsGrid.headers.date")}
-              </TableHead>
+              </th>
 
               {/* Match + result */}
-              <TableHead className="sticky left-0 z-20 bg-slate-50 whitespace-nowrap min-w-48 sm:min-w-64 p-4 h-auto">
+              <th className="sticky top-0 left-0 z-[70] bg-slate-50 border-r border-slate-100 whitespace-nowrap min-w-48 sm:min-w-64 p-4 h-auto shadow-[0_2px_8px_-6px_rgba(15,23,42,0.5)] text-left align-middle">
                 {t("predictionsGrid.headers.match")}
-              </TableHead>
-              <TableHead className="sticky left-48 sm:left-64 z-20 bg-slate-50 whitespace-nowrap min-w-24 text-center p-4 h-auto">
+              </th>
+              <th className="sticky top-0 left-48 sm:left-64 z-[65] bg-slate-50 whitespace-nowrap min-w-24 text-center p-4 h-auto border-l border-slate-100 shadow-[0_2px_8px_-6px_rgba(15,23,42,0.5),-1px_0_0_0_rgba(226,232,240,1)] align-middle">
                 {t("predictionsGrid.headers.result")}
-              </TableHead>
+              </th>
 
               {/* Participants */}
               {participants.map((p) => (
-                <TableHead
+                <th
                   key={p.id}
-                  className={`text-center whitespace-nowrap min-w-24 p-4 h-auto ${
+                  className={`sticky top-0 z-50 bg-slate-50 text-center whitespace-nowrap min-w-24 p-4 h-auto align-middle ${
                     selectedParticipantId === p.id
                       ? "selected-highlight-col selected-highlight-col-top"
                       : ""
                   }`}
                 >
                   {p.name}
-                </TableHead>
+                </th>
               ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+            </tr>
+          </thead>
+          <tbody>
             {groupedMatches.map((group) => {
               const isCollapsed = Boolean(collapsedStages[group.stage]);
               const stageLabel = t(`predictionSheets.stages.${group.stage}`);
 
               return (
                 <Fragment key={`stage-${group.stage}`}>
-                  <TableRow
+                  <tr
                     data-no-hover="true"
-                    className="stage-section-header bg-emerald-50/70 border-emerald-100"
+                    className="stage-section-header selected-highlight-row border-b"
                   >
-                    <TableCell
+                    <td
                       colSpan={4 + participants.length}
                       className="p-0 whitespace-normal"
                     >
                       <button
                         type="button"
                         onClick={() => toggleStage(group.stage)}
-                        className="w-full flex items-center justify-between gap-3 px-4 py-2 text-left"
+                        className="w-full flex items-center gap-2 px-4 py-2 text-left"
                         aria-expanded={!isCollapsed}
                         aria-label={
                           isCollapsed
@@ -144,31 +190,31 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                               })
                         }
                       >
+                        <span className="text-emerald-700 font-mono text-xs sm:text-sm shrink-0">
+                          {isCollapsed ? "▸" : "▾"}
+                        </span>
                         <span className="font-semibold text-emerald-900 text-xs sm:text-sm uppercase tracking-wide">
                           {stageLabel}
                         </span>
-                        <span className="text-emerald-700 font-mono text-xs sm:text-sm">
-                          {isCollapsed ? "▸" : "▾"}{" "}
-                          {t("predictionsGrid.stageHeader.matches", {
-                            count: group.matches.length,
-                          })}
-                        </span>
                       </button>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
 
                   {!isCollapsed &&
                     group.matches.map((match) => (
-                      <TableRow key={match.id}>
+                      <tr
+                        key={match.id}
+                        className="border-b hover:bg-muted/50 transition-colors"
+                      >
                         {/* Group/stage */}
-                        <TableCell className="hidden sm:table-cell text-center text-slate-400 whitespace-nowrap p-4">
+                        <td className="hidden sm:table-cell text-center text-slate-400 whitespace-nowrap p-4 align-middle">
                           {match.stage.startsWith("group_")
                             ? match.homeTeam.group
                             : t(`predictionSheets.stages.${match.stage}`)}
-                        </TableCell>
+                        </td>
 
                         {/* Date */}
-                        <TableCell className="text-slate-500 whitespace-nowrap text-xs sm:text-sm p-4">
+                        <td className="text-slate-500 whitespace-nowrap text-xs sm:text-sm p-4 align-middle">
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-2">
                             <span>
                               {getShortWeekday({ date: match.matchDate })}
@@ -177,10 +223,10 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                               {formatDateTime({ date: match.matchDate })}
                             </time>
                           </div>
-                        </TableCell>
+                        </td>
 
                         {/* Match */}
-                        <TableCell className="sticky left-0 z-10 bg-white p-4">
+                        <td className="sticky left-0 z-30 bg-white border-r border-slate-100 p-4 align-middle">
                           <div className="block md:hidden font-medium text-slate-700 whitespace-nowrap">
                             {getShortMatchTeamNames({
                               displayFlags: true,
@@ -195,12 +241,12 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                               awayTeamCode: match.awayTeam.code,
                             })}
                           </div>
-                        </TableCell>
+                        </td>
 
                         {/* Result */}
-                        <TableCell className="sticky left-48 sm:left-64 z-10 bg-white p-4 text-center whitespace-nowrap">
+                        <td className="sticky left-48 sm:left-64 z-20 bg-white p-4 text-center whitespace-nowrap border-l border-slate-100 shadow-[-1px_0_0_0_rgba(226,232,240,1)] align-middle">
                           {match.status === "live" ? (
-                            <div className="inline-flex items-center gap-1.5 bg-red-50 text-red-600 px-2.5 py-1 rounded-full text-xs font-bold border border-red-100">
+                            <span className="inline-flex h-6 items-center gap-1.5 bg-red-50 text-red-600 px-2 rounded-full text-xs font-bold border border-red-100 leading-none">
                               <span className="relative flex h-2 w-2">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
@@ -214,7 +260,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                                     })
                                   : NO_RESULT}
                               </span>
-                            </div>
+                            </span>
                           ) : (
                             <span
                               className={`font-mono font-bold ${
@@ -233,7 +279,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                                 : NO_RESULT}
                             </span>
                           )}
-                        </TableCell>
+                        </td>
 
                         {/* Participants */}
                         {participants.map((p) => {
@@ -242,7 +288,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
 
                           if (!pred) {
                             return (
-                              <TableCell
+                              <td
                                 key={p.id}
                                 className={`text-center whitespace-nowrap p-4 ${
                                   selectedParticipantId === p.id
@@ -251,12 +297,12 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                                 }`}
                               >
                                 <span className="text-muted-foreground">-</span>
-                              </TableCell>
+                              </td>
                             );
                           }
 
                           return (
-                            <TableCell
+                            <td
                               key={p.id}
                               className={`text-center whitespace-nowrap p-4 ${
                                 selectedParticipantId === p.id
@@ -288,11 +334,13 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                                   return (
                                     <span
                                       className={`text-xs font-mono font-bold w-4 flex justify-center ${
-                                        points === 3
-                                          ? "text-[#10b981]"
-                                          : points && points > 0
-                                            ? "text-[#0a192f]"
-                                            : "text-slate-300"
+                                        match.status === "live"
+                                          ? "text-red-600"
+                                          : points === 3
+                                            ? "text-[#10b981]"
+                                            : points && points > 0
+                                              ? "text-[#0a192f]"
+                                              : "text-slate-300"
                                       }`}
                                     >
                                       {points ?? "-"}
@@ -300,19 +348,48 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                                   );
                                 })()}
                               </div>
-                            </TableCell>
+                            </td>
                           );
                         })}
-                      </TableRow>
+                      </tr>
                     ))}
                 </Fragment>
               );
             })}
-            <TableRow className="bg-[#f0f7ff] border-b border-slate-100">
-              <TableCell className="hidden sm:table-cell text-center text-slate-400 whitespace-nowrap p-4" />
-              <TableCell className="text-slate-500 whitespace-nowrap text-xs sm:text-sm p-4 font-semibold" />
-              <TableCell className="sticky left-0 z-10 bg-[#f0f7ff] p-4 font-semibold text-[#0a192f] whitespace-nowrap" />
-              <TableCell className="sticky left-48 sm:left-64 z-10 bg-[#f0f7ff] p-4 text-center text-xs text-slate-500 whitespace-nowrap" />
+          </tbody>
+          <tfoot>
+            <tr className="bg-slate-50 border-t border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
+              <td className="hidden sm:table-cell whitespace-nowrap min-w-12 p-3 text-center">
+                {t("predictionsGrid.headers.group")}
+              </td>
+              <td className="whitespace-nowrap min-w-28 p-3">
+                {t("predictionsGrid.headers.date")}
+              </td>
+              <td className="sticky left-0 z-30 bg-slate-50 border-r border-slate-100 whitespace-nowrap min-w-48 sm:min-w-64 p-3">
+                {t("predictionsGrid.headers.match")}
+              </td>
+              <td className="sticky left-48 sm:left-64 z-20 bg-slate-50 whitespace-nowrap min-w-24 text-center p-3 border-l border-slate-100 shadow-[-1px_0_0_0_rgba(226,232,240,1)]">
+                {t("predictionsGrid.headers.result")}
+              </td>
+              {participants.map((p) => (
+                <td
+                  key={`summary-header-${p.id}`}
+                  className={`text-center whitespace-nowrap min-w-24 p-3 ${
+                    selectedParticipantId === p.id
+                      ? "selected-highlight-col selected-highlight-col-bottom"
+                      : ""
+                  }`}
+                >
+                  {p.name}
+                </td>
+              ))}
+            </tr>
+
+            <tr className="selected-highlight-row border-b border-slate-100">
+              <td className="sticky bottom-0 z-50 border-t border-slate-200 text-center text-slate-400 whitespace-nowrap p-4 bg-[var(--selected-participant-bg)] hover:bg-[var(--selected-participant-bg-hover)]" />
+              <td className="sticky bottom-0 z-50 border-t border-slate-200 text-slate-500 whitespace-nowrap text-xs sm:text-sm p-4 font-semibold bg-[var(--selected-participant-bg)] hover:bg-[var(--selected-participant-bg-hover)]" />
+              <td className="sticky bottom-0 left-0 z-[60] border-t border-r border-slate-200 p-4 font-semibold text-[#0a192f] whitespace-nowrap shadow-[0_-6px_12px_-8px_rgba(15,23,42,0.55)] bg-[var(--selected-participant-bg)] hover:bg-[var(--selected-participant-bg-hover)]" />
+              <td className="sticky bottom-0 left-48 sm:left-64 z-[55] border-t border-l border-slate-200 p-4 text-center text-xs text-slate-500 whitespace-nowrap shadow-[0_-6px_12px_-8px_rgba(15,23,42,0.55),-1px_0_0_0_rgba(226,232,240,1)] bg-[var(--selected-participant-bg)] hover:bg-[var(--selected-participant-bg-hover)]" />
               {participants.map((participant) => {
                 const totals = participantPointTotals[participant.id] ?? {
                   withoutLive: 0,
@@ -320,9 +397,9 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                 };
 
                 return (
-                  <TableCell
+                  <td
                     key={participant.id}
-                    className={`text-center whitespace-nowrap p-4 ${
+                    className={`sticky bottom-0 z-50 border-t border-slate-200 text-center whitespace-nowrap p-4 bg-[var(--selected-participant-bg)] hover:bg-[var(--selected-participant-bg-hover)] ${
                       selectedParticipantId === participant.id
                         ? "selected-highlight-col selected-highlight-col-bottom"
                         : ""
@@ -331,17 +408,21 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                     <span className="font-mono font-bold text-[#0a192f]">
                       {totals.withoutLive}
                     </span>
-                    <span className="text-slate-300 px-1">(</span>
-                    <span className="font-mono font-bold text-[#10b981]">
-                      {totals.withLive}
-                    </span>
-                    <span className="text-slate-300 px-1">)</span>
-                  </TableCell>
+                    {hasLiveMatch ? (
+                      <>
+                        <span className="text-slate-400 px-1">(</span>
+                        <span className="font-mono font-bold text-red-600">
+                          {totals.withLive}
+                        </span>
+                        <span className="text-slate-400 px-1">)</span>
+                      </>
+                    ) : null}
+                  </td>
                 );
               })}
-            </TableRow>
-          </TableBody>
-        </Table>
+            </tr>
+          </tfoot>
+        </table>
       </div>
     </Card>
   );

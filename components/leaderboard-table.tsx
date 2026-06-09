@@ -1,149 +1,105 @@
 "use client";
 
 import type { LeaderboardEntry } from "@/lib/types";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Card } from "@/components/ui/card";
-import { getShortMatchTeamNames } from "@/lib/teams";
 import { useTranslation } from "react-i18next";
 import { useSelectedParticipant } from "@/components/selected-participant-provider";
+import { getShortMatchTeamNames } from "@/lib/teams";
 
 interface LeaderboardTableProps {
   data: LeaderboardEntry[];
 }
 
-const getBackground = (rank: number) => {
-  switch (rank) {
-    case 1:
-      return "bg-[#10b981]/30 hover:bg-[#10b981]/40 border-l-4 border-[#10b981]";
-    case 2:
-      return "bg-[#10b981]/20 hover:bg-[#10b981]/30";
-    case 3:
-      return "bg-[#10b981]/10 hover:bg-[#10b981]/20";
-    default:
-      return "bg-white hover:bg-slate-50";
-  }
-};
+const getBackground = () => "bg-white hover:bg-slate-50";
 
-const getRankNumber = (rank: string) => {
-  switch (rank) {
-    case "🥇":
-      return 1;
-    case "🥈":
-      return 2;
-    case "🥉":
-      return 3;
-    default: {
-      const parsed = Number.parseInt(rank, 10);
-      return Number.isNaN(parsed) ? 999 : parsed;
-    }
-  }
-};
+const PODIUM_RANKS = new Set(["🥇", "🥈", "🥉"]);
 
-const getRankGroupsByPoints = (entries: LeaderboardEntry[]) => {
-  const groups = new Map<string, number>();
-  let groupRank = 0;
-
-  for (const entry of entries) {
-    const pointsKey = String(entry.total_points);
-
-    if (!groups.has(pointsKey)) {
-      groupRank += 1;
-      groups.set(pointsKey, groupRank);
-    }
-  }
-
-  return groups;
-};
+const formatMergedRankLabel = (rank: string) =>
+  PODIUM_RANKS.has(rank) ? rank : "";
 
 export function LeaderboardTable({ data }: LeaderboardTableProps) {
-  const { t } = useTranslation();
+  useTranslation();
   const { selectedParticipantId } = useSelectedParticipant();
-  const rankGroupsByPoints = getRankGroupsByPoints(data);
+  const visibleMatches = data[0]?.nextMatches.slice(0, 2) ?? [];
+
   return (
-    <Card className="w-full max-w-full overflow-hidden rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
-      <div className="overflow-x-auto public-table-scroll">
-        <Table className="table-auto min-w-max">
-          <TableHeader>
-            <TableRow className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
-              <TableHead className="sticky left-0 z-20 bg-slate-50/50 whitespace-nowrap min-w-14 text-center p-4 h-auto">
-                {t("leaderboard.rank")}
-              </TableHead>
-              <TableHead className="sticky left-14 z-20 bg-slate-50/50 whitespace-nowrap min-w-36 sm:min-w-44 p-4 h-auto">
-                {t("leaderboard.participant")}
-              </TableHead>
-              <TableHead className="sticky left-[12.5rem] sm:left-[14.5rem] z-20 bg-slate-50/50 text-center whitespace-nowrap min-w-16 p-4 h-auto">
-                {t("leaderboard.points")}
-              </TableHead>
-              {data[0].nextMatches.map((match) => (
-                <TableHead
+    <Card className="w-full max-w-full rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
+      <div className="relative overflow-auto max-h-[80vh] w-full public-table-scroll">
+        <table className="w-full border-collapse table-auto text-sm">
+          <thead>
+            <tr className="border-b border-slate-100 text-slate-500 font-semibold">
+              <th className="sticky top-0 left-0 z-30 bg-slate-50 border-b border-r border-slate-100 p-2 sm:p-3 h-auto text-left text-[clamp(0.62rem,2.9vw,0.78rem)] uppercase tracking-wide w-[1%] whitespace-nowrap" />
+              <th className="sticky top-0 z-20 bg-slate-50 border-b border-slate-100 shadow-sm p-2 sm:p-3 h-auto text-center text-[clamp(0.62rem,2.9vw,0.78rem)] uppercase tracking-wide w-[1%] whitespace-nowrap">
+                PKT.
+              </th>
+              {visibleMatches.map((match) => (
+                <th
                   key={match.id}
-                  className="text-center whitespace-nowrap min-w-24 p-4 h-auto"
+                  className={`sticky top-0 z-20 bg-slate-50 border-b border-slate-100 shadow-sm p-2 sm:p-3 h-auto text-center text-[clamp(0.62rem,2.9vw,0.78rem)] uppercase tracking-wide ${
+                    visibleMatches.length === 2 ? "w-[49%]" : "w-auto"
+                  }`}
                 >
                   {getShortMatchTeamNames({
                     displayFlags: true,
                     homeTeamCode: match.homeTeamCode,
                     awayTeamCode: match.awayTeamCode,
                   })}
-                </TableHead>
+                </th>
               ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {data.map((entry) => {
-              const rowRank =
-                rankGroupsByPoints.get(String(entry.total_points)) ??
-                getRankNumber(entry.rank);
+            </tr>
+          </thead>
+          <tbody>
+            {data.map((entry, index) => {
               const isSelected = selectedParticipantId === entry.id;
+              const isPinnedLeader = index === 0 || entry.rank === "🥇";
+              const nextPredictions = entry.nextPredictions.slice(
+                0,
+                visibleMatches.length,
+              );
+              const leaderStickyClass = isPinnedLeader
+                ? "sticky bottom-0 z-20 shadow-[0_-8px_14px_-10px_rgba(15,23,42,0.45)]"
+                : "";
 
               return (
-                <TableRow
+                <tr
                   key={entry.id}
-                  className={`${getBackground(rowRank)} ${
+                  className={`${getBackground()} ${
                     isSelected ? "selected-highlight-row" : ""
                   }`}
                 >
-                  <TableCell
-                    className={`font-medium text-center sticky left-0 z-10 bg-inherit whitespace-nowrap p-4 ${
-                      rowRank === 1 ? "border-l-4 border-[#10b981]" : ""
-                    }`}
+                  <td
+                    className={`sticky left-0 z-10 bg-white border-r border-slate-100 whitespace-nowrap p-2 sm:p-3 text-slate-700 ${leaderStickyClass}`}
                   >
-                    {entry.rank}
-                  </TableCell>
-                  <TableCell className="font-medium sticky left-14 z-10 bg-inherit whitespace-nowrap max-w-36 sm:max-w-44 truncate p-4 text-slate-700">
-                    {entry.name}
-                  </TableCell>
-                  <TableCell
-                    className={`text-center font-mono font-bold sticky left-[12.5rem] sm:left-[14.5rem] z-10 bg-inherit whitespace-nowrap p-4 ${
-                      rowRank === 1
-                        ? "text-[#10b981] text-lg"
-                        : "text-[#0a192f]"
-                    }`}
+                    <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                      <span className="inline-flex items-center justify-center text-[clamp(0.75rem,3.2vw,0.92rem)] leading-none">
+                        {formatMergedRankLabel(entry.rank)}
+                      </span>
+                      <span className="font-medium truncate text-[clamp(0.74rem,3.2vw,0.94rem)] leading-tight">
+                        {entry.name}
+                      </span>
+                    </div>
+                  </td>
+                  <td
+                    className={`bg-white text-center font-mono tabular-nums font-bold whitespace-nowrap p-2 sm:p-3 text-[#0a192f] text-[clamp(0.7rem,3vw,0.9rem)] ${leaderStickyClass}`}
                   >
                     {entry.total_points}
-                  </TableCell>
-                  {entry.nextPredictions.map((prediction) => (
-                    <TableCell
+                  </td>
+                  {nextPredictions.map((prediction) => (
+                    <td
                       key={`${entry.id}+${prediction.matchId}`}
-                      className="text-center font-mono text-slate-600 whitespace-nowrap p-4"
+                      className={`bg-white text-center font-mono tabular-nums text-slate-700 whitespace-nowrap p-2 sm:p-3 text-[clamp(0.68rem,2.9vw,0.88rem)] leading-none ${leaderStickyClass}`}
                     >
                       {prediction.homeScore !== null &&
                       prediction.awayScore !== null
                         ? `${prediction.homeScore}:${prediction.awayScore}`
                         : "-"}
-                    </TableCell>
+                    </td>
                   ))}
-                </TableRow>
+                </tr>
               );
             })}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
     </Card>
   );

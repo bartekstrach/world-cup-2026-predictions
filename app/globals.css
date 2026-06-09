@@ -49,8 +49,10 @@
 
 :root {
   --radius: 0.625rem;
-  --selected-participant-border: #ef4444;
-  --selected-participant-bg: color-mix(in oklab, #ef4444 8%, white);
+  --selected-participant-border: color-mix(in oklab, #10b981 36%, white);
+  --selected-participant-border-hover: color-mix(in oklab, #10b981 52%, white);
+  --selected-participant-bg: color-mix(in oklab, #10b981 16%, white);
+  --selected-participant-bg-hover: color-mix(in oklab, #10b981 28%, white);
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
@@ -143,11 +145,26 @@
     scrollbar-width: thin;
   }
 
+  .predictions-grid-table {
+    overflow-x: auto;
+    overflow-y: visible;
+    position: relative;
+    max-width: 100%;
+    isolation: isolate;
+  }
+
   .selected-highlight-row > td {
     background: var(--selected-participant-bg);
     box-shadow:
       inset 0 2px 0 var(--selected-participant-border),
       inset 0 -2px 0 var(--selected-participant-border);
+  }
+
+  .selected-highlight-row:hover > td {
+    background: var(--selected-participant-bg-hover);
+    box-shadow:
+      inset 0 2px 0 var(--selected-participant-border-hover),
+      inset 0 -2px 0 var(--selected-participant-border-hover);
   }
 
   .selected-highlight-row > td:first-child {
@@ -157,11 +174,25 @@
       inset 0 -2px 0 var(--selected-participant-border);
   }
 
+  .selected-highlight-row:hover > td:first-child {
+    box-shadow:
+      inset 2px 0 0 var(--selected-participant-border-hover),
+      inset 0 2px 0 var(--selected-participant-border-hover),
+      inset 0 -2px 0 var(--selected-participant-border-hover);
+  }
+
   .selected-highlight-row > td:last-child {
     box-shadow:
       inset -2px 0 0 var(--selected-participant-border),
       inset 0 2px 0 var(--selected-participant-border),
       inset 0 -2px 0 var(--selected-participant-border);
+  }
+
+  .selected-highlight-row:hover > td:last-child {
+    box-shadow:
+      inset -2px 0 0 var(--selected-participant-border-hover),
+      inset 0 2px 0 var(--selected-participant-border-hover),
+      inset 0 -2px 0 var(--selected-participant-border-hover);
   }
 
   .selected-highlight-col {

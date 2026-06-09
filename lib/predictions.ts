@@ -109,7 +109,10 @@ export async function getPredictionsData(): Promise<PredictionsGridData> {
           homeTeam: true,
           awayTeam: true,
         },
-        orderBy: (matches, { asc }) => [asc(matches.matchNumber)],
+        orderBy: (matches, { asc }) => [
+          asc(matches.matchDate),
+          asc(matches.matchNumber),
+        ],
       })
     : visibility.activeCompetitionId === null ||
         (publishedStageList.length === 0 && publishedMatchIdList.length === 0)
@@ -130,7 +133,10 @@ export async function getPredictionsData(): Promise<PredictionsGridData> {
             homeTeam: true,
             awayTeam: true,
           },
-          orderBy: (matches, { asc }) => [asc(matches.matchNumber)],
+          orderBy: (matches, { asc }) => [
+            asc(matches.matchDate),
+            asc(matches.matchNumber),
+          ],
         });
 
   const participants = await db.query.participants.findMany({
@@ -260,8 +266,8 @@ export async function getPredictionSheetLinks(): Promise<
       ),
     )
     .orderBy(
-      desc(predictionSubmissions.updatedAt),
-      desc(predictionSubmissions.createdAt),
+      sql`${predictionSubmissions.updatedAt} ASC NULLS LAST`,
+      sql`${predictionSubmissions.createdAt} ASC NULLS LAST`,
     );
 
   return rows

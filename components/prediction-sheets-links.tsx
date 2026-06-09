@@ -45,7 +45,18 @@ export function PredictionSheetsLinks({ data }: PredictionSheetsLinksProps) {
   const groupedByStage = STAGE_ORDER.map((stage) => {
     const entries = data
       .filter((entry) => entry.stage === stage)
-      .sort((a, b) => a.participantName.localeCompare(b.participantName));
+      .sort((a, b) => {
+        const aTime =
+          (a.updatedAt ?? a.createdAt)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+        const bTime =
+          (b.updatedAt ?? b.createdAt)?.getTime() ?? Number.MAX_SAFE_INTEGER;
+
+        if (aTime !== bTime) {
+          return aTime - bTime;
+        }
+
+        return a.participantName.localeCompare(b.participantName);
+      });
 
     return {
       stage,
@@ -55,7 +66,7 @@ export function PredictionSheetsLinks({ data }: PredictionSheetsLinksProps) {
   }).filter((group) => group.entries.length > 0);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {groupedByStage.map((group) => (
         <div key={group.stage} className="space-y-3">
           <h3 className="text-lg font-bold text-[#0a192f] flex items-center gap-2">
@@ -63,9 +74,9 @@ export function PredictionSheetsLinks({ data }: PredictionSheetsLinksProps) {
             {group.label}
           </h3>
 
-          <Card className="rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
+          <Card className="w-full max-w-full rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
             <div className="overflow-x-auto public-table-scroll">
-              <Table>
+              <Table className="table-auto min-w-max">
                 <TableHeader>
                   <TableRow className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                     <TableHead className="p-4 h-auto w-1/3">

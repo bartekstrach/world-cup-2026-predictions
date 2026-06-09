@@ -4,12 +4,10 @@ import {
   getLastCompletedMatchDate,
 } from "@/lib/scoring";
 import { getMatchTeamNames } from "@/lib/teams";
-import { getT } from "@/lib/i18n/server";
 
 export const revalidate = 60;
 
 export async function LastFinishedMatches() {
-  const t = await getT();
   const latestCompletedDate = await getLastCompletedMatchDate();
   if (!latestCompletedDate) return null;
 
@@ -26,7 +24,7 @@ export async function LastFinishedMatches() {
           awayTeamCode: m.awayTeamCode,
         })}`,
     )
-    .join(` ${t("common.and")} `);
+    .join(" / ");
 
   const formattedMatchDate = `${getShortWeekday({
     date: latestCompletedDate,
@@ -36,10 +34,7 @@ export async function LastFinishedMatches() {
 
   return (
     <>
-      {t("lastFinishedMatches.after", {
-        matchesSummary,
-        formattedMatchDate,
-      })}
+      Po meczach {matchesSummary} ({formattedMatchDate})
     </>
   );
 }

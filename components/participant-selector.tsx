@@ -64,7 +64,9 @@ export function ParticipantSelector({
         htmlFor="public-participant-selector"
         className="text-sm font-medium text-slate-600"
       >
-        {t("public.participantSelector.label")}
+        <h2 className="text-[clamp(1rem,4.8vw,1.45rem)] sm:text-2xl font-bold text-[#0a192f] leading-tight">
+          {t("public.participantSelector.label")}
+        </h2>
       </Label>
       <Select value={selectedValue} onValueChange={handleValueChange}>
         <SelectTrigger

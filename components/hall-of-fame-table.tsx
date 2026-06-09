@@ -49,12 +49,12 @@ export function HallOfFameTable({
   heroHeader,
 }: HallOfFameTableProps) {
   return (
-    <div className="grid gap-6 md:grid-cols-2">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full">
       <section className="space-y-3">
         <h3 className="text-lg sm:text-xl font-bold text-[#0a192f]">
           {hallOfFameTitle}
         </h3>
-        <Card className="rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
+        <Card className="w-full rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
           <div className="overflow-x-auto public-table-scroll">
             <Table>
               <TableHeader>
@@ -84,7 +84,7 @@ export function HallOfFameTable({
         <h3 className="text-lg sm:text-xl font-bold text-[#0a192f]">
           {hallOfShameTitle}
         </h3>
-        <Card className="rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
+        <Card className="w-full rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
           <div className="overflow-x-auto public-table-scroll">
             <Table>
               <TableHeader>

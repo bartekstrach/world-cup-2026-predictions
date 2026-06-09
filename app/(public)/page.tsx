@@ -33,34 +33,37 @@ export default async function MainPage() {
   const hasVisiblePredictions = predictionsData.matches.length > 0;
 
   return (
-    <div className="space-y-6 min-w-0">
-      <section className="space-y-4">
-        <div className="min-w-0 w-full">
-          <h2 className="text-xl sm:text-2xl font-bold text-[#0a192f] leading-tight">
-            {t("public.results")}
-          </h2>
-          <div className="text-slate-500 mt-1 text-sm sm:text-base">
-            <LastFinishedMatches />
+    <SelectedParticipantProvider>
+      <div className="space-y-3 sm:space-y-5 min-w-0">
+        {hasVisiblePredictions && (
+          <ParticipantSelector participants={predictionsData.participants} />
+        )}
+
+        <section className="space-y-2 sm:space-y-3">
+          <div className="min-w-0 w-full">
+            <h2 className="text-[clamp(1rem,4.8vw,1.45rem)] sm:text-2xl font-bold text-[#0a192f] leading-tight">
+              {t("public.results")}
+            </h2>
+            <div className="text-slate-500 mt-1 text-[clamp(0.72rem,3.3vw,0.95rem)] sm:text-base">
+              <LastFinishedMatches />
+            </div>
+            {nextMatchBannerData && (
+              <NextMatchBanner data={nextMatchBannerData} />
+            )}
           </div>
-          {nextMatchBannerData && (
-            <NextMatchBanner data={nextMatchBannerData} />
-          )}
+        </section>
+
+        <div className="w-full xl:w-1/2 xl:transition-all xl:duration-300">
+          <LeaderboardTable data={leaderboard} />
         </div>
-      </section>
 
-      <SelectedParticipantProvider>
-        <LeaderboardTable data={leaderboard} />
-
-        <section className="space-y-4 pt-4">
-          <h2 className="text-xl sm:text-2xl font-bold text-[#0a192f]">
+        <section className="space-y-2 sm:space-y-4 pt-2 sm:pt-4">
+          <h2 className="text-[clamp(1rem,4.8vw,1.45rem)] sm:text-2xl font-bold text-[#0a192f]">
             {t("public.predictions")}
           </h2>
 
           {hasVisiblePredictions ? (
             <>
-              <ParticipantSelector
-                participants={predictionsData.participants}
-              />
               <PredictionsGrid data={predictionsData} />
             </>
           ) : (
@@ -69,27 +72,31 @@ export default async function MainPage() {
             </p>
           )}
 
-          <HallOfFameTable
-            hallOfFameTitle={t("public.hallOfFame.title")}
-            hallOfShameTitle={t("public.hallOfShame.title")}
-            nameHeader={t("public.hallOfFame.headers.name")}
-            medalsHeader={t("public.hallOfFame.headers.medals")}
-            heroHeader={t("public.hallOfShame.headers.hero")}
-          />
+          <div className="w-full xl:w-3/4 xl:transition-all xl:duration-300">
+            <HallOfFameTable
+              hallOfFameTitle={t("public.hallOfFame.title")}
+              hallOfShameTitle={t("public.hallOfShame.title")}
+              nameHeader={t("public.hallOfFame.headers.name")}
+              medalsHeader={t("public.hallOfFame.headers.medals")}
+              heroHeader={t("public.hallOfShame.headers.hero")}
+            />
+          </div>
 
-          <div className="space-y-6 pt-8 border-t border-slate-200/60 mt-8">
+          <div className="space-y-3 sm:space-y-6 pt-4 sm:pt-8 border-t border-slate-200/60 mt-4 sm:mt-8">
             <div className="space-y-1">
-              <h2 className="text-xl sm:text-2xl font-bold text-[#0a192f]">
+              <h2 className="text-[clamp(1rem,4.8vw,1.45rem)] sm:text-2xl font-bold text-[#0a192f]">
                 {t("public.uploadedPredictionSheets")}
               </h2>
               <p className="text-sm text-slate-500">
                 {t("public.predictionSheetsSubtitle")}
               </p>
             </div>
-            <PredictionSheetsLinks data={predictionSheetLinks} />
+            <div className="w-full xl:w-3/4 xl:transition-all xl:duration-300">
+              <PredictionSheetsLinks data={predictionSheetLinks} />
+            </div>
           </div>
         </section>
-      </SelectedParticipantProvider>
-    </div>
+      </div>
+    </SelectedParticipantProvider>
   );
 }
