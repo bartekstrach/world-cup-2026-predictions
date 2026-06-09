@@ -13,6 +13,7 @@ import {
 } from "@/lib/predictions";
 import { getLeaderboard } from "@/lib/scoring";
 import { getT } from "@/lib/i18n/server";
+import { Card } from "@/components/ui/card";
 
 export const revalidate = 60;
 
@@ -35,9 +36,7 @@ export default async function MainPage() {
   return (
     <SelectedParticipantProvider>
       <div className="space-y-3 sm:space-y-5 min-w-0">
-        {hasVisiblePredictions && (
-          <ParticipantSelector participants={predictionsData.participants} />
-        )}
+        <ParticipantSelector participants={predictionsData.participants} />
 
         <section className="space-y-2 sm:space-y-3">
           <div className="min-w-0 w-full">
@@ -67,11 +66,13 @@ export default async function MainPage() {
               <PredictionsGrid data={predictionsData} />
             </>
           ) : (
-            <p className="text-sm text-slate-500">
+            <Card className="p-4 text-sm text-muted-foreground w-full xl:w-3/4 xl:transition-all xl:duration-300">
               {t("public.visibility.noPredictions")}
-            </p>
+            </Card>
           )}
+        </section>
 
+        <section className="space-y-2 sm:space-y-4 pt-2 sm:pt-4">
           <div className="w-full xl:w-3/4 xl:transition-all xl:duration-300">
             <HallOfFameTable
               hallOfFameTitle={t("public.hallOfFame.title")}
@@ -81,19 +82,19 @@ export default async function MainPage() {
               heroHeader={t("public.hallOfShame.headers.hero")}
             />
           </div>
+        </section>
 
-          <div className="space-y-3 sm:space-y-6 pt-4 sm:pt-8 border-t border-slate-200/60 mt-4 sm:mt-8">
-            <div className="space-y-1">
-              <h2 className="text-[clamp(1rem,4.8vw,1.45rem)] sm:text-2xl font-bold text-[#0a192f]">
-                {t("public.uploadedPredictionSheets")}
-              </h2>
-              <p className="text-sm text-slate-500">
-                {t("public.predictionSheetsSubtitle")}
-              </p>
-            </div>
-            <div className="w-full xl:w-3/4 xl:transition-all xl:duration-300">
-              <PredictionSheetsLinks data={predictionSheetLinks} />
-            </div>
+        <section className="space-y-2 sm:space-y-4 pt-2 sm:pt-4">
+          <div className="space-y-1">
+            <h2 className="text-[clamp(1rem,4.8vw,1.45rem)] sm:text-2xl font-bold text-[#0a192f]">
+              {t("public.uploadedPredictionSheets")}
+            </h2>
+            <p className="text-sm text-slate-500">
+              {t("public.predictionSheetsSubtitle")}
+            </p>
+          </div>
+          <div className="w-full xl:w-3/4 xl:transition-all xl:duration-300">
+            <PredictionSheetsLinks data={predictionSheetLinks} />
           </div>
         </section>
       </div>
