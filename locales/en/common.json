@@ -32,8 +32,7 @@
     "predictionSheetsSubtitle": "Participant prediction blobs grouped by stage",
     "participantSelector": {
       "label": "Participant",
-      "placeholder": "Select participant",
-      "all": "All participants"
+      "placeholder": "Select participant"
     },
     "visibility": {
       "noPredictions": "Predictions will appear here after publication.",
@@ -41,10 +40,12 @@
     }
   },
   "lastFinishedMatches": {
-    "after": "After {{matchesSummary}} ({{formattedMatchDate}})"
+    "after_one": "After {{matchesSummary}} ({{formattedMatchDate}})",
+    "after_other": "After {{matchesSummary}} ({{formattedMatchDate}})"
   },
   "nextMatchBanner": {
-    "label": "Next matches: {{teamsLabel}} ({{formattedMatchDate}})"
+    "label_one": "Next match: {{teamsLabel}} ({{formattedMatchDate}})",
+    "label_other": "Next matches: {{teamsLabel}} ({{formattedMatchDate}})"
   },
   "leaderboard": {
     "rank": "Rank",

@@ -79,7 +79,7 @@ export function ParticipantSelector({
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={ALL_PARTICIPANTS_VALUE}>
-            {t("public.participantSelector.all")}
+            {t("public.participantSelector.placeholder")}
           </SelectItem>
           {participants.map((participant) => (
             <SelectItem key={participant.id} value={participant.id.toString()}>

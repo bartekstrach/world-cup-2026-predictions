@@ -89,9 +89,6 @@ export default async function MainPage() {
             <h2 className="text-[clamp(1rem,4.8vw,1.45rem)] sm:text-2xl font-bold text-[#0a192f]">
               {t("public.uploadedPredictionSheets")}
             </h2>
-            <p className="text-sm text-slate-500">
-              {t("public.predictionSheetsSubtitle")}
-            </p>
           </div>
           <div className="w-full xl:w-3/4 xl:transition-all xl:duration-300">
             <PredictionSheetsLinks data={predictionSheetLinks} />

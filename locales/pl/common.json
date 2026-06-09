@@ -28,23 +28,24 @@
         "hero": "Bohater serc i żołądków"
       }
     },
-    "uploadedPredictionSheets": "Wgrane karty typów",
+    "uploadedPredictionSheets": "Karty typów",
     "predictionSheetsSubtitle": "Pliki typów uczestników pogrupowane według etapu",
     "participantSelector": {
       "label": "Uczestnik",
-      "placeholder": "Wybierz uczestnika",
-      "all": "Wszyscy uczestnicy"
+      "placeholder": "Wybierz uczestnika"
     },
     "visibility": {
-      "noPredictions": "Typy pojawią się tutaj po publikacji.",
-      "noSheets": "Karty typów pojawią się tutaj po publikacji."
+      "noPredictions": "Typy zostaną opublikowane jak wszyscy podeślą swoje karty",
+      "noSheets": "Karty typów pojawią się niedługo, są bezpieczne"
     }
   },
   "lastFinishedMatches": {
-    "after": "Po meczach {{matchesSummary}} ({{formattedMatchDate}})"
+    "after_one": "Po meczu {{matchesSummary}} ({{formattedMatchDate}})",
+    "after_other": "Po meczach {{matchesSummary}} ({{formattedMatchDate}})"
   },
   "nextMatchBanner": {
-    "label": "Następne mecze: {{teamsLabel}} ({{formattedMatchDate}})"
+    "label_one": "Następny mecz: {{teamsLabel}} ({{formattedMatchDate}})",
+    "label_other": "Następne mecze: {{teamsLabel}} ({{formattedMatchDate}})"
   },
   "leaderboard": {
     "rank": "Miejsce",
@@ -61,9 +62,9 @@
     "openSheet": "Otwórz kartę",
     "openSheetPage": "Otwórz kartę str. {{page}}",
     "stages": {
-      "group_1": "Faza grupowa - kolejka 1",
-      "group_2": "Faza grupowa - kolejka 2",
-      "group_3": "Faza grupowa - kolejka 3",
+      "group_1": "Faza grupowa - 1. kolejka",
+      "group_2": "Faza grupowa - 2. kolejka",
+      "group_3": "Faza grupowa - 3. kolejka",
       "round_32": "1/16 finału",
       "round_16": "1/8 finału",
       "quarter": "Ćwierćfinały",

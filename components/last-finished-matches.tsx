@@ -3,11 +3,13 @@ import {
   getFinishedMatchesByMatchDate,
   getLastCompletedMatchDate,
 } from "@/lib/scoring";
+import { getT } from "@/lib/i18n/server";
 import { getMatchTeamNames } from "@/lib/teams";
 
 export const revalidate = 60;
 
 export async function LastFinishedMatches() {
+  const t = await getT();
   const latestCompletedDate = await getLastCompletedMatchDate();
   if (!latestCompletedDate) return null;
 
@@ -34,7 +36,11 @@ export async function LastFinishedMatches() {
 
   return (
     <>
-      Po meczach {matchesSummary} ({formattedMatchDate})
+      {t("lastFinishedMatches.after", {
+        matchesSummary,
+        formattedMatchDate,
+        count: finishedMatches.length,
+      })}
     </>
   );
 }

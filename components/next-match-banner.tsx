@@ -30,6 +30,7 @@ export async function NextMatchBanner({ data }: NextMatchBannerProps) {
       {t("nextMatchBanner.label", {
         teamsLabel,
         formattedMatchDate,
+        count: data.matches.length,
       })}
     </p>
   );
