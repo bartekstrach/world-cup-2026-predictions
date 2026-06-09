@@ -48,16 +48,16 @@
     "label_other": "Następne mecze: {{teamsLabel}} ({{formattedMatchDate}})"
   },
   "leaderboard": {
-    "rank": "Miejsce",
-    "participant": "Uczestnik",
-    "points": "Punkty"
+    "rank": "",
+    "participant": "Imię",
+    "points": "Pkt."
   },
   "predictionSheets": {
     "noSheets": "Brak dostępnych kart typów.",
     "headers": {
-      "participant": "Uczestnik",
+      "participant": "Imię",
       "uploaded": "Wgrano",
-      "sheet": "Karta"
+      "sheet": "Linki do kart"
     },
     "openSheet": "Otwórz kartę",
     "openSheetPage": "Otwórz kartę str. {{page}}",
