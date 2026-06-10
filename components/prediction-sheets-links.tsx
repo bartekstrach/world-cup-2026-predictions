@@ -76,7 +76,7 @@ export function PredictionSheetsLinks({ data }: PredictionSheetsLinksProps) {
 
           <Card className="w-full max-w-full rounded-2xl border-slate-100 p-0 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
             <div className="overflow-x-auto public-table-scroll">
-              <Table className="table-auto min-w-max">
+              <Table className="table-auto">
                 <TableHeader>
                   <TableRow className="bg-slate-50/50 border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
                     <TableHead className="p-4 h-auto w-1/3">
