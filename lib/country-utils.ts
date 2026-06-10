@@ -28,6 +28,16 @@ const FIFA_TO_ISO_ALPHA3: Record<string, string> = {
   ALG: "DZA",
 };
 
+const PL_SHORT_NAMES: Record<string, string> = {
+  ZAF: "RPA",
+  BIH: "Bośnia i Herc.",
+  USA: "USA",
+  CIV: "Wybrzeże Kości Sł.",
+  CPV: "Republika Ziel. Przyl.",
+  COD: "DR Kongo",
+  SAU: "Arabia Saud.",
+};
+
 export function getCountryName(
   isoCode: string,
   locale: "en" | "pl" = "pl",
@@ -42,6 +52,10 @@ export function getCountryName(
   }
 
   const resolvedCode = FIFA_TO_ISO_ALPHA3[normalizedCode] || normalizedCode;
+
+  if (locale === "pl" && PL_SHORT_NAMES[resolvedCode]) {
+    return PL_SHORT_NAMES[resolvedCode];
+  }
 
   // Try alpha-3 first
   const alpha2 = countries.alpha3ToAlpha2(resolvedCode);
