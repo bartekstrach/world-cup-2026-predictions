@@ -138,10 +138,10 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
               </th>
 
               {/* Match + result */}
-              <th className="sticky top-0 left-0 z-[70] bg-slate-50 border-r border-slate-100 whitespace-nowrap min-w-48 sm:min-w-64 p-4 h-auto shadow-[0_2px_8px_-6px_rgba(15,23,42,0.5)] text-left align-middle">
+              <th className="sticky top-0 left-0 z-[70] bg-slate-50 border-r border-slate-100 whitespace-nowrap w-48 min-w-48 max-w-48 md:w-64 md:min-w-64 md:max-w-64 p-4 h-auto shadow-[0_2px_8px_-6px_rgba(15,23,42,0.5)] text-left align-middle">
                 {t("predictionsGrid.headers.match")}
               </th>
-              <th className="sticky top-0 left-48 sm:left-64 z-[65] bg-slate-50 whitespace-nowrap min-w-24 text-center p-4 h-auto border-l border-slate-100 shadow-[0_2px_8px_-6px_rgba(15,23,42,0.5),-1px_0_0_0_rgba(226,232,240,1)] align-middle">
+              <th className="sticky top-0 left-48 md:left-64 z-[65] bg-slate-50 whitespace-nowrap w-24 min-w-24 max-w-24 text-center p-4 h-auto border-l border-slate-100 shadow-[0_2px_8px_-6px_rgba(15,23,42,0.5),-1px_0_0_0_rgba(226,232,240,1)] align-middle">
                 {t("predictionsGrid.headers.result")}
               </th>
 
@@ -226,15 +226,15 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                         </td>
 
                         {/* Match */}
-                        <td className="sticky left-0 z-30 bg-white border-r border-slate-100 p-4 align-middle">
-                          <div className="block md:hidden font-medium text-slate-700 whitespace-nowrap">
+                        <td className="sticky left-0 z-30 bg-white border-r border-slate-100 p-4 align-middle w-48 min-w-48 max-w-48 md:w-64 md:min-w-64 md:max-w-64">
+                          <div className="block md:hidden font-medium text-slate-700 whitespace-nowrap truncate">
                             {getShortMatchTeamNames({
                               displayFlags: true,
                               homeTeamCode: match.homeTeam.code,
                               awayTeamCode: match.awayTeam.code,
                             })}
                           </div>
-                          <div className="hidden md:block font-medium text-slate-700 whitespace-nowrap">
+                          <div className="hidden md:block font-medium text-slate-700 whitespace-nowrap truncate">
                             {getMatchTeamNames({
                               displayFlags: true,
                               homeTeamCode: match.homeTeam.code,
@@ -244,7 +244,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                         </td>
 
                         {/* Result */}
-                        <td className="sticky left-48 sm:left-64 z-20 bg-white p-4 text-center whitespace-nowrap border-l border-slate-100 shadow-[-1px_0_0_0_rgba(226,232,240,1)] align-middle">
+                        <td className="sticky left-48 md:left-64 z-20 bg-white p-4 text-center whitespace-nowrap border-l border-slate-100 shadow-[-1px_0_0_0_rgba(226,232,240,1)] align-middle w-24 min-w-24 max-w-24">
                           {match.status === "live" ? (
                             <span className="inline-flex h-6 items-center gap-1.5 bg-red-50 text-red-600 px-2 rounded-full text-xs font-bold border border-red-100 leading-none">
                               <span className="relative flex h-2 w-2">
@@ -365,10 +365,10 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
               <td className="whitespace-nowrap min-w-28 p-3">
                 {t("predictionsGrid.headers.date")}
               </td>
-              <td className="sticky left-0 z-30 bg-slate-50 border-r border-slate-100 whitespace-nowrap min-w-48 sm:min-w-64 p-3">
+              <td className="sticky left-0 z-30 bg-slate-50 border-r border-slate-100 whitespace-nowrap w-48 min-w-48 max-w-48 md:w-64 md:min-w-64 md:max-w-64 p-3">
                 {t("predictionsGrid.headers.match")}
               </td>
-              <td className="sticky left-48 sm:left-64 z-20 bg-slate-50 whitespace-nowrap min-w-24 text-center p-3 border-l border-slate-100 shadow-[-1px_0_0_0_rgba(226,232,240,1)]">
+              <td className="sticky left-48 md:left-64 z-20 bg-slate-50 whitespace-nowrap w-24 min-w-24 max-w-24 text-center p-3 border-l border-slate-100 shadow-[-1px_0_0_0_rgba(226,232,240,1)]">
                 {t("predictionsGrid.headers.result")}
               </td>
               {participants.map((p) => (
@@ -386,23 +386,28 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
             </tr>
 
             <tr className="selected-highlight-row border-b border-slate-100">
-              <td className="sticky bottom-0 z-50 border-t border-slate-200 text-center text-slate-400 whitespace-nowrap p-4 bg-[var(--selected-participant-bg)] hover:bg-[var(--selected-participant-bg-hover)]" />
-              <td className="sticky bottom-0 z-50 border-t border-slate-200 text-slate-500 whitespace-nowrap text-xs sm:text-sm p-4 font-semibold bg-[var(--selected-participant-bg)] hover:bg-[var(--selected-participant-bg-hover)]" />
-              <td className="sticky bottom-0 left-0 z-[60] border-t border-r border-slate-200 p-4 font-semibold text-[#0a192f] whitespace-nowrap shadow-[0_-6px_12px_-8px_rgba(15,23,42,0.55)] bg-[var(--selected-participant-bg)] hover:bg-[var(--selected-participant-bg-hover)]" />
-              <td className="sticky bottom-0 left-48 sm:left-64 z-[55] border-t border-l border-slate-200 p-4 text-center text-xs text-slate-500 whitespace-nowrap shadow-[0_-6px_12px_-8px_rgba(15,23,42,0.55),-1px_0_0_0_rgba(226,232,240,1)] bg-[var(--selected-participant-bg)] hover:bg-[var(--selected-participant-bg-hover)]" />
+              <td className="sticky bottom-0 z-50 border-t border-slate-200 text-center text-slate-400 whitespace-nowrap p-4 bg-[#ddf5ea] hover:bg-[#c9eedf]" />
+              <td className="sticky bottom-0 z-50 border-t border-slate-200 text-slate-500 whitespace-nowrap text-xs sm:text-sm p-4 font-semibold bg-[#ddf5ea] hover:bg-[#c9eedf]" />
+              <td className="sticky bottom-0 left-0 z-[60] border-t border-r border-slate-200 p-4 font-semibold text-[#0a192f] whitespace-nowrap shadow-[0_-6px_12px_-8px_rgba(15,23,42,0.55)] bg-[#ddf5ea] hover:bg-[#c9eedf] w-48 min-w-48 max-w-48 md:w-64 md:min-w-64 md:max-w-64">
+                {""}
+              </td>
+              <td className="sticky bottom-0 left-48 md:left-64 z-[55] border-t border-l border-slate-200 p-4 text-center text-xs text-slate-500 whitespace-nowrap shadow-[0_-6px_12px_-8px_rgba(15,23,42,0.55),-1px_0_0_0_rgba(226,232,240,1)] bg-[#ddf5ea] hover:bg-[#c9eedf] w-24 min-w-24 max-w-24">
+                {""}
+              </td>
               {participants.map((participant) => {
                 const totals = participantPointTotals[participant.id] ?? {
                   withoutLive: 0,
                   withLive: 0,
                 };
+                const isSelected = selectedParticipantId === participant.id;
 
                 return (
                   <td
                     key={participant.id}
-                    className={`sticky bottom-0 z-50 border-t border-slate-200 text-center whitespace-nowrap p-4 bg-[var(--selected-participant-bg)] hover:bg-[var(--selected-participant-bg-hover)] ${
-                      selectedParticipantId === participant.id
-                        ? "selected-highlight-col selected-highlight-col-bottom"
-                        : ""
+                    className={`sticky bottom-0 z-50 border-t border-slate-200 text-center whitespace-nowrap p-4 ${
+                      isSelected
+                        ? "bg-[var(--selected-participant-bg)] hover:bg-[var(--selected-participant-bg-hover)] selected-highlight-col selected-highlight-col-bottom"
+                        : "bg-white hover:bg-slate-50"
                     }`}
                   >
                     <span className="font-mono font-bold text-[#0a192f]">
