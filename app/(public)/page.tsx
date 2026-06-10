@@ -36,9 +36,11 @@ export default async function MainPage() {
   return (
     <SelectedParticipantProvider>
       <div className="space-y-3 sm:space-y-5 min-w-0">
-        <ParticipantSelector participants={predictionsData.participants} />
+        <section className="space-y-2 sm:space-y-3 w-full xl:w-1/2 xl:transition-all xl:duration-300 mx-auto">
+          <ParticipantSelector participants={predictionsData.participants} />
+        </section>
 
-        <section className="space-y-2 sm:space-y-3">
+        <section className="space-y-2 sm:space-y-3 w-full xl:w-1/2 xl:transition-all xl:duration-300 mx-auto">
           <div className="min-w-0 w-full">
             <h2 className="text-[clamp(1rem,4.8vw,1.45rem)] sm:text-2xl font-bold text-[#0a192f] leading-tight">
               {t("public.results")}
@@ -50,11 +52,8 @@ export default async function MainPage() {
               <NextMatchBanner data={nextMatchBannerData} />
             )}
           </div>
-        </section>
-
-        <div className="w-full xl:w-1/2 xl:transition-all xl:duration-300">
           <LeaderboardTable data={leaderboard} />
-        </div>
+        </section>
 
         <section className="space-y-2 sm:space-y-4 pt-2 sm:pt-4">
           <h2 className="text-[clamp(1rem,4.8vw,1.45rem)] sm:text-2xl font-bold text-[#0a192f]">
@@ -62,37 +61,31 @@ export default async function MainPage() {
           </h2>
 
           {hasVisiblePredictions ? (
-            <>
-              <PredictionsGrid data={predictionsData} />
-            </>
+            <PredictionsGrid data={predictionsData} />
           ) : (
-            <Card className="p-4 text-sm text-muted-foreground w-full xl:w-3/4 xl:transition-all xl:duration-300">
+            <Card className="p-4 text-sm text-muted-foreground w-full">
               {t("public.visibility.noPredictions")}
             </Card>
           )}
         </section>
 
-        <section className="space-y-2 sm:space-y-4 pt-2 sm:pt-4">
-          <div className="w-full xl:w-3/4 xl:transition-all xl:duration-300">
-            <HallOfFameTable
-              hallOfFameTitle={t("public.hallOfFame.title")}
-              hallOfShameTitle={t("public.hallOfShame.title")}
-              nameHeader={t("public.hallOfFame.headers.name")}
-              medalsHeader={t("public.hallOfFame.headers.medals")}
-              heroHeader={t("public.hallOfShame.headers.hero")}
-            />
-          </div>
+        <section className="space-y-2 sm:space-y-4 pt-2 sm:pt-4 w-full xl:w-3/4 xl:transition-all xl:duration-300 mx-auto">
+          <HallOfFameTable
+            hallOfFameTitle={t("public.hallOfFame.title")}
+            hallOfShameTitle={t("public.hallOfShame.title")}
+            nameHeader={t("public.hallOfFame.headers.name")}
+            medalsHeader={t("public.hallOfFame.headers.medals")}
+            heroHeader={t("public.hallOfShame.headers.hero")}
+          />
         </section>
 
-        <section className="space-y-2 sm:space-y-4 pt-2 sm:pt-4">
+        <section className="space-y-2 sm:space-y-4 pt-2 sm:pt-4 w-full xl:w-3/4 xl:transition-all xl:duration-300 mx-auto">
           <div className="space-y-1">
             <h2 className="text-[clamp(1rem,4.8vw,1.45rem)] sm:text-2xl font-bold text-[#0a192f]">
               {t("public.uploadedPredictionSheets")}
             </h2>
           </div>
-          <div className="w-full xl:w-3/4 xl:transition-all xl:duration-300">
-            <PredictionSheetsLinks data={predictionSheetLinks} />
-          </div>
+          <PredictionSheetsLinks data={predictionSheetLinks} />
         </section>
       </div>
     </SelectedParticipantProvider>
