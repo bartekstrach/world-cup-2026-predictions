@@ -361,18 +361,10 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
           </tbody>
           <tfoot>
             <tr className="bg-slate-50 text-xs uppercase tracking-wider text-slate-500 font-semibold">
-              <td className="hidden sm:table-cell sticky bottom-[41px] sm:bottom-[57px] z-40 bg-slate-50 border-t border-slate-200 whitespace-nowrap min-w-12 p-2 sm:p-3 text-center">
-                {t("predictionsGrid.headers.group")}
-              </td>
-              <td className="sticky bottom-[41px] sm:bottom-[57px] z-40 bg-slate-50 border-t border-slate-200 whitespace-nowrap min-w-28 p-2 sm:p-3">
-                {t("predictionsGrid.headers.date")}
-              </td>
-              <td className="sticky bottom-[41px] sm:bottom-[57px] left-0 z-[50] bg-slate-50 border-t border-slate-200 border-r border-slate-100 whitespace-nowrap w-40 min-w-40 max-w-40 md:w-80 md:min-w-80 md:max-w-80 transition-all duration-300 p-2 sm:p-3 shadow-[0_-6px_12px_-8px_rgba(15,23,42,0.55)]">
-                {t("predictionsGrid.headers.match")}
-              </td>
-              <td className="sticky bottom-[41px] sm:bottom-[57px] left-40 md:left-80 z-[45] bg-slate-50 border-t border-slate-200 whitespace-nowrap w-20 min-w-20 max-w-20 lg:w-24 lg:min-w-24 lg:max-w-24 transition-all duration-300 text-center p-2 sm:p-1 md:p-1 border-l border-r border-slate-100 shadow-[0_-6px_12px_-8px_rgba(15,23,42,0.55),-1px_0_0_0_rgba(226,232,240,1)]">
-                {t("predictionsGrid.headers.result")}
-              </td>
+              <td className="hidden sm:table-cell sticky bottom-[41px] sm:bottom-[57px] z-40 bg-slate-50 border-t border-slate-200 whitespace-nowrap min-w-12 p-2 sm:p-3 text-center" />
+              <td className="sticky bottom-[41px] sm:bottom-[57px] z-40 bg-slate-50 border-t border-slate-200 whitespace-nowrap min-w-28 p-2 sm:p-3" />
+              <td className="sticky bottom-[41px] sm:bottom-[57px] left-0 z-[50] bg-slate-50 border-t border-slate-200 border-r border-slate-100 whitespace-nowrap w-40 min-w-40 max-w-40 md:w-80 md:min-w-80 md:max-w-80 transition-all duration-300 p-2 sm:p-3 shadow-[0_-6px_12px_-8px_rgba(15,23,42,0.55)]" />
+              <td className="sticky bottom-[41px] sm:bottom-[57px] left-40 md:left-80 z-[45] bg-slate-50 border-t border-slate-200 whitespace-nowrap w-20 min-w-20 max-w-20 lg:w-24 lg:min-w-24 lg:max-w-24 transition-all duration-300 text-center p-2 sm:p-1 md:p-1 border-l border-r border-slate-100 shadow-[0_-6px_12px_-8px_rgba(15,23,42,0.55),-1px_0_0_0_rgba(226,232,240,1)]" />
               {participants.map((p) => (
                 <td
                   key={`summary-header-${p.id}`}
