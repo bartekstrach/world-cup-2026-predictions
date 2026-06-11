@@ -14,6 +14,8 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { getMatchTeamNames } from "@/lib/teams";
+import { getCountryFlag, getCountryName } from "@/lib/country-utils";
 
 interface Participant {
   id: number;
@@ -145,7 +147,9 @@ export function ManualPredictionForm({
                   #{match.matchNumber}
                 </span>
                 <span className="w-32 font-medium text-slate-700">
-                  {match.homeTeam.code} {t("common.vs")} {match.awayTeam.code}
+                  {getCountryFlag(match.homeTeam.code)}
+                  <span className="text-slate-300 font-bold m-2" />
+                  {getCountryName(match.homeTeam.code, "pl")}
                 </span>
                 <div className="flex items-center gap-3">
                   <Input
@@ -170,6 +174,11 @@ export function ManualPredictionForm({
                     }
                   />
                 </div>
+                <span className="w-32 font-medium text-slate-700">
+                  {getCountryName(match.awayTeam.code, "pl")}
+                  <span className="text-slate-300 font-bold m-2" />
+                  {getCountryFlag(match.awayTeam.code)}
+                </span>
               </div>
             ))}
           </div>
