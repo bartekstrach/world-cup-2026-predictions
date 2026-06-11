@@ -128,20 +128,20 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
           <thead>
             <tr className="border-b border-slate-100 text-xs uppercase tracking-wider text-slate-500 font-semibold">
               {/* Group/stage */}
-              <th className="sticky top-0 z-50 bg-slate-50 hidden sm:table-cell whitespace-nowrap min-w-12 p-4 h-auto text-left align-middle">
+              <th className="sticky top-0 z-50 bg-slate-50 hidden sm:table-cell whitespace-nowrap min-w-12 p-2 sm:p-4 h-auto text-left align-middle">
                 {t("predictionsGrid.headers.group")}
               </th>
 
               {/* Date */}
-              <th className="sticky top-0 z-50 bg-slate-50 whitespace-nowrap min-w-28 p-4 h-auto text-left align-middle">
+              <th className="sticky top-0 z-50 bg-slate-50 whitespace-nowrap min-w-28 p-2 sm:p-4 h-auto text-left align-middle">
                 {t("predictionsGrid.headers.date")}
               </th>
 
               {/* Match + result */}
-              <th className="sticky top-0 left-0 z-[70] bg-slate-50 border-r border-slate-100 whitespace-nowrap w-40 min-w-40 max-w-40 md:w-80 md:min-w-80 md:max-w-80 transition-all duration-300 p-4 h-auto shadow-[0_2px_8px_-6px_rgba(15,23,42,0.5)] text-left align-middle">
+              <th className="sticky top-0 left-0 z-[70] bg-slate-50 border-r border-slate-100 whitespace-nowrap w-40 min-w-40 max-w-40 md:w-80 md:min-w-80 md:max-w-80 transition-all duration-300 p-2 sm:p-4 h-auto shadow-[0_2px_8px_-6px_rgba(15,23,42,0.5)] text-left align-middle">
                 {t("predictionsGrid.headers.match")}
               </th>
-              <th className="sticky top-0 left-40 md:left-80 z-[65] bg-slate-50 whitespace-nowrap w-18 min-w-18 max-w-18 lg:w-24 lg:min-w-24 lg:max-w-24 transition-all duration-300 text-center sm:p-1 md:p-2 p-4 h-auto border-l border-r border-slate-100 shadow-[0_2px_8px_-6px_rgba(15,23,42,0.5),-1px_0_0_0_rgba(226,232,240,1)] align-middle">
+              <th className="sticky top-0 left-40 md:left-80 z-[65] bg-slate-50 whitespace-nowrap w-20 min-w-20 max-w-20 lg:w-24 lg:min-w-24 lg:max-w-24 transition-all duration-300 text-center p-2 sm:p-1 md:p-2 h-auto border-l border-r border-slate-100 shadow-[0_2px_8px_-6px_rgba(15,23,42,0.5),-1px_0_0_0_rgba(226,232,240,1)] align-middle">
                 {t("predictionsGrid.headers.result")}
               </th>
 
@@ -149,7 +149,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
               {participants.map((p) => (
                 <th
                   key={p.id}
-                  className={`sticky top-0 z-50 bg-slate-50 text-center whitespace-nowrap min-w-24 p-4 h-auto align-middle ${
+                  className={`sticky top-0 z-50 bg-slate-50 text-center whitespace-nowrap min-w-24 p-2 sm:p-4 h-auto align-middle ${
                     selectedParticipantId === p.id
                       ? "selected-highlight-col selected-highlight-col-top"
                       : ""
@@ -171,8 +171,10 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                     data-no-hover="true"
                     className="stage-section-header selected-highlight-row border-b"
                   >
+                    {/* ZMIANA 1: Rozdzielenie colSpan na dwie komórki w celu zachowania poprawnej struktury siatki na małych ekranach */}
+                    <td className="hidden sm:table-cell p-0 border-none"></td>
                     <td
-                      colSpan={4 + participants.length}
+                      colSpan={3 + participants.length}
                       className="p-0 whitespace-normal"
                     >
                       <button
@@ -207,14 +209,14 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                         className="border-b hover:bg-muted/50 transition-colors"
                       >
                         {/* Group/stage */}
-                        <td className="hidden sm:table-cell text-center text-slate-400 whitespace-nowrap p-4 align-middle">
+                        <td className="hidden sm:table-cell text-center text-slate-400 whitespace-nowrap p-2 sm:p-4 align-middle">
                           {match.stage.startsWith("group_")
                             ? match.homeTeam.group
                             : t(`predictionSheets.stages.${match.stage}`)}
                         </td>
 
                         {/* Date */}
-                        <td className="text-slate-500 whitespace-nowrap text-xs sm:text-sm p-4 align-middle">
+                        <td className="text-slate-500 whitespace-nowrap text-xs sm:text-sm p-2 sm:p-4 align-middle">
                           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-2">
                             <span>
                               {getShortWeekday({ date: match.matchDate })}
@@ -226,7 +228,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                         </td>
 
                         {/* Match */}
-                        <td className="sticky left-0 z-30 bg-white border-r border-slate-100 p-4 align-middle w-40 min-w-40 max-w-40 md:w-80 md:min-w-80 md:max-w-80 transition-all duration-300">
+                        <td className="sticky left-0 z-30 bg-white border-r border-slate-100 p-2 sm:p-4 align-middle w-40 min-w-40 max-w-40 md:w-80 md:min-w-80 md:max-w-80 transition-all duration-300">
                           <div className="block md:hidden font-medium text-slate-700 whitespace-nowrap truncate">
                             {getShortMatchTeamNames({
                               displayFlags: true,
@@ -244,7 +246,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                         </td>
 
                         {/* Result */}
-                        <td className="sticky left-40 md:left-80 z-20 bg-slate-50 hover:bg-slate-100 sm:p-1 md:p-1 p-4 text-center whitespace-nowrap border-l border-r border-slate-100 shadow-[-1px_0_0_0_rgba(226,232,240,1)] align-middle w-18 min-w-18 max-w-18 lg:w-24 lg:min-w-24 lg:max-w-24 transition-all duration-300">
+                        <td className="sticky left-40 md:left-80 z-20 bg-slate-50 hover:bg-slate-100 p-1 md:p-1 text-center whitespace-nowrap border-l border-r border-slate-100 shadow-[-1px_0_0_0_rgba(226,232,240,1)] align-middle w-20 min-w-20 max-w-20 lg:w-24 lg:min-w-24 lg:max-w-24 transition-all duration-300">
                           {match.status === "live" ? (
                             <span className="inline-flex h-6 items-center gap-1.5 bg-red-50 text-red-600 px-2 rounded-full text-xs font-bold border border-red-100 leading-none">
                               <span className="relative flex h-2 w-2">
@@ -290,7 +292,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                             return (
                               <td
                                 key={p.id}
-                                className={`text-center whitespace-nowrap p-4 ${
+                                className={`text-center whitespace-nowrap p-2 sm:p-4 ${
                                   selectedParticipantId === p.id
                                     ? "selected-highlight-col"
                                     : ""
@@ -304,7 +306,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                           return (
                             <td
                               key={p.id}
-                              className={`text-center whitespace-nowrap p-4 ${
+                              className={`text-center whitespace-nowrap p-2 sm:p-4 ${
                                 selectedParticipantId === p.id
                                   ? "selected-highlight-col"
                                   : ""
@@ -359,22 +361,22 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
           </tbody>
           <tfoot>
             <tr className="bg-slate-50 border-t border-slate-200 text-xs uppercase tracking-wider text-slate-500 font-semibold">
-              <td className="hidden sm:table-cell whitespace-nowrap min-w-12 p-3 text-center">
+              <td className="hidden sm:table-cell whitespace-nowrap min-w-12 p-2 sm:p-3 text-center">
                 {t("predictionsGrid.headers.group")}
               </td>
-              <td className="whitespace-nowrap min-w-28 p-3">
+              <td className="whitespace-nowrap min-w-28 p-2 sm:p-3">
                 {t("predictionsGrid.headers.date")}
               </td>
-              <td className="sticky left-0 z-30 bg-slate-50 border-r border-slate-100 whitespace-nowrap w-40 min-w-40 max-w-40 md:w-80 md:min-w-80 md:max-w-80 transition-all duration-300 p-3">
+              <td className="sticky left-0 z-30 bg-slate-50 border-r border-slate-100 whitespace-nowrap w-40 min-w-40 max-w-40 md:w-80 md:min-w-80 md:max-w-80 transition-all duration-300 p-2 sm:p-3">
                 {t("predictionsGrid.headers.match")}
               </td>
-              <td className="sticky left-40 md:left-80 z-20 bg-slate-50 whitespace-nowrap w-18 min-w-18 max-w-18 lg:w-24 lg:min-w-24 lg:max-w-24 transition-all duration-300 text-center sm:p-1 md:p-1 p-3 border-l border-r border-slate-100 shadow-[-1px_0_0_0_rgba(226,232,240,1)]">
+              <td className="sticky left-40 md:left-80 z-20 bg-slate-50 whitespace-nowrap w-20 min-w-20 max-w-20 lg:w-24 lg:min-w-24 lg:max-w-24 transition-all duration-300 text-center p-2 sm:p-1 md:p-1 border-l border-r border-slate-100 shadow-[-1px_0_0_0_rgba(226,232,240,1)]">
                 {t("predictionsGrid.headers.result")}
               </td>
               {participants.map((p) => (
                 <td
                   key={`summary-header-${p.id}`}
-                  className={`text-center whitespace-nowrap min-w-24 p-3 ${
+                  className={`text-center whitespace-nowrap min-w-24 p-2 sm:p-3 ${
                     selectedParticipantId === p.id
                       ? "selected-highlight-col selected-highlight-col-bottom"
                       : ""
@@ -386,12 +388,13 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
             </tr>
 
             <tr className="selected-highlight-row border-b border-slate-100">
-              <td className="sticky bottom-0 z-50 border-t border-slate-200 text-center text-slate-400 whitespace-nowrap p-4 bg-[#ddf5ea] hover:bg-[#c9eedf]" />
-              <td className="sticky bottom-0 z-50 border-t border-slate-200 text-slate-500 whitespace-nowrap text-xs sm:text-sm p-4 font-semibold bg-[#ddf5ea] hover:bg-[#c9eedf]" />
-              <td className="sticky bottom-0 left-0 z-[60] border-t border-r border-slate-200 p-4 font-semibold text-[#0a192f] whitespace-nowrap shadow-[0_-6px_12px_-8px_rgba(15,23,42,0.55)] bg-[#ddf5ea] hover:bg-[#c9eedf] w-40 min-w-40 max-w-40 md:w-80 md:min-w-80 md:max-w-80 transition-all duration-300">
+              {/* ZMIANA 2: Dodano brakujące hidden sm:table-cell, które rozsadzało kalkulację szerokości komórek poniżej 640px */}
+              <td className="hidden sm:table-cell sticky bottom-0 z-50 border-t border-slate-200 text-center text-slate-400 whitespace-nowrap p-2 sm:p-4 bg-[#ddf5ea] hover:bg-[#c9eedf]" />
+              <td className="sticky bottom-0 z-50 border-t border-slate-200 text-slate-500 whitespace-nowrap text-xs sm:text-sm p-2 sm:p-4 font-semibold bg-[#ddf5ea] hover:bg-[#c9eedf]" />
+              <td className="sticky bottom-0 left-0 z-[60] border-t border-r border-slate-200 p-2 sm:p-4 font-semibold text-[#0a192f] whitespace-nowrap shadow-[0_-6px_12px_-8px_rgba(15,23,42,0.55)] bg-[#ddf5ea] hover:bg-[#c9eedf] w-40 min-w-40 max-w-40 md:w-80 md:min-w-80 md:max-w-80 transition-all duration-300">
                 {""}
               </td>
-              <td className="sticky bottom-0 left-40 md:left-80 z-[55] border-t border-l border-r border-slate-200 sm:p-1 md:p-1 p-4 text-center text-xs text-slate-500 whitespace-nowrap shadow-[0_-6px_12px_-8px_rgba(15,23,42,0.55),-1px_0_0_0_rgba(226,232,240,1)] bg-[#ddf5ea] hover:bg-[#c9eedf] w-18 min-w-18 max-w-18 lg:w-24 lg:min-w-24 lg:max-w-24 transition-all duration-300">
+              <td className="sticky bottom-0 left-40 md:left-80 z-[55] border-t border-l border-r border-slate-200 p-2 sm:p-1 md:p-1 text-center text-xs text-slate-500 whitespace-nowrap shadow-[0_-6px_12px_-8px_rgba(15,23,42,0.55),-1px_0_0_0_rgba(226,232,240,1)] bg-[#ddf5ea] hover:bg-[#c9eedf] w-20 min-w-20 max-w-20 lg:w-24 lg:min-w-24 lg:max-w-24 transition-all duration-300">
                 {""}
               </td>
               {participants.map((participant) => {
@@ -404,7 +407,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                 return (
                   <td
                     key={participant.id}
-                    className={`sticky bottom-0 z-50 border-t border-slate-200 text-center whitespace-nowrap p-4 ${
+                    className={`sticky bottom-0 z-50 border-t border-slate-200 text-center whitespace-nowrap p-2 sm:p-4 ${
                       isSelected
                         ? "bg-[var(--selected-participant-bg)] hover:bg-[var(--selected-participant-bg-hover)] selected-highlight-col selected-highlight-col-bottom"
                         : "bg-white hover:bg-slate-50"
