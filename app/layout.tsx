@@ -22,7 +22,6 @@ const serif = Lora({
 
 export const metadata: Metadata = {
   title: plCommon.app.metadata.title,
-  description: plCommon.app.metadata.description,
 };
 
 export default function RootLayout({
