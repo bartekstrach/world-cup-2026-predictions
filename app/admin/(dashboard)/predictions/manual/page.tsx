@@ -14,7 +14,7 @@ async function getData() {
       homeTeam: true,
       awayTeam: true,
     },
-    orderBy: (matches, { asc }) => [asc(matches.matchNumber)],
+    orderBy: (matches, { asc }) => [asc(matches.matchDate)],
   });
 
   return { participants, matches };
