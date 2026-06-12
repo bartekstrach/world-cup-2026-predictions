@@ -600,19 +600,53 @@ export async function syncLiveMatches(
       !Number.isInteger(item.matchNumber),
   );
 
-  const scheduledFallbackQueue = hasUnmappedIncoming
-    ? (
-        await db.query.matches.findMany({
+  const fallbackMatchNumberQueue = hasUnmappedIncoming
+    ? (() => {
+        // Keep fallback stable across cron runs:
+        // 1) first reuse already-live local matches,
+        // 2) only then assign next scheduled by date.
+        const liveFirst = db.query.matches.findMany({
+          where: (table, { eq }) => eq(table.status, MATCH_STATUSES.LIVE),
+          orderBy: (table, { asc }) => [asc(table.matchDate)],
+          columns: {
+            matchNumber: true,
+          },
+        });
+
+        const scheduledNext = db.query.matches.findMany({
           where: (table, { eq }) => eq(table.status, MATCH_STATUSES.SCHEDULED),
           orderBy: (table, { asc }) => [asc(table.matchDate)],
           columns: {
             matchNumber: true,
           },
-        })
-      )
-        .map((match) => match.matchNumber)
-        .filter((matchNumber) => !explicitlyMappedMatchNumbers.has(matchNumber))
-    : [];
+        });
+
+        return Promise.all([liveFirst, scheduledNext]).then(
+          ([liveRows, scheduledRows]) => {
+            const seen = new Set<number>(explicitlyMappedMatchNumbers);
+            const queue: number[] = [];
+
+            for (const row of liveRows) {
+              if (!seen.has(row.matchNumber)) {
+                seen.add(row.matchNumber);
+                queue.push(row.matchNumber);
+              }
+            }
+
+            for (const row of scheduledRows) {
+              if (!seen.has(row.matchNumber)) {
+                seen.add(row.matchNumber);
+                queue.push(row.matchNumber);
+              }
+            }
+
+            return queue;
+          },
+        );
+      })()
+    : Promise.resolve([] as number[]);
+
+  const resolvedFallbackQueue = await fallbackMatchNumberQueue;
 
   const mappedMatches = matchesWithResolvedMapping
     .map((item) => {
@@ -623,7 +657,7 @@ export async function syncLiveMatches(
         return item;
       }
 
-      const fallbackMatchNumber = scheduledFallbackQueue.shift() ?? null;
+      const fallbackMatchNumber = resolvedFallbackQueue.shift() ?? null;
 
       return {
         ...item,
