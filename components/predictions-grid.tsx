@@ -342,7 +342,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                                             ? "text-[#10b981]"
                                             : points && points > 0
                                               ? "text-[#0a192f]"
-                                              : "text-slate-300"
+                                              : "text-slate-500"
                                       }`}
                                     >
                                       {points ?? "-"}
