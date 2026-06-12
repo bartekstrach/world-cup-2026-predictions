@@ -80,6 +80,8 @@ type ProviderRawMatch = {
 type FootballDataScoreTime = {
   home?: number | null;
   away?: number | null;
+  homeTeam?: number | null;
+  awayTeam?: number | null;
 };
 
 type FootballDataScore = {
@@ -97,6 +99,11 @@ type FootballDataRawMatch = {
   minute?: number | null;
   score?: FootballDataScore | null;
   [key: string]: unknown;
+};
+
+type FootballDataMatchesPayload = {
+  matches?: FootballDataRawMatch[];
+  match?: FootballDataRawMatch;
 };
 
 type ExternalIdMap = Record<string, number>;
@@ -194,10 +201,14 @@ function selectFootballDataScore(
   score: FootballDataScore | null | undefined,
   status: MatchStatus,
 ) {
-  const regularTimeHome = parseScore(score?.regularTime?.home);
-  const regularTimeAway = parseScore(score?.regularTime?.away);
-  const fullTimeHome = parseScore(score?.fullTime?.home);
-  const fullTimeAway = parseScore(score?.fullTime?.away);
+  const regularTimeHome = parseScore(
+    score?.regularTime?.home ?? score?.regularTime?.homeTeam,
+  );
+  const regularTimeAway = parseScore(
+    score?.regularTime?.away ?? score?.regularTime?.awayTeam,
+  );
+  const fullTimeHome = parseScore(score?.fullTime?.home ?? score?.fullTime?.homeTeam);
+  const fullTimeAway = parseScore(score?.fullTime?.away ?? score?.fullTime?.awayTeam);
 
   const hasRegularTimeScore =
     regularTimeHome !== null && regularTimeAway !== null;
@@ -307,9 +318,37 @@ async function fetchProviderJson(url: string): Promise<unknown> {
       method: "GET",
       headers: {
         Accept: "application/json",
-        ...(LIVE_MATCHES_API_KEY
-          ? { Authorization: `Bearer ${LIVE_MATCHES_API_KEY}` }
-          : {}),
+      },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Provider request failed with status ${response.status}`);
+    }
+
+    return response.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+async function fetchProviderJsonWithHeaders(
+  url: string,
+  headers: Record<string, string>,
+): Promise<unknown> {
+  const controller = new AbortController();
+  const timeout = Number.isFinite(LIVE_MATCHES_TIMEOUT_MS)
+    ? LIVE_MATCHES_TIMEOUT_MS
+    : 10000;
+  const timer = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Accept: "application/json",
+        ...headers,
       },
       cache: "no-store",
       signal: controller.signal,
@@ -346,7 +385,11 @@ function createHttpAdapter(): LiveProviderAdapter {
         throw new Error("LIVE_MATCHES_API_URL is not configured");
       }
 
-      const json = await fetchProviderJson(LIVE_MATCHES_API_URL);
+      const json = await fetchProviderJsonWithHeaders(LIVE_MATCHES_API_URL, {
+        ...(LIVE_MATCHES_API_KEY
+          ? { Authorization: `Bearer ${LIVE_MATCHES_API_KEY}` }
+          : {}),
+      });
       const payload =
         typeof json === "object" && json !== null
           ? (json as Record<string, unknown>)
@@ -373,15 +416,21 @@ function createFootballDataAdapter(): LiveProviderAdapter {
         throw new Error("LIVE_MATCHES_API_URL is not configured");
       }
 
-      const json = await fetchProviderJson(LIVE_MATCHES_API_URL);
+      const footballDataToken =
+        LIVE_MATCHES_API_KEY || process.env.FOOTBALL_DATA_API_TOKEN || "";
+      const json = await fetchProviderJsonWithHeaders(LIVE_MATCHES_API_URL, {
+        ...(footballDataToken ? { "X-Auth-Token": footballDataToken } : {}),
+      });
       const payload =
         typeof json === "object" && json !== null
-          ? (json as Record<string, unknown>)
+          ? (json as FootballDataMatchesPayload)
           : null;
 
       const sourceMatches = Array.isArray(payload?.matches)
-        ? (payload?.matches as FootballDataRawMatch[])
-        : [];
+        ? payload.matches
+        : payload?.match
+          ? [payload.match]
+          : [];
 
       return {
         provider: LIVE_MATCHES_PROVIDERS.FOOTBALL_DATA,
@@ -524,11 +573,55 @@ export async function syncLiveMatches(
   const payload = await fetchLiveMatchesNormalized();
   const externalIdMap = parseExternalIdMap();
 
-  const mappedMatches = payload.matches
-    .map((item) => ({
-      ...item,
-      matchNumber: resolveMatchNumberFromMapping(item, externalIdMap),
-    }))
+  const matchesWithResolvedMapping = payload.matches.map((item) => ({
+    ...item,
+    matchNumber: resolveMatchNumberFromMapping(item, externalIdMap),
+  }));
+
+  const explicitlyMappedMatchNumbers = new Set<number>(
+    matchesWithResolvedMapping
+      .map((item) => item.matchNumber)
+      .filter(
+        (matchNumber): matchNumber is number =>
+          typeof matchNumber === "number" && Number.isInteger(matchNumber),
+      ),
+  );
+
+  const hasUnmappedIncoming = matchesWithResolvedMapping.some(
+    (item) =>
+      typeof item.matchNumber !== "number" || !Number.isInteger(item.matchNumber),
+  );
+
+  const scheduledFallbackQueue = hasUnmappedIncoming
+    ? (
+        await db.query.matches.findMany({
+          where: (table, { eq }) => eq(table.status, MATCH_STATUSES.SCHEDULED),
+          orderBy: (table, { asc }) => [asc(table.matchDate)],
+          columns: {
+            matchNumber: true,
+          },
+        })
+      )
+        .map((match) => match.matchNumber)
+        .filter((matchNumber) => !explicitlyMappedMatchNumbers.has(matchNumber))
+    : [];
+
+  const mappedMatches = matchesWithResolvedMapping
+    .map((item) => {
+      if (
+        typeof item.matchNumber === "number" &&
+        Number.isInteger(item.matchNumber)
+      ) {
+        return item;
+      }
+
+      const fallbackMatchNumber = scheduledFallbackQueue.shift() ?? null;
+
+      return {
+        ...item,
+        matchNumber: fallbackMatchNumber,
+      };
+    })
     .filter(
       (item): item is LiveProviderMatch & { matchNumber: number } =>
         typeof item.matchNumber === "number" &&
