@@ -165,10 +165,13 @@ function normalizeFootballDataStatus(value: unknown): MatchStatus {
     return MATCH_STATUSES.FINISHED;
   }
 
-  if (["IN_PLAY", "PAUSED"].includes(normalized)) {
+  // football-data v4 states that represent an ongoing (not yet final) match
+  if (["IN_PLAY", "PAUSED", "SUSPENDED"].includes(normalized)) {
     return MATCH_STATUSES.LIVE;
   }
 
+  // Remaining known states (SCHEDULED, TIMED, POSTPONED, CANCELED, etc.)
+  // are treated as non-live, non-final in this project.
   return MATCH_STATUSES.SCHEDULED;
 }
 
@@ -207,8 +210,12 @@ function selectFootballDataScore(
   const regularTimeAway = parseScore(
     score?.regularTime?.away ?? score?.regularTime?.awayTeam,
   );
-  const fullTimeHome = parseScore(score?.fullTime?.home ?? score?.fullTime?.homeTeam);
-  const fullTimeAway = parseScore(score?.fullTime?.away ?? score?.fullTime?.awayTeam);
+  const fullTimeHome = parseScore(
+    score?.fullTime?.home ?? score?.fullTime?.homeTeam,
+  );
+  const fullTimeAway = parseScore(
+    score?.fullTime?.away ?? score?.fullTime?.awayTeam,
+  );
 
   const hasRegularTimeScore =
     regularTimeHome !== null && regularTimeAway !== null;
@@ -589,7 +596,8 @@ export async function syncLiveMatches(
 
   const hasUnmappedIncoming = matchesWithResolvedMapping.some(
     (item) =>
-      typeof item.matchNumber !== "number" || !Number.isInteger(item.matchNumber),
+      typeof item.matchNumber !== "number" ||
+      !Number.isInteger(item.matchNumber),
   );
 
   const scheduledFallbackQueue = hasUnmappedIncoming
