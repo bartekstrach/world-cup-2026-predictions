@@ -269,7 +269,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                                 match.homeScore !== null &&
                                 match.awayScore !== null
                                   ? "text-[#0a192f]"
-                                  : "text-slate-300"
+                                  : "text-slate-500"
                               }`}
                             >
                               {match.homeScore !== null &&
