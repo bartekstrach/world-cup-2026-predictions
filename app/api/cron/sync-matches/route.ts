@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isValidCronSyncSecret, syncLiveMatches } from "@/lib/live-matches";
+import {
+  isValidCronSyncSecret,
+  LiveSyncSafetyError,
+  syncLiveMatches,
+} from "@/lib/live-matches";
 import { db } from "@/lib/db";
 import { matches } from "@/lib/schema";
 import { MATCH_STATUSES } from "@/lib/constants";
@@ -78,6 +82,16 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof LiveSyncSafetyError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: error.message,
+        },
+        { status: 409 },
+      );
+    }
+
     console.error("Cron sync failed", error);
 
     return NextResponse.json(

@@ -51,6 +51,13 @@ export type LiveSyncResult = {
   finalizedMatches: number;
 };
 
+export class LiveSyncSafetyError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "LiveSyncSafetyError";
+  }
+}
+
 type SyncLiveMatchesOptions = {
   useRuntimeCadence?: boolean;
 };
@@ -599,6 +606,12 @@ export async function syncLiveMatches(
       typeof item.matchNumber !== "number" ||
       !Number.isInteger(item.matchNumber),
   );
+
+  if (mode === "sync" && payload.matches.length > 1 && hasUnmappedIncoming) {
+    throw new LiveSyncSafetyError(
+      "Unsafe sync blocked: multiple live matches received without explicit mapping. Configure LIVE_MATCHES_ID_MAP.",
+    );
+  }
 
   const fallbackMatchNumberQueue = hasUnmappedIncoming
     ? (() => {
