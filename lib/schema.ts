@@ -121,6 +121,7 @@ export const liveSyncRuntimeStates = pgTable("live_sync_runtime_states", {
     .references(() => matches.id)
     .notNull()
     .unique(),
+  providerMatchId: varchar("provider_match_id", { length: 128 }),
   halftimeStartedAt: timestamp("halftime_started_at"),
   lastPolledAt: timestamp("last_polled_at"),
   finalizedAt: timestamp("finalized_at"),

@@ -117,6 +117,7 @@ type ExternalIdMap = Record<string, number>;
 
 type LiveRuntimeState = {
   matchId: number;
+  providerMatchId: string | null;
   halftimeStartedAt: Date | null;
   lastPolledAt: Date | null;
   finalizedAt: Date | null;
@@ -469,6 +470,36 @@ function getLiveProviderAdapter(): LiveProviderAdapter {
   return createHttpAdapter();
 }
 
+async function fetchFootballDataMatchesByStatus(
+  status: string,
+): Promise<LiveProviderMatch[]> {
+  if (!LIVE_MATCHES_API_URL) {
+    return [];
+  }
+
+  const footballDataToken =
+    LIVE_MATCHES_API_KEY || process.env.FOOTBALL_DATA_API_TOKEN || "";
+  const endpoint = new URL(LIVE_MATCHES_API_URL);
+  endpoint.searchParams.set("status", status);
+
+  const json = await fetchProviderJsonWithHeaders(endpoint.toString(), {
+    ...(footballDataToken ? { "X-Auth-Token": footballDataToken } : {}),
+  });
+
+  const payload =
+    typeof json === "object" && json !== null
+      ? (json as FootballDataMatchesPayload)
+      : null;
+
+  const sourceMatches = Array.isArray(payload?.matches)
+    ? payload.matches
+    : payload?.match
+      ? [payload.match]
+      : [];
+
+  return sourceMatches.map(normalizeFootballDataMatch);
+}
+
 function hasScoreChanged({
   previousHome,
   previousAway,
@@ -512,7 +543,10 @@ async function upsertRuntimeState(
   current: LiveRuntimeState | null,
   matchId: number,
   changes: Partial<
-    Pick<LiveRuntimeState, "halftimeStartedAt" | "lastPolledAt" | "finalizedAt">
+    Pick<
+      LiveRuntimeState,
+      "providerMatchId" | "halftimeStartedAt" | "lastPolledAt" | "finalizedAt"
+    >
   >,
 ): Promise<LiveRuntimeState> {
   const now = new Date();
@@ -520,6 +554,8 @@ async function upsertRuntimeState(
   if (!current) {
     const next: LiveRuntimeState = {
       matchId,
+      providerMatchId:
+        changes.providerMatchId === undefined ? null : changes.providerMatchId,
       halftimeStartedAt:
         changes.halftimeStartedAt === undefined
           ? null
@@ -532,6 +568,7 @@ async function upsertRuntimeState(
 
     await db.insert(liveSyncRuntimeStates).values({
       matchId,
+      providerMatchId: next.providerMatchId,
       halftimeStartedAt: next.halftimeStartedAt,
       lastPolledAt: next.lastPolledAt,
       finalizedAt: next.finalizedAt,
@@ -544,6 +581,9 @@ async function upsertRuntimeState(
 
   const next: LiveRuntimeState = {
     ...current,
+    ...(changes.providerMatchId === undefined
+      ? {}
+      : { providerMatchId: changes.providerMatchId }),
     ...(changes.halftimeStartedAt === undefined
       ? {}
       : { halftimeStartedAt: changes.halftimeStartedAt }),
@@ -558,6 +598,9 @@ async function upsertRuntimeState(
   await db
     .update(liveSyncRuntimeStates)
     .set({
+      ...(changes.providerMatchId === undefined
+        ? {}
+        : { providerMatchId: changes.providerMatchId }),
       ...(changes.halftimeStartedAt === undefined
         ? {}
         : { halftimeStartedAt: changes.halftimeStartedAt }),
@@ -710,6 +753,7 @@ export async function syncLiveMatches(
       row.matchId,
       {
         matchId: row.matchId,
+        providerMatchId: row.providerMatchId,
         halftimeStartedAt: row.halftimeStartedAt,
         lastPolledAt: row.lastPolledAt,
         finalizedAt: row.finalizedAt,
@@ -727,6 +771,97 @@ export async function syncLiveMatches(
   let finalizedMatches = 0;
   const updatedMatchIds: number[] = [];
 
+  if (mode === "sync" && useRuntimeCadence && payload.matches.length === 0) {
+    const unresolvedRuntimeRows = await db.query.liveSyncRuntimeStates.findMany(
+      {
+        where: (table, { isNull }) => isNull(table.finalizedAt),
+      },
+    );
+
+    if (unresolvedRuntimeRows.length > 0) {
+      const unresolvedMatchIds = unresolvedRuntimeRows.map(
+        (row) => row.matchId,
+      );
+      const unresolvedMatches = await db.query.matches.findMany({
+        where: (table, { inArray }) => inArray(table.id, unresolvedMatchIds),
+      });
+      const unresolvedById = new Map(
+        unresolvedMatches.map((match) => [match.id, match]),
+      );
+      const now = new Date();
+
+      const finishedByProviderMatchId = new Map<string, LiveProviderMatch>();
+
+      if (
+        LIVE_MATCHES_PROVIDER_NAME.trim().toLowerCase() ===
+        LIVE_MATCHES_PROVIDERS.FOOTBALL_DATA
+      ) {
+        const finishedMatches =
+          await fetchFootballDataMatchesByStatus("FINISHED");
+
+        for (const finishedMatch of finishedMatches) {
+          finishedByProviderMatchId.set(
+            finishedMatch.providerMatchId,
+            finishedMatch,
+          );
+        }
+      }
+
+      for (const runtimeRow of unresolvedRuntimeRows) {
+        const local = unresolvedById.get(runtimeRow.matchId);
+
+        if (!local) {
+          continue;
+        }
+
+        const shouldFinalizeMatch = local.status === MATCH_STATUSES.LIVE;
+
+        if (shouldFinalizeMatch) {
+          const finishedSnapshot = runtimeRow.providerMatchId
+            ? (finishedByProviderMatchId.get(runtimeRow.providerMatchId) ??
+              null)
+            : null;
+          const nextHomeScore =
+            typeof finishedSnapshot?.homeScore === "number"
+              ? finishedSnapshot.homeScore
+              : local.homeScore;
+          const nextAwayScore =
+            typeof finishedSnapshot?.awayScore === "number"
+              ? finishedSnapshot.awayScore
+              : local.awayScore;
+
+          await db
+            .update(matches)
+            .set({
+              homeScore: nextHomeScore,
+              awayScore: nextAwayScore,
+              status: MATCH_STATUSES.FINISHED,
+            })
+            .where(eq(matches.id, local.id));
+
+          updatedMatches += 1;
+          updatedMatchIds.push(local.id);
+
+          if (nextHomeScore !== null && nextAwayScore !== null) {
+            const updatedPredictions = await updateMatchPredictions(local.id);
+            predictionsRecalculated += updatedPredictions;
+          }
+        }
+
+        await db
+          .update(liveSyncRuntimeStates)
+          .set({
+            finalizedAt: now,
+            halftimeStartedAt: null,
+            updatedAt: now,
+          })
+          .where(eq(liveSyncRuntimeStates.matchId, runtimeRow.matchId));
+
+        finalizedMatches += 1;
+      }
+    }
+  }
+
   for (const incoming of mappedMatches) {
     const local = localByMatchNumber.get(incoming.matchNumber);
 
@@ -737,6 +872,17 @@ export async function syncLiveMatches(
 
     const now = new Date();
     let runtime = runtimeByMatchId.get(local.id) ?? null;
+
+    if (
+      mode === "sync" &&
+      useRuntimeCadence &&
+      runtime?.providerMatchId !== incoming.providerMatchId
+    ) {
+      runtime = await upsertRuntimeState(runtime, local.id, {
+        providerMatchId: incoming.providerMatchId,
+      });
+      runtimeByMatchId.set(local.id, runtime);
+    }
 
     if (useRuntimeCadence && incoming.status === MATCH_STATUSES.LIVE) {
       activeLiveMatches += 1;
@@ -750,6 +896,7 @@ export async function syncLiveMatches(
 
       if (!runtime?.finalizedAt && mode === "sync") {
         runtime = await upsertRuntimeState(runtime, local.id, {
+          providerMatchId: incoming.providerMatchId,
           finalizedAt: now,
           halftimeStartedAt: null,
         });
@@ -767,6 +914,7 @@ export async function syncLiveMatches(
 
         if (mode === "sync" && !runtime?.halftimeStartedAt) {
           runtime = await upsertRuntimeState(runtime, local.id, {
+            providerMatchId: incoming.providerMatchId,
             halftimeStartedAt,
           });
           runtimeByMatchId.set(local.id, runtime);
@@ -778,6 +926,7 @@ export async function syncLiveMatches(
         }
       } else if (mode === "sync" && runtime?.halftimeStartedAt) {
         runtime = await upsertRuntimeState(runtime, local.id, {
+          providerMatchId: incoming.providerMatchId,
           halftimeStartedAt: null,
         });
         runtimeByMatchId.set(local.id, runtime);
@@ -805,6 +954,7 @@ export async function syncLiveMatches(
 
     if (mode === "sync" && useRuntimeCadence) {
       runtime = await upsertRuntimeState(runtime, local.id, {
+        providerMatchId: incoming.providerMatchId,
         lastPolledAt: now,
       });
       runtimeByMatchId.set(local.id, runtime);
@@ -860,6 +1010,7 @@ export async function syncLiveMatches(
 
       if (useRuntimeCadence && nextStatus === MATCH_STATUSES.FINISHED) {
         runtime = await upsertRuntimeState(runtime, local.id, {
+          providerMatchId: incoming.providerMatchId,
           finalizedAt: now,
           halftimeStartedAt: null,
         });
