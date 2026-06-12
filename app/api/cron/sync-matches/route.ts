@@ -5,9 +5,9 @@ import {
   syncLiveMatches,
 } from "@/lib/live-matches";
 import { db } from "@/lib/db";
-import { matches } from "@/lib/schema";
+import { liveSyncRuntimeStates, matches } from "@/lib/schema";
 import { MATCH_STATUSES } from "@/lib/constants";
-import { and, eq, gte, lte, ne, or } from "drizzle-orm";
+import { and, eq, gte, isNull, lte, ne, or } from "drizzle-orm";
 
 const LOOKBACK_MINUTES = 150;
 const PREMATCH_WINDOW_MINUTES = 10;
@@ -35,6 +35,12 @@ export async function POST(request: NextRequest) {
       now.getTime() + PREMATCH_WINDOW_MINUTES * 60_000,
     );
 
+    const pendingRuntimeStates = await db
+      .select({ matchId: liveSyncRuntimeStates.matchId })
+      .from(liveSyncRuntimeStates)
+      .where(isNull(liveSyncRuntimeStates.finalizedAt))
+      .limit(1);
+
     const potentiallyActiveMatches = await db
       .select({ id: matches.id })
       .from(matches)
@@ -54,7 +60,10 @@ export async function POST(request: NextRequest) {
       )
       .limit(1);
 
-    if (potentiallyActiveMatches.length === 0) {
+    if (
+      potentiallyActiveMatches.length === 0 &&
+      pendingRuntimeStates.length === 0
+    ) {
       return NextResponse.json({
         success: true,
         skipped: true,
