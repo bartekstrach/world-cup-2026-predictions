@@ -50,6 +50,8 @@ export const LIVE_MATCHES_ID_MAP = process.env.LIVE_MATCHES_ID_MAP ?? "{}";
 export const LIVE_MATCHES_TIMEOUT_MS = Number(
   process.env.LIVE_MATCHES_TIMEOUT_MS ?? "10000",
 );
+export const LIVE_MATCHES_DEBUG_LOGS =
+  process.env.LIVE_MATCHES_DEBUG_LOGS === "true";
 export const LIVE_SYNC_FREQUENCY_MINUTES = Number(
   process.env.LIVE_SYNC_FREQUENCY_MINUTES ?? "1",
 );

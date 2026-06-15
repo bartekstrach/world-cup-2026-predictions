@@ -915,7 +915,7 @@ export async function syncLiveMatches(
     .map((item) => item.providerMatchId);
 
   if (mode === "sync" && hasUnmappedIncoming) {
-    console.warn(LOG_PREFIX, "Unmapped incoming provider matches detected", {
+    logDebug(debugEnabled, "Unmapped incoming provider matches detected", {
       requestId,
       count: unmappedIncomingProviderMatchIds.length,
       providerMatchIds: unmappedIncomingProviderMatchIds,

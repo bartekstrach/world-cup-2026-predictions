@@ -6,7 +6,7 @@ import {
 } from "@/lib/live-matches";
 import { db } from "@/lib/db";
 import { liveSyncRuntimeStates, matches } from "@/lib/schema";
-import { MATCH_STATUSES } from "@/lib/constants";
+import { LIVE_MATCHES_DEBUG_LOGS, MATCH_STATUSES } from "@/lib/constants";
 import { and, eq, gte, isNull, lte, ne, or } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +17,10 @@ const PREMATCH_WINDOW_MINUTES = 10;
 const LOG_PREFIX = "🍊 [cron/sync-matches]";
 
 function logInfo(message: string, meta?: Record<string, unknown>) {
+  if (!LIVE_MATCHES_DEBUG_LOGS) {
+    return;
+  }
+
   if (meta) {
     console.info(LOG_PREFIX, message, meta);
     return;
@@ -115,7 +119,7 @@ export async function POST(request: NextRequest) {
 
     const result = await syncLiveMatches("sync", {
       useRuntimeCadence: true,
-      debug: true,
+      debug: LIVE_MATCHES_DEBUG_LOGS,
       requestId,
     });
 
