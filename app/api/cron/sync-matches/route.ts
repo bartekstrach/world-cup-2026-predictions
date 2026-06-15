@@ -9,8 +9,21 @@ import { liveSyncRuntimeStates, matches } from "@/lib/schema";
 import { MATCH_STATUSES } from "@/lib/constants";
 import { and, eq, gte, isNull, lte, ne, or } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const LOOKBACK_MINUTES = 150;
 const PREMATCH_WINDOW_MINUTES = 10;
+const LOG_PREFIX = "🍊 [cron/sync-matches]";
+
+function logInfo(message: string, meta?: Record<string, unknown>) {
+  if (meta) {
+    console.info(LOG_PREFIX, message, meta);
+    return;
+  }
+
+  console.info(LOG_PREFIX, message);
+}
 
 function getSecretFromRequest(request: NextRequest): string | null {
   const bearer = request.headers.get("authorization");
@@ -22,9 +35,18 @@ function getSecretFromRequest(request: NextRequest): string | null {
 }
 
 export async function POST(request: NextRequest) {
+  const requestId = crypto.randomUUID();
   const secret = getSecretFromRequest(request);
 
+  logInfo("Request received", {
+    requestId,
+    hasAuthorizationHeader: Boolean(request.headers.get("authorization")),
+    hasCronHeader: Boolean(request.headers.get("x-cron-secret")),
+  });
+
   if (!isValidCronSyncSecret(secret)) {
+    logInfo("Unauthorized request", { requestId });
+
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -60,10 +82,20 @@ export async function POST(request: NextRequest) {
       )
       .limit(1);
 
+    logInfo("Guard check completed", {
+      requestId,
+      potentiallyActiveMatches: potentiallyActiveMatches.length,
+      pendingRuntimeStates: pendingRuntimeStates.length,
+      lookbackMinutes: LOOKBACK_MINUTES,
+      prematchWindowMinutes: PREMATCH_WINDOW_MINUTES,
+    });
+
     if (
       potentiallyActiveMatches.length === 0 &&
       pendingRuntimeStates.length === 0
     ) {
+      logInfo("Skipping sync: no active matches", { requestId });
+
       return NextResponse.json({
         success: true,
         skipped: true,
@@ -76,8 +108,33 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    logInfo("Running live sync", {
+      requestId,
+      cadence: "runtime",
+    });
+
     const result = await syncLiveMatches("sync", {
       useRuntimeCadence: true,
+      debug: true,
+      requestId,
+    });
+
+    logInfo("Live sync completed", {
+      requestId,
+      provider: result.provider,
+      fetchedAt: result.fetchedAt,
+      totalIncoming: result.totalIncoming,
+      totalMapped: result.totalMapped,
+      updatedMatches: result.updatedMatches,
+      unchangedMatches: result.unchangedMatches,
+      skippedMatches: result.skippedMatches,
+      activeLiveMatches: result.activeLiveMatches,
+      polledMatches: result.polledMatches,
+      halftimePausedMatches: result.halftimePausedMatches,
+      finalizedMatches: result.finalizedMatches,
+      predictionsRecalculated: result.predictionsRecalculated,
+      updatedMatchIds: result.updatedMatchIds,
+      revalidatedPaths: ["/", "/admin", "/admin/matches"],
     });
 
     return NextResponse.json({
@@ -92,6 +149,11 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     if (error instanceof LiveSyncSafetyError) {
+      logInfo("Sync blocked by safety check", {
+        requestId,
+        message: error.message,
+      });
+
       return NextResponse.json(
         {
           success: false,
@@ -101,7 +163,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error("Cron sync failed", error);
+    console.error(LOG_PREFIX, "Cron sync failed", {
+      requestId,
+      error,
+    });
 
     return NextResponse.json(
       {

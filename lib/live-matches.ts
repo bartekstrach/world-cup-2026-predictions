@@ -1,5 +1,5 @@
-import { revalidatePath } from "next/cache";
-import { eq } from "drizzle-orm";
+import { revalidatePath, unstable_noStore as noStore } from "next/cache";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   CRON_SYNC_SECRET,
@@ -60,6 +60,8 @@ export class LiveSyncSafetyError extends Error {
 
 type SyncLiveMatchesOptions = {
   useRuntimeCadence?: boolean;
+  debug?: boolean;
+  requestId?: string;
 };
 
 type LiveProviderAdapter = {
@@ -104,6 +106,18 @@ type FootballDataRawMatch = {
   utcDate?: string | null;
   status?: string | null;
   minute?: number | null;
+  homeTeam?: {
+    tla?: string | null;
+    code?: string | null;
+    shortName?: string | null;
+    name?: string | null;
+  } | null;
+  awayTeam?: {
+    tla?: string | null;
+    code?: string | null;
+    shortName?: string | null;
+    name?: string | null;
+  } | null;
   score?: FootballDataScore | null;
   [key: string]: unknown;
 };
@@ -125,6 +139,22 @@ type LiveRuntimeState = {
 
 const LIVE_POLL_INTERVAL_MS = 30 * 1000;
 const HALFTIME_PAUSE_MS = 15 * 60 * 1000;
+const LOG_PREFIX = "🍎 [live-matches]";
+
+function logDebug(
+  enabled: boolean,
+  message: string,
+  meta?: Record<string, unknown>,
+) {
+  if (!enabled) return;
+
+  if (meta) {
+    console.info(LOG_PREFIX, message, meta);
+    return;
+  }
+
+  console.info(LOG_PREFIX, message);
+}
 
 function parseScore(value: unknown): number | null {
   if (typeof value !== "number" || !Number.isFinite(value)) {
@@ -279,6 +309,193 @@ function normalizeFootballDataMatch(
     startedAt: typeof raw.utcDate === "string" ? raw.utcDate : null,
     raw,
   };
+}
+
+function getFootballDataTeamCode(
+  raw: unknown,
+  side: "homeTeam" | "awayTeam",
+): string | null {
+  if (typeof raw !== "object" || raw === null) {
+    return null;
+  }
+
+  const rawRecord = raw as Record<string, unknown>;
+  const team =
+    typeof rawRecord[side] === "object" && rawRecord[side] !== null
+      ? (rawRecord[side] as Record<string, unknown>)
+      : null;
+
+  const value = team?.tla ?? team?.code;
+  if (typeof value !== "string") {
+    return null;
+  }
+
+  const normalized = value.trim().toUpperCase();
+  return normalized.length > 0 ? normalized : null;
+}
+
+function parseStartedAtDate(value: string | null | undefined): Date | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+async function resolveUnmappedMatchesDeterministically(
+  matchesWithResolvedMapping: LiveProviderMatch[],
+  options: {
+    providerName: string;
+    requestId: string;
+    debugEnabled: boolean;
+  },
+): Promise<LiveProviderMatch[]> {
+  const unmappedProviderMatchIds = matchesWithResolvedMapping
+    .filter(
+      (item) =>
+        typeof item.matchNumber !== "number" ||
+        !Number.isInteger(item.matchNumber),
+    )
+    .map((item) => item.providerMatchId);
+
+  if (unmappedProviderMatchIds.length === 0) {
+    return matchesWithResolvedMapping;
+  }
+
+  const runtimeBindings = await db.query.liveSyncRuntimeStates.findMany({
+    where: (table) => inArray(table.providerMatchId, unmappedProviderMatchIds),
+    columns: {
+      matchId: true,
+      providerMatchId: true,
+    },
+    with: {
+      match: {
+        columns: {
+          matchNumber: true,
+        },
+      },
+    },
+  });
+
+  const resolvedByProviderId = new Map<string, number>();
+  for (const row of runtimeBindings) {
+    if (
+      row.providerMatchId &&
+      row.match &&
+      Number.isInteger(row.match.matchNumber)
+    ) {
+      resolvedByProviderId.set(row.providerMatchId, row.match.matchNumber);
+    }
+  }
+
+  const isFootballData =
+    options.providerName.trim().toLowerCase() ===
+    LIVE_MATCHES_PROVIDERS.FOOTBALL_DATA;
+
+  const localMatchesForTeamDateMatching = isFootballData
+    ? await db.query.matches.findMany({
+        columns: {
+          id: true,
+          matchNumber: true,
+          matchDate: true,
+        },
+        with: {
+          homeTeam: {
+            columns: {
+              code: true,
+            },
+          },
+          awayTeam: {
+            columns: {
+              code: true,
+            },
+          },
+        },
+      })
+    : [];
+
+  const MAX_KICKOFF_DIFF_MS = 2 * 60 * 60 * 1000;
+
+  const resolved = matchesWithResolvedMapping.map((item) => {
+    if (
+      typeof item.matchNumber === "number" &&
+      Number.isInteger(item.matchNumber)
+    ) {
+      return item;
+    }
+
+    const runtimeMatchNumber = resolvedByProviderId.get(item.providerMatchId);
+    if (Number.isInteger(runtimeMatchNumber)) {
+      return {
+        ...item,
+        matchNumber: runtimeMatchNumber,
+      };
+    }
+
+    if (!isFootballData) {
+      return item;
+    }
+
+    const homeCode = getFootballDataTeamCode(item.raw, "homeTeam");
+    const awayCode = getFootballDataTeamCode(item.raw, "awayTeam");
+    const startedAtDate = parseStartedAtDate(item.startedAt ?? null);
+
+    logDebug(options.debugEnabled, "football-data team codes extracted", {
+      requestId: options.requestId,
+      providerMatchId: item.providerMatchId,
+      homeCode,
+      awayCode,
+      startedAt: item.startedAt ?? null,
+      hasStartedAtDate: Boolean(startedAtDate),
+    });
+
+    if (!homeCode || !awayCode || !startedAtDate) {
+      return item;
+    }
+
+    const candidates = localMatchesForTeamDateMatching.filter((localMatch) => {
+      if (
+        localMatch.homeTeam.code.toUpperCase() !== homeCode ||
+        localMatch.awayTeam.code.toUpperCase() !== awayCode
+      ) {
+        return false;
+      }
+
+      const diffMs = Math.abs(
+        localMatch.matchDate.getTime() - startedAtDate.getTime(),
+      );
+
+      return diffMs <= MAX_KICKOFF_DIFF_MS;
+    });
+
+    if (candidates.length !== 1) {
+      return item;
+    }
+
+    return {
+      ...item,
+      matchNumber: candidates[0].matchNumber,
+    };
+  });
+
+  const autoResolvedCount = resolved.filter((item, index) => {
+    const previous = matchesWithResolvedMapping[index];
+    const wasMappedBefore =
+      typeof previous.matchNumber === "number" &&
+      Number.isInteger(previous.matchNumber);
+    const isMappedNow =
+      typeof item.matchNumber === "number" &&
+      Number.isInteger(item.matchNumber);
+    return !wasMappedBefore && isMappedNow;
+  }).length;
+
+  if (autoResolvedCount > 0) {
+    logDebug(options.debugEnabled, "Auto-resolved provider mapping", {
+      requestId: options.requestId,
+      autoResolvedCount,
+      totalUnmappedInitially: unmappedProviderMatchIds.length,
+    });
+  }
+
+  return resolved;
 }
 
 function parseExternalIdMap(): ExternalIdMap {
@@ -618,6 +835,7 @@ async function upsertRuntimeState(
 }
 
 export async function fetchLiveMatchesNormalized(): Promise<LiveProviderPayload> {
+  noStore();
   const adapter = getLiveProviderAdapter();
   return adapter.fetchMatches();
 }
@@ -626,14 +844,52 @@ export async function syncLiveMatches(
   mode: LiveSyncMode,
   options?: SyncLiveMatchesOptions,
 ): Promise<LiveSyncResult> {
+  noStore();
+
   const useRuntimeCadence = mode === "sync" && options?.useRuntimeCadence;
+  const debugEnabled = Boolean(options?.debug);
+  const requestId = options?.requestId ?? "n/a";
+
+  logDebug(debugEnabled, "Starting syncLiveMatches", {
+    requestId,
+    mode,
+    useRuntimeCadence,
+    provider: LIVE_MATCHES_PROVIDER_NAME,
+    endpointConfigured: Boolean(LIVE_MATCHES_API_URL),
+  });
+
   const payload = await fetchLiveMatchesNormalized();
+  logDebug(debugEnabled, "Provider payload fetched", {
+    requestId,
+    provider: payload.provider,
+    fetchedAt: payload.fetchedAt,
+    totalIncoming: payload.matches.length,
+    sample: payload.matches.slice(0, 3).map((match) => ({
+      providerMatchId: match.providerMatchId,
+      matchNumber: match.matchNumber,
+      status: match.status,
+      minute: match.minute,
+      homeScore: match.homeScore,
+      awayScore: match.awayScore,
+      homeCode: getFootballDataTeamCode(match.raw, "homeTeam"),
+      awayCode: getFootballDataTeamCode(match.raw, "awayTeam"),
+      startedAt: match.startedAt ?? null,
+    })),
+  });
+
   const externalIdMap = parseExternalIdMap();
 
-  const matchesWithResolvedMapping = payload.matches.map((item) => ({
+  const initiallyResolvedMapping = payload.matches.map((item) => ({
     ...item,
     matchNumber: resolveMatchNumberFromMapping(item, externalIdMap),
   }));
+
+  const matchesWithResolvedMapping =
+    await resolveUnmappedMatchesDeterministically(initiallyResolvedMapping, {
+      providerName: payload.provider,
+      requestId,
+      debugEnabled,
+    });
 
   const explicitlyMappedMatchNumbers = new Set<number>(
     matchesWithResolvedMapping
@@ -650,57 +906,85 @@ export async function syncLiveMatches(
       !Number.isInteger(item.matchNumber),
   );
 
-  if (mode === "sync" && payload.matches.length > 1 && hasUnmappedIncoming) {
+  const unmappedIncomingProviderMatchIds = matchesWithResolvedMapping
+    .filter(
+      (item) =>
+        typeof item.matchNumber !== "number" ||
+        !Number.isInteger(item.matchNumber),
+    )
+    .map((item) => item.providerMatchId);
+
+  if (mode === "sync" && hasUnmappedIncoming) {
+    console.warn(LOG_PREFIX, "Unmapped incoming provider matches detected", {
+      requestId,
+      count: unmappedIncomingProviderMatchIds.length,
+      providerMatchIds: unmappedIncomingProviderMatchIds,
+      recommendation: "Configure LIVE_MATCHES_ID_MAP for deterministic mapping",
+    });
+
+    logDebug(
+      debugEnabled,
+      "Safety block triggered: unmapped incoming matches",
+      {
+        requestId,
+        totalIncoming: payload.matches.length,
+        mappedFromConfig: explicitlyMappedMatchNumbers.size,
+        providerMatchIds: unmappedIncomingProviderMatchIds,
+      },
+    );
+
     throw new LiveSyncSafetyError(
-      "Unsafe sync blocked: multiple live matches received without explicit mapping. Configure LIVE_MATCHES_ID_MAP.",
+      `Unsafe sync blocked: unmapped provider matches received (${unmappedIncomingProviderMatchIds.join(", ")}). Configure LIVE_MATCHES_ID_MAP.`,
     );
   }
 
-  const fallbackMatchNumberQueue = hasUnmappedIncoming
-    ? (() => {
-        // Keep fallback stable across cron runs:
-        // 1) first reuse already-live local matches,
-        // 2) only then assign next scheduled by date.
-        const liveFirst = db.query.matches.findMany({
-          where: (table, { eq }) => eq(table.status, MATCH_STATUSES.LIVE),
-          orderBy: (table, { asc }) => [asc(table.matchDate)],
-          columns: {
-            matchNumber: true,
-          },
-        });
+  const fallbackMatchNumberQueue =
+    hasUnmappedIncoming && mode !== "sync"
+      ? (() => {
+          // Keep fallback stable across cron runs:
+          // 1) first reuse already-live local matches,
+          // 2) only then assign next scheduled by date.
+          const liveFirst = db.query.matches.findMany({
+            where: (table, { eq }) => eq(table.status, MATCH_STATUSES.LIVE),
+            orderBy: (table, { asc }) => [asc(table.matchDate)],
+            columns: {
+              matchNumber: true,
+            },
+          });
 
-        const scheduledNext = db.query.matches.findMany({
-          where: (table, { eq }) => eq(table.status, MATCH_STATUSES.SCHEDULED),
-          orderBy: (table, { asc }) => [asc(table.matchDate)],
-          columns: {
-            matchNumber: true,
-          },
-        });
+          const scheduledNext = db.query.matches.findMany({
+            where: (table, { eq }) =>
+              eq(table.status, MATCH_STATUSES.SCHEDULED),
+            orderBy: (table, { asc }) => [asc(table.matchDate)],
+            columns: {
+              matchNumber: true,
+            },
+          });
 
-        return Promise.all([liveFirst, scheduledNext]).then(
-          ([liveRows, scheduledRows]) => {
-            const seen = new Set<number>(explicitlyMappedMatchNumbers);
-            const queue: number[] = [];
+          return Promise.all([liveFirst, scheduledNext]).then(
+            ([liveRows, scheduledRows]) => {
+              const seen = new Set<number>(explicitlyMappedMatchNumbers);
+              const queue: number[] = [];
 
-            for (const row of liveRows) {
-              if (!seen.has(row.matchNumber)) {
-                seen.add(row.matchNumber);
-                queue.push(row.matchNumber);
+              for (const row of liveRows) {
+                if (!seen.has(row.matchNumber)) {
+                  seen.add(row.matchNumber);
+                  queue.push(row.matchNumber);
+                }
               }
-            }
 
-            for (const row of scheduledRows) {
-              if (!seen.has(row.matchNumber)) {
-                seen.add(row.matchNumber);
-                queue.push(row.matchNumber);
+              for (const row of scheduledRows) {
+                if (!seen.has(row.matchNumber)) {
+                  seen.add(row.matchNumber);
+                  queue.push(row.matchNumber);
+                }
               }
-            }
 
-            return queue;
-          },
-        );
-      })()
-    : Promise.resolve([] as number[]);
+              return queue;
+            },
+          );
+        })()
+      : Promise.resolve([] as number[]);
 
   const resolvedFallbackQueue = await fallbackMatchNumberQueue;
 
@@ -725,6 +1009,27 @@ export async function syncLiveMatches(
         typeof item.matchNumber === "number" &&
         Number.isInteger(item.matchNumber),
     );
+
+  logDebug(debugEnabled, "Mapping resolved", {
+    requestId,
+    totalIncoming: payload.matches.length,
+    totalMapped: mappedMatches.length,
+    hasUnmappedIncoming,
+    fallbackQueueSize: resolvedFallbackQueue.length,
+    mappedPreview: mappedMatches.slice(0, 5).map((match) => ({
+      providerMatchId: match.providerMatchId,
+      matchNumber: match.matchNumber,
+      status: match.status,
+      score: [match.homeScore, match.awayScore],
+    })),
+  });
+
+  if (mode !== "sync" && hasUnmappedIncoming) {
+    logDebug(debugEnabled, "Fallback mapping was used for incoming matches", {
+      requestId,
+      providerMatchIds: unmappedIncomingProviderMatchIds,
+    });
+  }
 
   const matchNumbers = mappedMatches.map((item) => item.matchNumber);
 
@@ -772,6 +1077,11 @@ export async function syncLiveMatches(
   const updatedMatchIds: number[] = [];
 
   if (mode === "sync" && useRuntimeCadence && payload.matches.length === 0) {
+    logDebug(debugEnabled, "No incoming payload while runtime cadence active", {
+      requestId,
+      action: "checking unresolved runtime states",
+    });
+
     const unresolvedRuntimeRows = await db.query.liveSyncRuntimeStates.findMany(
       {
         where: (table, { isNull }) => isNull(table.finalizedAt),
@@ -779,6 +1089,11 @@ export async function syncLiveMatches(
     );
 
     if (unresolvedRuntimeRows.length > 0) {
+      logDebug(debugEnabled, "Found unresolved runtime rows", {
+        requestId,
+        unresolvedRuntimeRows: unresolvedRuntimeRows.length,
+      });
+
       const unresolvedMatchIds = unresolvedRuntimeRows.map(
         (row) => row.matchId,
       );
@@ -846,6 +1161,14 @@ export async function syncLiveMatches(
             const updatedPredictions = await updateMatchPredictions(local.id);
             predictionsRecalculated += updatedPredictions;
           }
+
+          logDebug(debugEnabled, "Finalized unresolved live match", {
+            requestId,
+            matchId: local.id,
+            providerMatchId: runtimeRow.providerMatchId,
+            homeScore: nextHomeScore,
+            awayScore: nextAwayScore,
+          });
         }
 
         await db
@@ -867,6 +1190,13 @@ export async function syncLiveMatches(
 
     if (!local) {
       skippedMatches += 1;
+
+      logDebug(debugEnabled, "Skipping mapped incoming match: no local match", {
+        requestId,
+        providerMatchId: incoming.providerMatchId,
+        matchNumber: incoming.matchNumber,
+      });
+
       continue;
     }
 
@@ -890,9 +1220,47 @@ export async function syncLiveMatches(
 
     if (
       useRuntimeCadence &&
-      (runtime?.finalizedAt || local.status === MATCH_STATUSES.FINISHED)
+      runtime?.finalizedAt &&
+      runtime.providerMatchId &&
+      runtime.providerMatchId !== incoming.providerMatchId
     ) {
+      logDebug(
+        debugEnabled,
+        "Ignoring stale finalized runtime state (provider mismatch)",
+        {
+          requestId,
+          matchId: local.id,
+          incomingProviderMatchId: incoming.providerMatchId,
+          runtimeProviderMatchId: runtime.providerMatchId,
+        },
+      );
+
+      if (mode === "sync") {
+        runtime = await upsertRuntimeState(runtime, local.id, {
+          providerMatchId: incoming.providerMatchId,
+          finalizedAt: null,
+          halftimeStartedAt: null,
+        });
+        runtimeByMatchId.set(local.id, runtime);
+      }
+    }
+
+    const finalizedByRuntime = Boolean(
+      runtime?.finalizedAt &&
+      (!runtime.providerMatchId ||
+        runtime.providerMatchId === incoming.providerMatchId),
+    );
+    const finalizedByLocalStatus = local.status === MATCH_STATUSES.FINISHED;
+
+    if (useRuntimeCadence && (finalizedByRuntime || finalizedByLocalStatus)) {
       finalizedMatches += 1;
+
+      logDebug(debugEnabled, "Skipping sync for finalized match", {
+        requestId,
+        matchId: local.id,
+        providerMatchId: incoming.providerMatchId,
+        reason: finalizedByRuntime ? "finalized-runtime" : "local-finished",
+      });
 
       if (!runtime?.finalizedAt && mode === "sync") {
         runtime = await upsertRuntimeState(runtime, local.id, {
@@ -922,6 +1290,13 @@ export async function syncLiveMatches(
 
         if (now.getTime() - halftimeStartedAt.getTime() < HALFTIME_PAUSE_MS) {
           halftimePausedMatches += 1;
+
+          logDebug(debugEnabled, "Skipping poll during halftime pause", {
+            requestId,
+            matchId: local.id,
+            providerMatchId: incoming.providerMatchId,
+          });
+
           continue;
         }
       } else if (mode === "sync" && runtime?.halftimeStartedAt) {
@@ -936,6 +1311,12 @@ export async function syncLiveMatches(
         runtime?.lastPolledAt &&
         now.getTime() - runtime.lastPolledAt.getTime() < LIVE_POLL_INTERVAL_MS
       ) {
+        logDebug(debugEnabled, "Skipping poll due to poll interval throttle", {
+          requestId,
+          matchId: local.id,
+          providerMatchId: incoming.providerMatchId,
+        });
+
         continue;
       }
     }
@@ -945,6 +1326,13 @@ export async function syncLiveMatches(
       incoming.status !== MATCH_STATUSES.LIVE &&
       incoming.status !== MATCH_STATUSES.FINISHED
     ) {
+      logDebug(debugEnabled, "Skipping non-live/non-finished incoming status", {
+        requestId,
+        matchId: local.id,
+        providerMatchId: incoming.providerMatchId,
+        incomingStatus: incoming.status,
+      });
+
       continue;
     }
 
@@ -985,6 +1373,15 @@ export async function syncLiveMatches(
 
     if (!scoreChanged && !statusChanged) {
       unchangedMatches += 1;
+
+      logDebug(debugEnabled, "No change detected", {
+        requestId,
+        matchId: local.id,
+        providerMatchId: incoming.providerMatchId,
+        status: nextStatus,
+        score: [nextHomeScore, nextAwayScore],
+      });
+
       continue;
     }
 
@@ -1019,6 +1416,16 @@ export async function syncLiveMatches(
       }
 
       updatedMatchIds.push(local.id);
+
+      logDebug(debugEnabled, "Match updated from provider payload", {
+        requestId,
+        matchId: local.id,
+        providerMatchId: incoming.providerMatchId,
+        previousStatus: local.status,
+        nextStatus,
+        previousScore: [local.homeScore, local.awayScore],
+        nextScore: [nextHomeScore, nextAwayScore],
+      });
     }
 
     updatedMatches += 1;
@@ -1028,7 +1435,29 @@ export async function syncLiveMatches(
     revalidatePath("/");
     revalidatePath("/admin");
     revalidatePath("/admin/matches");
+
+    logDebug(debugEnabled, "Revalidated paths after updates", {
+      requestId,
+      paths: ["/", "/admin", "/admin/matches"],
+      updatedMatchIds,
+    });
   }
+
+  logDebug(debugEnabled, "syncLiveMatches completed", {
+    requestId,
+    provider: payload.provider,
+    mode,
+    totalIncoming: payload.matches.length,
+    totalMapped: mappedMatches.length,
+    updatedMatches,
+    unchangedMatches,
+    skippedMatches,
+    predictionsRecalculated,
+    activeLiveMatches,
+    polledMatches,
+    halftimePausedMatches,
+    finalizedMatches,
+  });
 
   return {
     provider: payload.provider,
