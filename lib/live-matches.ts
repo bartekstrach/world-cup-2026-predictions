@@ -140,6 +140,30 @@ type LiveRuntimeState = {
 const LIVE_POLL_INTERVAL_MS = 30 * 1000;
 const HALFTIME_PAUSE_MS = 15 * 60 * 1000;
 const LOG_PREFIX = "🍎 [live-matches]";
+const FOOTBALL_DATA_TO_LOCAL_TEAM_CODE: Record<string, string> = {
+  DEU: "GER",
+  HRV: "CRO",
+  CHE: "SUI",
+  NLD: "NED",
+  PRT: "POR",
+  SAU: "KSA",
+  ZAF: "RSA",
+  URY: "URU",
+  DZA: "ALG",
+};
+
+function normalizeTeamCode(value: string | null | undefined): string | null {
+  if (!value) {
+    return null;
+  }
+
+  const normalized = value.trim().toUpperCase();
+  if (!normalized) {
+    return null;
+  }
+
+  return FOOTBALL_DATA_TO_LOCAL_TEAM_CODE[normalized] ?? normalized;
+}
 
 function logDebug(
   enabled: boolean,
@@ -330,8 +354,7 @@ function getFootballDataTeamCode(
     return null;
   }
 
-  const normalized = value.trim().toUpperCase();
-  return normalized.length > 0 ? normalized : null;
+  return normalizeTeamCode(value);
 }
 
 function parseStartedAtDate(value: string | null | undefined): Date | null {
@@ -452,10 +475,10 @@ async function resolveUnmappedMatchesDeterministically(
     }
 
     const candidates = localMatchesForTeamDateMatching.filter((localMatch) => {
-      if (
-        localMatch.homeTeam.code.toUpperCase() !== homeCode ||
-        localMatch.awayTeam.code.toUpperCase() !== awayCode
-      ) {
+      const localHomeCode = normalizeTeamCode(localMatch.homeTeam.code);
+      const localAwayCode = normalizeTeamCode(localMatch.awayTeam.code);
+
+      if (localHomeCode !== homeCode || localAwayCode !== awayCode) {
         return false;
       }
 
