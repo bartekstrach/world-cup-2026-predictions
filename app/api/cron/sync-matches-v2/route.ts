@@ -5,6 +5,7 @@ import { LIVE_MATCHES_DEBUG_LOGS } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+export const runtime = "nodejs";
 
 const LOG_PREFIX = "🥝 [cron/sync-matches-v2]";
 
@@ -68,6 +69,17 @@ export async function POST(request: NextRequest) {
       predictionsRecalculated: result.predictionsRecalculated,
       updatedMatchIds: result.updatedMatchIds,
     });
+
+    if (!result.ok) {
+      return NextResponse.json(
+        {
+          success: false,
+          ...result,
+          checkedAt: now.toISOString(),
+        },
+        { status: 503 },
+      );
+    }
 
     return NextResponse.json({
       success: result.ok,
