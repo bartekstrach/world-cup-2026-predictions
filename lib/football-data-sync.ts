@@ -164,9 +164,13 @@ function normalizeStatus(value: unknown): MatchStatus {
 
   // IN_PLAY / PAUSED / EXTRA_TIME / PENALTY_SHOOTOUT / SUSPENDED -> trwający mecz.
   if (
-    ["IN_PLAY", "PAUSED", "EXTRA_TIME", "PENALTY_SHOOTOUT", "SUSPENDED"].includes(
-      normalized,
-    )
+    [
+      "IN_PLAY",
+      "PAUSED",
+      "EXTRA_TIME",
+      "PENALTY_SHOOTOUT",
+      "SUSPENDED",
+    ].includes(normalized)
   ) {
     return MATCH_STATUSES.LIVE;
   }
@@ -282,9 +286,7 @@ async function fetchWorldCupSnapshot(
     }
 
     const payload = (await response.json()) as FootballDataMatchesResponse;
-    const sourceMatches = Array.isArray(payload.matches)
-      ? payload.matches
-      : [];
+    const sourceMatches = Array.isArray(payload.matches) ? payload.matches : [];
 
     logInfo(debug, "Provider snapshot fetched", {
       dateFrom: formatDateForApi(dateFrom),
@@ -325,6 +327,7 @@ type LocalMatch = {
 
 /**
  * Wybiera wynik istotny dla naszego turnieju:
+ * - dla LIVE preferuje regularTime (szybsza aktualizacja in-play),
  * - faza pucharowa w dogrywce/karnych -> wynik po 90 min (regularTime),
  * - w pozostałych przypadkach -> fullTime (lub regularTime jako fallback).
  */
@@ -332,6 +335,17 @@ function selectRelevantScore(
   incoming: NormalizedProviderMatch,
   stage: MatchStage,
 ): { home: number | null; away: number | null } {
+  if (incoming.status === MATCH_STATUSES.LIVE) {
+    logInfo(true, "selectRelevantScore: LIVE", {
+      home: incoming.regularTime.home ?? incoming.fullTime.home ?? null,
+      away: incoming.regularTime.away ?? incoming.fullTime.away ?? null,
+    });
+    return {
+      home: incoming.regularTime.home ?? incoming.fullTime.home ?? null,
+      away: incoming.regularTime.away ?? incoming.fullTime.away ?? null,
+    };
+  }
+
   const isKnockout = KNOCKOUT_STAGES.has(stage);
   const wentBeyondRegular =
     incoming.duration === "EXTRA_TIME" ||
@@ -556,6 +570,7 @@ export async function runLiveSyncV2(
 
   if (updatedMatchIds.length > 0) {
     revalidatePath("/");
+    revalidatePath("/predictions");
     revalidatePath("/admin");
     revalidatePath("/admin/matches");
   }
