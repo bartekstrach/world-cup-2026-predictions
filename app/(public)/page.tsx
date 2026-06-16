@@ -15,7 +15,7 @@ import { getLeaderboard } from "@/lib/scoring";
 import { getT } from "@/lib/i18n/server";
 import { Card } from "@/components/ui/card";
 
-export const revalidate = 10;
+export const revalidate = 0;
 
 export default async function MainPage() {
   const t = await getT();

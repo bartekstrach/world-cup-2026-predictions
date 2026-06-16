@@ -6,7 +6,7 @@ import {
 import { getT } from "@/lib/i18n/server";
 import { getMatchTeamNames } from "@/lib/teams";
 
-export const revalidate = 10;
+export const revalidate = 0;
 
 export async function LastFinishedMatches() {
   const t = await getT();
