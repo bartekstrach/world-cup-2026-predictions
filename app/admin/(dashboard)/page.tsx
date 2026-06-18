@@ -1,5 +1,4 @@
 import { getAdminStats } from "@/lib/admin-stats";
-import { LIVE_SYNC_FREQUENCY_MINUTES } from "@/lib/constants";
 import { HallOfShameCard } from "@/components/admin/hall-of-shame-card";
 import { NextMatchInsightList } from "@/components/admin/next-match-insight-list";
 import { NextEventCountersCard } from "@/components/admin/next-event-counters-card";
@@ -148,55 +147,9 @@ export default async function AdminDashboard() {
 
         <PublishControlsCard />
 
-        <AiModelSelector initialModel={activeAiModel} />
-
         <Card className="rounded-2xl border-slate-100 p-6 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)]">
-          <CardHeader className="p-0">
-            <CardTitle className="text-lg font-bold text-[#0a192f]">
-              {t("admin.dashboard.quickActions")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2.5 text-sm text-slate-600 p-0 mt-4">
-            <p className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] mt-1.5 shrink-0"></span>
-              <span>
-                {t("admin.dashboard.actions.updateResults", {
-                  section: t("admin.layout.nav.matches"),
-                })}
-              </span>
-            </p>
-            <p className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] mt-1.5 shrink-0"></span>
-              <span>
-                {t("admin.dashboard.actions.addParticipants", {
-                  section: t("admin.layout.nav.participants"),
-                })}
-              </span>
-            </p>
-            <p className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] mt-1.5 shrink-0"></span>
-              <span>
-                {t("admin.dashboard.actions.uploadFiles", {
-                  section: t("admin.layout.nav.predictions"),
-                })}
-              </span>
-            </p>
-            <p className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] mt-1.5 shrink-0"></span>
-              <span>
-                {t("admin.dashboard.actions.manualEntry", {
-                  section: t("admin.layout.nav.manualEntry"),
-                })}
-              </span>
-            </p>
-            <p className="flex items-start gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#10b981] mt-1.5 shrink-0"></span>
-              <span>
-                {t("admin.dashboard.actions.liveSync", {
-                  minutes: LIVE_SYNC_FREQUENCY_MINUTES,
-                })}
-              </span>
-            </p>
+          <CardContent className="p-0">
+            <AiModelSelector initialModel={activeAiModel} />
           </CardContent>
         </Card>
       </div>

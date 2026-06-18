@@ -131,7 +131,6 @@
       "upcomingStage": "Upcoming stage transition: {{stage}}",
       "noUpcomingTitle": "No upcoming scheduled matches",
       "noUpcomingDescription": "Add or schedule future matches to see the next kickoff insight.",
-      "quickActions": "Quick Actions",
       "actions": {
         "updateResults": "Update match results in {{section}}",
         "addParticipants": "Add participants in {{section}}",
