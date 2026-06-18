@@ -136,6 +136,17 @@ function logInfo(
   console.info(LOG_PREFIX, message);
 }
 
+function formatScore(
+  home: number | null,
+  away: number | null,
+): string {
+  if (home === null || away === null) {
+    return "-";
+  }
+
+  return `${home}:${away}`;
+}
+
 function toNonNegativeInt(value: unknown): number | null {
   if (typeof value !== "number" || !Number.isFinite(value)) {
     return null;
@@ -177,6 +188,31 @@ function normalizeStatus(value: unknown): MatchStatus {
 
   // SCHEDULED / TIMED / POSTPONED / CANCELLED -> niezagrany / nie-live.
   return MATCH_STATUSES.SCHEDULED;
+}
+
+function resolveNextStatus(
+  localStatus: MatchStatus | null,
+  providerStatus: MatchStatus,
+): MatchStatus {
+  const current = localStatus ?? MATCH_STATUSES.SCHEDULED;
+
+  // Finished is terminal — never downgrade when provider snapshot lags.
+  if (
+    current === MATCH_STATUSES.FINISHED &&
+    providerStatus !== MATCH_STATUSES.FINISHED
+  ) {
+    return MATCH_STATUSES.FINISHED;
+  }
+
+  // Keep manual/admin "live" when provider still reports TIMED/SCHEDULED.
+  if (
+    current === MATCH_STATUSES.LIVE &&
+    providerStatus === MATCH_STATUSES.SCHEDULED
+  ) {
+    return MATCH_STATUSES.LIVE;
+  }
+
+  return providerStatus;
 }
 
 function parseKickoff(value: string | null | undefined): Date | null {
@@ -288,6 +324,8 @@ async function fetchWorldCupSnapshot(
     const payload = (await response.json()) as FootballDataMatchesResponse;
     const sourceMatches = Array.isArray(payload.matches) ? payload.matches : [];
 
+    // logInfo(true, JSON.stringify(payload));
+
     logInfo(debug, "Provider snapshot fetched", {
       dateFrom: formatDateForApi(dateFrom),
       dateTo: formatDateForApi(dateTo),
@@ -316,6 +354,7 @@ async function fetchWorldCupSnapshot(
 
 type LocalMatch = {
   id: number;
+  matchNumber: number;
   stage: MatchStage;
   matchDate: Date;
   status: MatchStatus | null;
@@ -334,16 +373,17 @@ type LocalMatch = {
 function selectRelevantScore(
   incoming: NormalizedProviderMatch,
   stage: MatchStage,
+  debug: boolean,
 ): { home: number | null; away: number | null } {
   if (incoming.status === MATCH_STATUSES.LIVE) {
-    logInfo(true, "selectRelevantScore: LIVE", {
-      home: incoming.regularTime.home ?? incoming.fullTime.home ?? null,
-      away: incoming.regularTime.away ?? incoming.fullTime.away ?? null,
-    });
-    return {
+    const score = {
       home: incoming.regularTime.home ?? incoming.fullTime.home ?? null,
       away: incoming.regularTime.away ?? incoming.fullTime.away ?? null,
     };
+
+    logInfo(debug, "selectRelevantScore: LIVE", score);
+
+    return score;
   }
 
   const isKnockout = KNOCKOUT_STAGES.has(stage);
@@ -415,6 +455,7 @@ export async function runLiveSyncV2(
 
   const candidates: LocalMatch[] = candidateRows.map((row) => ({
     id: row.id,
+    matchNumber: row.matchNumber,
     stage: row.stage,
     matchDate: row.matchDate,
     status: row.status,
@@ -427,6 +468,14 @@ export async function runLiveSyncV2(
   logInfo(debug, "Candidate lookup completed", {
     requestId,
     candidateMatches: candidates.length,
+    candidates: candidates.map((candidate) => ({
+      matchId: candidate.id,
+      matchNumber: candidate.matchNumber,
+      match: `${candidate.homeCode} vs ${candidate.awayCode}`,
+      status: candidate.status ?? MATCH_STATUSES.SCHEDULED,
+      score: formatScore(candidate.homeScore, candidate.awayScore),
+      kickoff: candidate.matchDate.toISOString(),
+    })),
   });
 
   if (candidates.length === 0) {
@@ -508,8 +557,8 @@ export async function runLiveSyncV2(
 
     totalMapped += 1;
 
-    const nextStatus = matched.status;
-    const selectedScore = selectRelevantScore(matched, local.stage);
+    const nextStatus = resolveNextStatus(local.status, matched.status);
+    const selectedScore = selectRelevantScore(matched, local.stage, debug);
 
     const nextHomeScore =
       selectedScore.home !== null ? selectedScore.home : local.homeScore;
@@ -519,6 +568,21 @@ export async function runLiveSyncV2(
     const statusChanged = local.status !== nextStatus;
     const scoreChanged =
       local.homeScore !== nextHomeScore || local.awayScore !== nextAwayScore;
+
+    logInfo(debug, "Reconciling match", {
+      requestId,
+      matchId: local.id,
+      matchNumber: local.matchNumber,
+      match: `${local.homeCode} vs ${local.awayCode}`,
+      providerMatchId: matched.providerMatchId,
+      localStatus: local.status ?? MATCH_STATUSES.SCHEDULED,
+      localScore: formatScore(local.homeScore, local.awayScore),
+      providerStatus: matched.status,
+      providerScore: formatScore(selectedScore.home, selectedScore.away),
+      nextStatus,
+      nextScore: formatScore(nextHomeScore, nextAwayScore),
+      changed: statusChanged || scoreChanged,
+    });
 
     if (!statusChanged && !scoreChanged) {
       unchangedMatches += 1;
@@ -555,14 +619,16 @@ export async function runLiveSyncV2(
       predictionsRecalculated += updatedPredictions;
     }
 
-    logInfo(debug, "Match reconciled", {
+    logInfo(debug, "Match updated", {
       requestId,
       matchId: local.id,
+      matchNumber: local.matchNumber,
+      match: `${local.homeCode} vs ${local.awayCode}`,
       providerMatchId: matched.providerMatchId,
-      previousStatus: local.status,
+      previousStatus: local.status ?? MATCH_STATUSES.SCHEDULED,
+      previousScore: formatScore(local.homeScore, local.awayScore),
       nextStatus,
-      previousScore: [local.homeScore, local.awayScore],
-      nextScore: [nextHomeScore, nextAwayScore],
+      nextScore: formatScore(nextHomeScore, nextAwayScore),
       duration: matched.duration,
       stage: local.stage,
     });
