@@ -56,10 +56,6 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
     Partial<Record<MatchStage, boolean>>
   >(() => {
     const initial: Partial<Record<MatchStage, boolean>> = {};
-    const now = Date.now();
-    const firstMatch = sortedMatches[0] ?? null;
-    const shouldKeepFirstGroupOpen =
-      firstMatch !== null && now < firstMatch.matchDate.getTime();
 
     for (const stage of MATCH_STAGES) {
       const stageMatches = sortedMatches.filter(
@@ -74,11 +70,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
         (match) => match.status === "scheduled",
       );
 
-      const defaultCollapsed = allFinished || allUpcoming;
-      initial[stage] =
-        stage === "group_1" && shouldKeepFirstGroupOpen
-          ? false
-          : defaultCollapsed;
+      initial[stage] = allFinished || allUpcoming;
     }
 
     return initial;
@@ -162,7 +154,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
           </thead>
           <tbody>
             {groupedMatches.map((group) => {
-              const isCollapsed = false; // Boolean(collapsedStages[group.stage]);
+              const isCollapsed = Boolean(collapsedStages[group.stage]);
               const stageLabel = t(`predictionSheets.stages.${group.stage}`);
 
               return (
