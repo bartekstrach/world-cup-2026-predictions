@@ -224,7 +224,20 @@
     border-bottom-color: color-mix(in oklab, #10b981 20%, white);
   }
 
+  .stage-section-header.selected-highlight-row > .stage-section-header-match-cell {
+    background: var(--selected-participant-bg);
+  }
+
+  .stage-section-header.selected-highlight-row:hover
+    > .stage-section-header-match-cell {
+    background: var(--selected-participant-bg-hover);
+  }
+
+  .stage-section-header button {
+    background: transparent;
+  }
+
   .stage-section-header button:hover {
-    background: color-mix(in oklab, #10b981 16%, white);
+    background: transparent;
   }
 }

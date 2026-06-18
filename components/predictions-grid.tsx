@@ -163,12 +163,9 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                     data-no-hover="true"
                     className="stage-section-header selected-highlight-row border-b"
                   >
-                    {/* ZMIANA 1: Rozdzielenie colSpan na dwie komórki w celu zachowania poprawnej struktury siatki na małych ekranach */}
                     <td className="hidden sm:table-cell p-0 border-none"></td>
-                    <td
-                      colSpan={3 + participants.length}
-                      className="p-0 whitespace-normal"
-                    >
+                    <td className="p-0 border-none"></td>
+                    <td className="stage-section-header-match-cell sticky left-0 z-30 border-r border-slate-100 p-0 whitespace-normal w-40 min-w-40 max-w-40 md:w-80 md:min-w-80 md:max-w-80 transition-all duration-300">
                       <button
                         type="button"
                         onClick={() => toggleStage(group.stage)}
@@ -192,6 +189,10 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                         </span>
                       </button>
                     </td>
+                    <td
+                      colSpan={1 + participants.length}
+                      className="p-0 border-none"
+                    ></td>
                   </tr>
 
                   {!isCollapsed &&
