@@ -14,7 +14,10 @@ async function getData() {
       homeTeam: true,
       awayTeam: true,
     },
-    orderBy: (matches, { asc }) => [asc(matches.matchNumber)],
+    orderBy: (matches, { asc }) => [
+      asc(matches.matchDate),
+      asc(matches.matchNumber),
+    ],
   });
 
   const predictionRows = await db.query.predictions.findMany({
@@ -41,6 +44,7 @@ async function getData() {
     matches: matches.map((match) => ({
       id: match.id,
       matchNumber: match.matchNumber,
+      matchDate: match.matchDate.toISOString(),
       homeTeamCode: match.homeTeam.code,
       awayTeamCode: match.awayTeam.code,
     })),
@@ -50,6 +54,7 @@ async function getData() {
       participantName: prediction.participant.name,
       matchId: prediction.matchId,
       matchNumber: prediction.match.matchNumber,
+      matchDate: prediction.match.matchDate.toISOString(),
       homeTeamCode: prediction.match.homeTeam.code,
       awayTeamCode: prediction.match.awayTeam.code,
       homeScore: prediction.homeScore,

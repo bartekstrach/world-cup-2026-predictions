@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { getMatchTeamNames } from "@/lib/teams";
 
 interface ParticipantOption {
   id: number;
@@ -31,6 +32,7 @@ interface ParticipantOption {
 interface MatchOption {
   id: number;
   matchNumber: number;
+  matchDate: string;
   homeTeamCode: string;
   awayTeamCode: string;
 }
@@ -41,6 +43,7 @@ interface PredictionRow {
   participantName: string;
   matchId: number;
   matchNumber: number;
+  matchDate: string;
   homeTeamCode: string;
   awayTeamCode: string;
   homeScore: number;
@@ -90,7 +93,11 @@ export function PredictionsEditor({
           return a.participantId - b.participantId;
         }
 
-        return a.matchId - b.matchId;
+        const byDate =
+          new Date(a.matchDate).getTime() - new Date(b.matchDate).getTime();
+        if (byDate !== 0) return byDate;
+
+        return a.matchNumber - b.matchNumber;
       });
   }, [rows, participantFilter, matchFilter]);
 
@@ -101,6 +108,14 @@ export function PredictionsEditor({
   ).length;
 
   const shownCount = visibleRows.length;
+
+  function formatMatchLabel(homeTeamCode: string, awayTeamCode: string) {
+    return getMatchTeamNames({
+      displayFlags: true,
+      homeTeamCode,
+      awayTeamCode,
+    });
+  }
 
   function updateScore(
     id: number,
@@ -271,8 +286,7 @@ export function PredictionsEditor({
                   </SelectItem>
                   {matches.map((match) => (
                     <SelectItem key={match.id} value={match.id.toString()}>
-                      #{match.matchNumber} {match.homeTeamCode} {t("common.vs")}{" "}
-                      {match.awayTeamCode}
+                      #{match.matchNumber} {formatMatchLabel(match.homeTeamCode, match.awayTeamCode)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -337,7 +351,7 @@ export function PredictionsEditor({
                         #{row.matchNumber}
                       </TableCell>
                       <TableCell className="p-4 font-medium text-slate-700">
-                        {row.homeTeamCode} {t("common.vs")} {row.awayTeamCode}
+                        {formatMatchLabel(row.homeTeamCode, row.awayTeamCode)}
                       </TableCell>
                       <TableCell className="p-4 text-center">
                         <div className="flex items-center justify-center gap-2">
