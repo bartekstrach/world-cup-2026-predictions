@@ -3,6 +3,7 @@ import { MatchesTable } from "@/components/admin/matches-table";
 import { Trophy } from "lucide-react";
 import { AdminSectionHeader } from "@/components/admin/admin-section-header";
 import { getT } from "@/lib/i18n/server";
+import { getCurrentTournamentStage } from "@/lib/tournament-stage";
 
 async function getMatches() {
   return db.query.matches.findMany({
@@ -19,7 +20,10 @@ async function getMatches() {
 
 export default async function MatchesPage() {
   const t = await getT();
-  const matches = await getMatches();
+  const [matches, defaultStageFilter] = await Promise.all([
+    getMatches(),
+    getCurrentTournamentStage(),
+  ]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">
@@ -29,7 +33,10 @@ export default async function MatchesPage() {
         icon={Trophy}
       />
 
-      <MatchesTable matches={matches} />
+      <MatchesTable
+        matches={matches}
+        defaultStageFilter={defaultStageFilter}
+      />
     </div>
   );
 }

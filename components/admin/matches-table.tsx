@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Table,
   TableBody,
@@ -21,13 +21,27 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
+import { ChevronDownIcon } from "lucide-react";
 import {
   MATCH_STAGES,
+  MATCH_STATUSES,
   type MatchStage,
   type MatchStatus,
 } from "@/lib/constants";
 import { formatDateTime } from "@/lib/date";
 import { toFifaCode } from "@/lib/country-utils";
+import { cn } from "@/lib/utils";
+
+const STATUS_FILTER_OPTIONS: MatchStatus[] = [
+  MATCH_STATUSES.SCHEDULED,
+  MATCH_STATUSES.LIVE,
+  MATCH_STATUSES.FINISHED,
+];
+
+const DEFAULT_STATUS_FILTER: MatchStatus[] = [
+  MATCH_STATUSES.SCHEDULED,
+  MATCH_STATUSES.LIVE,
+];
 
 interface Match {
   id: number;
@@ -41,11 +55,58 @@ interface Match {
   awayTeam: { name: string; code: string };
 }
 
-export function MatchesTable({ matches }: { matches: Match[] }) {
+export function MatchesTable({
+  matches,
+  defaultStageFilter,
+}: {
+  matches: Match[];
+  defaultStageFilter: MatchStage;
+}) {
   const { t } = useTranslation();
   const [rows, setRows] = useState<Match[]>(matches);
-  const [stageFilter, setStageFilter] = useState<MatchStage | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<MatchStatus | "all">("all");
+  const [stageFilter, setStageFilter] = useState<MatchStage | "all">(
+    defaultStageFilter,
+  );
+  const [statusFilter, setStatusFilter] = useState<MatchStatus[]>(
+    DEFAULT_STATUS_FILTER,
+  );
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const statusFilterRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!statusDropdownOpen) return;
+
+    function handlePointerDown(event: MouseEvent) {
+      if (
+        statusFilterRef.current &&
+        !statusFilterRef.current.contains(event.target as Node)
+      ) {
+        setStatusDropdownOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [statusDropdownOpen]);
+
+  function toggleStatusFilter(status: MatchStatus) {
+    setStatusFilter((current) =>
+      current.includes(status)
+        ? current.filter((item) => item !== status)
+        : [...current, status],
+    );
+  }
+
+  const statusFilterLabel = useMemo(() => {
+    if (statusFilter.length === 0) {
+      return t("matchesTable.placeholders.status");
+    }
+
+    return STATUS_FILTER_OPTIONS.filter((status) =>
+      statusFilter.includes(status),
+    )
+      .map((status) => t(`matchesTable.status.${status}`))
+      .join(", ");
+  }, [statusFilter, t]);
   const [editing, setEditing] = useState<number | null>(null);
   const [homeScore, setHomeScore] = useState<number>(0);
   const [awayScore, setAwayScore] = useState<number>(0);
@@ -104,8 +165,7 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
     return rows.filter((row) => {
       const effectiveStatus = row.status ?? "scheduled";
       const matchesStage = stageFilter === "all" || row.stage === stageFilter;
-      const matchesStatus =
-        statusFilter === "all" || effectiveStatus === statusFilter;
+      const matchesStatus = statusFilter.includes(effectiveStatus);
 
       return matchesStage && matchesStatus;
     });
@@ -171,32 +231,45 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
               {t("matchesTable.filters.status")}
             </span>
-            <Select
-              value={statusFilter}
-              onValueChange={(value) =>
-                setStatusFilter(value as MatchStatus | "all")
-              }
-            >
-              <SelectTrigger className="w-44 border-slate-200 bg-white">
-                <SelectValue
-                  placeholder={t("matchesTable.placeholders.status")}
-                />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">
-                  {t("matchesTable.filters.allStatuses")}
-                </SelectItem>
-                <SelectItem value="scheduled">
-                  {t("matchesTable.status.scheduled")}
-                </SelectItem>
-                <SelectItem value="live">
-                  {t("matchesTable.status.live")}
-                </SelectItem>
-                <SelectItem value="finished">
-                  {t("matchesTable.status.finished")}
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="relative" ref={statusFilterRef}>
+              <button
+                type="button"
+                aria-expanded={statusDropdownOpen}
+                aria-haspopup="listbox"
+                onClick={() => setStatusDropdownOpen((open) => !open)}
+                className={cn(
+                  "flex h-9 w-52 items-center justify-between gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-xs transition-[color,box-shadow] outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50",
+                )}
+              >
+                <span className="line-clamp-1 text-left text-slate-700">
+                  {statusFilterLabel}
+                </span>
+                <ChevronDownIcon className="size-4 shrink-0 opacity-50" />
+              </button>
+
+              {statusDropdownOpen ? (
+                <div
+                  role="listbox"
+                  aria-multiselectable="true"
+                  className="absolute right-0 z-50 mt-1 w-52 rounded-md border border-slate-200 bg-white p-1 shadow-md"
+                >
+                  {STATUS_FILTER_OPTIONS.map((status) => (
+                    <label
+                      key={status}
+                      className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-slate-700 hover:bg-slate-50"
+                    >
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 rounded border-slate-300 accent-[#10b981]"
+                        checked={statusFilter.includes(status)}
+                        onChange={() => toggleStatusFilter(status)}
+                      />
+                      {t(`matchesTable.status.${status}`)}
+                    </label>
+                  ))}
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>
