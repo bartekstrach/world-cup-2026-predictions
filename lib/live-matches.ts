@@ -11,6 +11,7 @@ import {
   LIVE_MATCHES_TIMEOUT_MS,
   MATCH_STATUSES,
 } from "@/lib/constants";
+import { toFifaCode } from "@/lib/country-utils";
 import { updateMatchPredictions } from "@/lib/scoring";
 import { liveSyncRuntimeStates, matches } from "@/lib/schema";
 import type { MatchStatus } from "@/lib/constants";
@@ -140,18 +141,6 @@ type LiveRuntimeState = {
 const LIVE_POLL_INTERVAL_MS = 30 * 1000;
 const HALFTIME_PAUSE_MS = 15 * 60 * 1000;
 const LOG_PREFIX = "🍎 [live-matches]";
-const FOOTBALL_DATA_TO_LOCAL_TEAM_CODE: Record<string, string> = {
-  DEU: "GER",
-  HRV: "CRO",
-  CHE: "SUI",
-  NLD: "NED",
-  PRT: "POR",
-  SAU: "KSA",
-  ZAF: "RSA",
-  URY: "URU",
-  DZA: "ALG",
-};
-
 function normalizeTeamCode(value: string | null | undefined): string | null {
   if (!value) {
     return null;
@@ -162,7 +151,7 @@ function normalizeTeamCode(value: string | null | undefined): string | null {
     return null;
   }
 
-  return FOOTBALL_DATA_TO_LOCAL_TEAM_CODE[normalized] ?? normalized;
+  return toFifaCode(normalized);
 }
 
 function logDebug(

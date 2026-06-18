@@ -28,6 +28,14 @@ const FIFA_TO_ISO_ALPHA3: Record<string, string> = {
   ALG: "DZA",
 };
 
+const ISO_TO_FIFA_ALPHA3 = Object.fromEntries(
+  Object.entries(FIFA_TO_ISO_ALPHA3).map(([fifa, iso]) => [iso, fifa]),
+) as Record<string, string>;
+
+export function toFifaCode(teamCode: string): string {
+  return ISO_TO_FIFA_ALPHA3[teamCode.toUpperCase()] || teamCode;
+}
+
 const PL_SHORT_NAMES: Record<string, string> = {
   ZAF: "RPA",
   BIH: "Bośnia i Herc.",

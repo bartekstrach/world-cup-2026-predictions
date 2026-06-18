@@ -1,20 +1,5 @@
 import { TEAMS_SEPARATOR } from "./constants";
-import { getCountryFlag, getCountryName } from "./country-utils";
-
-const ISO_TO_FIFA_CODE: Record<string, string> = {
-  DEU: "GER",
-  HRV: "CRO",
-  CHE: "SUI",
-  NLD: "NED",
-  PRT: "POR",
-  SAU: "KSA",
-  ZAF: "RSA",
-  URY: "URU",
-  DZA: "ALG",
-};
-
-const getDisplayTeamCode = (teamCode: string) =>
-  ISO_TO_FIFA_CODE[teamCode.toUpperCase()] || teamCode;
+import { getCountryFlag, getCountryName, toFifaCode } from "./country-utils";
 
 export const getShortMatchTeamNames = ({
   displayFlags,
@@ -26,8 +11,8 @@ export const getShortMatchTeamNames = ({
   awayTeamCode: string;
 }) => {
   const chunks: string[] = [];
-  const displayHomeTeamCode = getDisplayTeamCode(homeTeamCode);
-  const displayAwayTeamCode = getDisplayTeamCode(awayTeamCode);
+  const displayHomeTeamCode = toFifaCode(homeTeamCode);
+  const displayAwayTeamCode = toFifaCode(awayTeamCode);
 
   if (displayFlags) chunks.push(getCountryFlag(homeTeamCode));
   chunks.push(displayHomeTeamCode);

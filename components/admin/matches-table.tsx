@@ -27,6 +27,7 @@ import {
   type MatchStatus,
 } from "@/lib/constants";
 import { formatDateTime } from "@/lib/date";
+import { toFifaCode } from "@/lib/country-utils";
 
 interface Match {
   id: number;
@@ -243,7 +244,8 @@ export function MatchesTable({ matches }: { matches: Match[] }) {
                   {t(`predictionSheets.stages.${match.stage}`)}
                 </TableCell>
                 <TableCell className="font-medium text-slate-700 p-4">
-                  {match.homeTeam.code} {t("common.vs")} {match.awayTeam.code}
+                  {toFifaCode(match.homeTeam.code)} {t("common.vs")}{" "}
+                  {toFifaCode(match.awayTeam.code)}
                 </TableCell>
                 <TableCell className="text-center p-4">
                   {editing === match.id ? (

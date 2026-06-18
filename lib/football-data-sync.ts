@@ -8,6 +8,7 @@ import {
   type MatchStage,
   type MatchStatus,
 } from "@/lib/constants";
+import { toFifaCode } from "@/lib/country-utils";
 import { updateMatchPredictions } from "@/lib/scoring";
 
 /**
@@ -44,20 +45,6 @@ const KNOCKOUT_STAGES: ReadonlySet<MatchStage> = new Set<MatchStage>([
   "semi",
   "final",
 ]);
-
-// Lokalna konwersja kodów: football-data zwraca kody ISO (tla/code), a aplikacja
-// używa kodów FIFA. Mapujemy tylko te, które się różnią.
-const FOOTBALL_DATA_TO_LOCAL_TEAM_CODE: Record<string, string> = {
-  DEU: "GER",
-  HRV: "CRO",
-  CHE: "SUI",
-  NLD: "NED",
-  PRT: "POR",
-  SAU: "KSA",
-  ZAF: "RSA",
-  URY: "URU",
-  DZA: "ALG",
-};
 
 type FootballDataScoreTime = {
   home?: number | null;
@@ -159,7 +146,7 @@ function normalizeTeamCode(value: string | null | undefined): string | null {
   if (!value) return null;
   const normalized = value.trim().toUpperCase();
   if (!normalized) return null;
-  return FOOTBALL_DATA_TO_LOCAL_TEAM_CODE[normalized] ?? normalized;
+  return toFifaCode(normalized);
 }
 
 function normalizeStatus(value: unknown): MatchStatus {
