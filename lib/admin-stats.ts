@@ -1,7 +1,6 @@
 import { db } from "@/lib/db";
 import { MATCH_STATUSES } from "@/lib/constants";
 import { sql } from "drizzle-orm";
-import { getWarsawCountdownParts } from "@/lib/date";
 
 type BaseStatsRow = {
   total_matches: string | number;
@@ -93,16 +92,8 @@ export type AdminStats = {
     nextMissing: number;
     nextTotal: number;
   }>;
-  nextMatchCountdown: {
-    days: number;
-    hours: number;
-    minutes: number;
-  } | null;
-  nextStageCountdown: {
-    days: number;
-    hours: number;
-    minutes: number;
-  } | null;
+  nextMatchCountdownTarget: Date | null;
+  nextStageCountdownTarget: Date | null;
 };
 
 export async function getAdminStats(): Promise<AdminStats> {
@@ -121,8 +112,8 @@ export async function getAdminStats(): Promise<AdminStats> {
     hallOfShameCurrentStage: null,
     hallOfShameNextStage: null,
     hallOfShame: [],
-    nextMatchCountdown: null,
-    nextStageCountdown: null,
+    nextMatchCountdownTarget: null,
+    nextStageCountdownTarget: null,
   };
 
   try {
@@ -345,9 +336,6 @@ export async function getAdminStats(): Promise<AdminStats> {
     const nextMatchDate = nextEventRows[0]?.match_date
       ? new Date(nextEventRows[0].match_date)
       : null;
-    const nextMatchCountdown = nextMatchDate
-      ? getWarsawCountdownParts({ targetDate: nextMatchDate })
-      : null;
 
     const currentStage = hallOfShameCurrentStage;
     const nextStageDate =
@@ -355,8 +343,9 @@ export async function getAdminStats(): Promise<AdminStats> {
         ? nextEventRows.find((row) => row.stage !== currentStage)?.match_date
         : nextEventRows[0]?.match_date;
 
-    const nextStageCountdown = nextStageDate
-      ? getWarsawCountdownParts({ targetDate: new Date(nextStageDate) })
+    const nextMatchCountdownTarget = nextMatchDate;
+    const nextStageCountdownTarget = nextStageDate
+      ? new Date(nextStageDate)
       : null;
 
     return {
@@ -395,8 +384,8 @@ export async function getAdminStats(): Promise<AdminStats> {
         nextMissing: Number(row.next_missing),
         nextTotal: Number(row.next_total),
       })),
-      nextMatchCountdown,
-      nextStageCountdown,
+      nextMatchCountdownTarget,
+      nextStageCountdownTarget,
     };
   } catch (error) {
     console.error("Failed to load admin stats", error);

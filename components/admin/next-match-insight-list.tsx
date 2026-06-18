@@ -1,6 +1,6 @@
 import { Calendar } from "lucide-react";
 
-import { formatDateTime } from "@/lib/date";
+import { KickoffDateLabel } from "@/components/kickoff-date-label";
 import { getMatchTeamNames } from "@/lib/teams";
 import { getT } from "@/lib/i18n/server";
 
@@ -52,11 +52,7 @@ export async function NextMatchInsightList({
                 awayTeamCode: match.awayTeamCode,
               })}
             </div>
-            <p className="text-sm text-slate-500 font-mono">
-              {t("admin.dashboard.kickoff", {
-                date: formatDateTime({ date: match.matchDate }),
-              })}
-            </p>
+            <KickoffDateLabel date={match.matchDate} />
           </div>
         ))}
       </div>

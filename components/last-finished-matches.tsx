@@ -1,15 +1,13 @@
-import { formatDateTime, getShortWeekday } from "@/lib/date";
 import {
   getFinishedMatchesByMatchDate,
   getLastCompletedMatchDate,
 } from "@/lib/scoring";
-import { getT } from "@/lib/i18n/server";
 import { getMatchTeamNames } from "@/lib/teams";
+import { LastFinishedMatchesText } from "@/components/last-finished-matches-text";
 
 export const revalidate = 0;
 
 export async function LastFinishedMatches() {
-  const t = await getT();
   const latestCompletedDate = await getLastCompletedMatchDate();
   if (!latestCompletedDate) return null;
 
@@ -28,19 +26,11 @@ export async function LastFinishedMatches() {
     )
     .join(" / ");
 
-  const formattedMatchDate = `${getShortWeekday({
-    date: latestCompletedDate,
-  })} ${formatDateTime({
-    date: latestCompletedDate,
-  })}`;
-
   return (
-    <>
-      {t("lastFinishedMatches.after", {
-        matchesSummary,
-        formattedMatchDate,
-        count: finishedMatches.length,
-      })}
-    </>
+    <LastFinishedMatchesText
+      matchesSummary={matchesSummary}
+      matchDate={latestCompletedDate}
+      count={finishedMatches.length}
+    />
   );
 }

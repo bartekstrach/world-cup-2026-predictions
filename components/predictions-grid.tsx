@@ -209,11 +209,14 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
 
                         {/* Date */}
                         <td className="text-slate-500 whitespace-nowrap text-xs sm:text-sm p-2 sm:p-4 align-middle">
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-2">
+                          <div
+                            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-2"
+                            suppressHydrationWarning
+                          >
                             <span>
                               {getShortWeekday({ date: match.matchDate })}
                             </span>
-                            <time>
+                            <time dateTime={match.matchDate.toISOString()}>
                               {formatDateTime({ date: match.matchDate })}
                             </time>
                           </div>

@@ -104,11 +104,13 @@ export function PredictionSheetsLinks({ data }: PredictionSheetsLinksProps) {
                         {entry.participantName}
                       </TableCell>
                       <TableCell className="p-4 text-slate-500 text-sm whitespace-nowrap font-sans">
-                        {(entry.updatedAt ?? entry.createdAt)
-                          ? formatDateTime({
-                              date: entry.updatedAt ?? entry.createdAt!,
-                            })
-                          : "-"}
+                        <span suppressHydrationWarning>
+                          {(entry.updatedAt ?? entry.createdAt)
+                            ? formatDateTime({
+                                date: entry.updatedAt ?? entry.createdAt!,
+                              })
+                            : "-"}
+                        </span>
                       </TableCell>
                       <TableCell className="p-4 text-right whitespace-nowrap">
                         <div className="inline-flex items-center gap-3">

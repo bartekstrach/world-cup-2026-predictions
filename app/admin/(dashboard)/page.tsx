@@ -136,8 +136,8 @@ export default async function AdminDashboard() {
         </Card>
 
         <NextEventCountersCard
-          nextStageCountdown={stats.nextStageCountdown}
-          nextMatchCountdown={stats.nextMatchCountdown}
+          nextMatchTargetDate={stats.nextMatchCountdownTarget}
+          nextStageTargetDate={stats.nextStageCountdownTarget}
         />
 
         <HallOfShameCard

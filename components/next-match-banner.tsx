@@ -1,14 +1,16 @@
+"use client";
+
 import type { NextMatchBannerData } from "@/lib/types";
-import { formatDateTime, getShortWeekday } from "@/lib/date";
+import { formatWeekdayDateTime } from "@/lib/date";
 import { getMatchTeamNames } from "@/lib/teams";
-import { getT } from "@/lib/i18n/server";
+import { useTranslation } from "react-i18next";
 
 interface NextMatchBannerProps {
   data: NextMatchBannerData;
 }
 
-export async function NextMatchBanner({ data }: NextMatchBannerProps) {
-  const t = await getT();
+export function NextMatchBanner({ data }: NextMatchBannerProps) {
+  const { t } = useTranslation();
   const teamsLabel = data.matches
     .map((match) =>
       getMatchTeamNames({
@@ -19,14 +21,15 @@ export async function NextMatchBanner({ data }: NextMatchBannerProps) {
     )
     .join(` ${t("common.and")} `);
 
-  const formattedMatchDate = `${getShortWeekday({
+  const formattedMatchDate = formatWeekdayDateTime({
     date: data.matchDate,
-  })} ${formatDateTime({
-    date: data.matchDate,
-  })}`;
+  });
 
   return (
-    <p className="text-[#10b981] font-medium mt-1 text-sm sm:text-base">
+    <p
+      className="text-[#10b981] font-medium mt-1 text-sm sm:text-base"
+      suppressHydrationWarning
+    >
       {t("nextMatchBanner.label", {
         teamsLabel,
         formattedMatchDate,

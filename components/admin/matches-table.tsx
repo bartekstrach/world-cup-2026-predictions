@@ -309,8 +309,14 @@ export function MatchesTable({
                   {match.matchNumber}
                 </TableCell>
                 <TableCell className="text-center p-4">
-                  <time className="font-mono text-slate-600 whitespace-nowrap">
-                    {formatDateTime({ date: new Date(match.matchDate) })}
+                  <time
+                    dateTime={new Date(match.matchDate).toISOString()}
+                    suppressHydrationWarning
+                    className="font-mono text-slate-600 whitespace-nowrap"
+                  >
+                    {formatDateTime({
+                      date: new Date(match.matchDate),
+                    })}
                   </time>
                 </TableCell>
                 <TableCell className="font-medium text-slate-600 p-4 whitespace-nowrap">

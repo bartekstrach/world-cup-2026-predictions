@@ -1,5 +1,3 @@
-const WARSAW_TIME_ZONE = "Europe/Warsaw";
-
 export const getShortWeekday = ({
   date,
   locale = "pl-PL",
@@ -10,7 +8,6 @@ export const getShortWeekday = ({
   options?: Intl.DateTimeFormatOptions;
 }) => {
   const weekday = new Intl.DateTimeFormat(locale, {
-    timeZone: WARSAW_TIME_ZONE,
     weekday: "short",
     ...options,
   })
@@ -22,9 +19,14 @@ export const getShortWeekday = ({
   return weekday;
 };
 
-export const formatDateTime = ({ date }: { date: Date }) => {
-  const parts = new Intl.DateTimeFormat("pl-PL", {
-    timeZone: WARSAW_TIME_ZONE,
+export const formatDateTime = ({
+  date,
+  locale = "pl-PL",
+}: {
+  date: Date;
+  locale?: Intl.LocalesArgument;
+}) => {
+  const parts = new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",
@@ -37,38 +39,24 @@ export const formatDateTime = ({ date }: { date: Date }) => {
   return `${map.day}.${map.month} ${map.hour}:${map.minute}`;
 };
 
-const toWarsawTimestamp = (date: Date) => {
-  const parts = new Intl.DateTimeFormat("en-GB", {
-    timeZone: WARSAW_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  }).formatToParts(date);
-
-  const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-
-  return Date.UTC(
-    Number(map.year),
-    Number(map.month) - 1,
-    Number(map.day),
-    Number(map.hour),
-    Number(map.minute),
-    Number(map.second),
-  );
+export const formatWeekdayDateTime = ({
+  date,
+  locale = "pl-PL",
+}: {
+  date: Date;
+  locale?: Intl.LocalesArgument;
+}) => {
+  return `${getShortWeekday({ date, locale })} ${formatDateTime({ date, locale })}`;
 };
 
-export const getWarsawCountdownParts = ({
+export const getCountdownParts = ({
   targetDate,
   now = new Date(),
 }: {
   targetDate: Date;
   now?: Date;
 }) => {
-  const diffMs = toWarsawTimestamp(targetDate) - toWarsawTimestamp(now);
+  const diffMs = targetDate.getTime() - now.getTime();
 
   if (diffMs <= 0) {
     return null;
