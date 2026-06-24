@@ -40,10 +40,14 @@
   },
   "lastFinishedMatches": {
     "after_one": "Po meczu {{matchesSummary}} ({{formattedMatchDate}})",
+    "after_few": "Po meczach {{matchesSummary}} ({{formattedMatchDate}})",
+    "after_many": "Po meczach {{matchesSummary}} ({{formattedMatchDate}})",
     "after_other": "Po meczach {{matchesSummary}} ({{formattedMatchDate}})"
   },
   "nextMatchBanner": {
     "label_one": "Następny mecz: {{teamsLabel}} ({{formattedMatchDate}})",
+    "label_few": "Następne mecze: {{teamsLabel}} ({{formattedMatchDate}})",
+    "label_many": "Następne mecze: {{teamsLabel}} ({{formattedMatchDate}})",
     "label_other": "Następne mecze: {{teamsLabel}} ({{formattedMatchDate}})"
   },
   "leaderboard": {
@@ -77,6 +81,9 @@
       "date": "Data",
       "match": "Mecz",
       "result": "Wynik"
+    },
+    "actions": {
+      "scrollToFirstNotFinished": "Przewiń do pierwszego aktywnego meczu"
     },
     "stageHeader": {
       "matches": "{{count}} meczów",
@@ -134,6 +141,7 @@
       "upcomingStage": "Nadchodząca zmiana etapu: {{stage}}",
       "noUpcomingTitle": "Brak zaplanowanych nadchodzących meczów",
       "noUpcomingDescription": "Dodaj lub zaplanuj kolejne mecze, aby zobaczyć najbliższy termin.",
+      "quickActions": "Szybkie akcje",
       "actions": {
         "updateResults": "Aktualizuj wyniki meczów w sekcji {{section}}",
         "addParticipants": "Dodawaj uczestników w sekcji {{section}}",
