@@ -57,7 +57,8 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
   >(() => {
     const initial: Partial<Record<MatchStage, boolean>> = {};
 
-    for (const stage of MATCH_STAGES) {
+    for (let stageIndex = 0; stageIndex < MATCH_STAGES.length; stageIndex++) {
+      const stage = MATCH_STAGES[stageIndex];
       const stageMatches = sortedMatches.filter(
         (match) => match.stage === stage,
       );
@@ -70,7 +71,26 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
         (match) => match.status === "scheduled",
       );
 
-      initial[stage] = allFinished || allUpcoming;
+      if (allFinished) {
+        initial[stage] = true;
+        continue;
+      }
+
+      if (allUpcoming) {
+        const previousStage =
+          stageIndex > 0 ? MATCH_STAGES[stageIndex - 1] : undefined;
+        const previousMatches = previousStage
+          ? sortedMatches.filter((match) => match.stage === previousStage)
+          : [];
+        const previousAllFinished =
+          previousMatches.length > 0 &&
+          previousMatches.every((match) => match.status === "finished");
+
+        initial[stage] = !previousAllFinished;
+        continue;
+      }
+
+      initial[stage] = false;
     }
 
     return initial;
