@@ -78,9 +78,6 @@
       "match": "Match",
       "result": "Result"
     },
-    "actions": {
-      "scrollToFirstNotFinished": "Scroll to first active match"
-    },
     "stageHeader": {
       "matches": "{{count}} matches",
       "expand": "Expand {{stage}}",

@@ -82,9 +82,6 @@
       "match": "Mecz",
       "result": "Wynik"
     },
-    "actions": {
-      "scrollToFirstNotFinished": "Przewiń do pierwszego aktywnego meczu"
-    },
     "stageHeader": {
       "matches": "{{count}} meczów",
       "expand": "Rozwiń {{stage}}",
