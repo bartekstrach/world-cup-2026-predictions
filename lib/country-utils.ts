@@ -27,6 +27,7 @@ const FIFA_TO_ISO_ALPHA3: Record<string, string> = {
   URU: "URY",
   ALG: "DZA",
   HAI: "HTI",
+  PAR: "PRY",
 };
 
 const ISO_TO_FIFA_ALPHA3 = Object.fromEntries(
