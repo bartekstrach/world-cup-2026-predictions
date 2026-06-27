@@ -56,6 +56,13 @@ export const LIVE_SYNC_FREQUENCY_MINUTES = Number(
   process.env.LIVE_SYNC_FREQUENCY_MINUTES ?? "1",
 );
 
+// How long after a match is marked finished the v2 sync keeps re-verifying its
+// score against the provider's authoritative FINISHED result (catches late
+// VAR-disallowed goals corrected 1-2 min after the final whistle).
+export const LIVE_FINISHED_RECHECK_MINUTES = Number(
+  process.env.LIVE_FINISHED_RECHECK_MINUTES ?? "10",
+);
+
 export const CRON_SYNC_SECRET = process.env.CRON_SYNC_SECRET ?? "";
 
 export type MatchStatus = (typeof MATCH_STATUSES)[keyof typeof MATCH_STATUSES];

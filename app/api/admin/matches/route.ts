@@ -47,6 +47,10 @@ export async function PATCH(request: NextRequest) {
       homeScore,
       awayScore,
       status,
+      // Manual admin edits are authoritative: clearing finishedAt opts the
+      // match out of the v2 post-finalization recheck so the provider can
+      // never clobber a hand-corrected score.
+      finishedAt: null,
     })
     .where(eq(matches.id, matchId));
 

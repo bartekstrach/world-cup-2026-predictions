@@ -13,6 +13,21 @@ export const formatScore = ({
   awayScore?: number;
 }): string => [homeScore ?? "-", SCORE_SEPARATOR, awayScore ?? "-"].join("");
 
+/**
+ * Merge a provider-reported score side onto the local score.
+ *
+ * Rule: a concrete numeric value from the provider always wins (including a
+ * downgrade to a lower number or 0, e.g. a VAR-disallowed goal), while a
+ * `null` from the provider (transient gap during a VAR review) keeps the
+ * locally stored value so we never wipe a real score.
+ */
+export function reconcileScore(
+  localScore: number | null,
+  providerScore: number | null,
+): number | null {
+  return providerScore !== null ? providerScore : localScore;
+}
+
 export function calculatePoints(
   predictedHome: number,
   predictedAway: number,

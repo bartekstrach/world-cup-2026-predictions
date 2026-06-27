@@ -56,6 +56,7 @@ export const matches = pgTable(
     stage: varchar("stage", { length: 50 }).$type<MatchStage>().notNull(), // group_1, group_2, group_3, round_32, round_16, quarter, semi, final
     matchDate: timestamp("match_date").notNull(),
     status: text("status").$type<MatchStatus>(),
+    finishedAt: timestamp("finished_at"),
     matchNumber: integer("match_number").notNull(),
   },
   (table) => ({

@@ -1,8 +1,9 @@
 import { revalidatePath, unstable_noStore as noStore } from "next/cache";
-import { and, eq, gte, lte, ne } from "drizzle-orm";
+import { and, eq, gte, lte, ne, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { matches } from "@/lib/schema";
 import {
+  LIVE_FINISHED_RECHECK_MINUTES,
   LIVE_MATCHES_API_KEY,
   MATCH_STATUSES,
   type MatchStage,
@@ -10,6 +11,7 @@ import {
 } from "@/lib/constants";
 import { toFifaCode } from "@/lib/country-utils";
 import { updateMatchPredictions } from "@/lib/scoring";
+import { reconcileScore } from "@/lib/scoring-utils";
 
 /**
  * V2 live sync (stateless full reconciliation).
@@ -345,6 +347,7 @@ type LocalMatch = {
   stage: MatchStage;
   matchDate: Date;
   status: MatchStatus | null;
+  finishedAt: Date | null;
   homeScore: number | null;
   awayScore: number | null;
   homeCode: string;
@@ -424,15 +427,26 @@ export async function runLiveSyncV2(
     ...extra,
   });
 
-  // Kandydaci: mecze niezakończone z kick-offem w oknie [-6h, +15min].
+  // Kandydaci: mecze niezakończone z kick-offem w oknie [-6h, +15min] ORAZ
+  // mecze świeżo zakończone w oknie rechecku (do wychwycenia korekt VAR
+  // przychodzących 1-2 min po końcowym gwizdku).
   const lookbackStart = new Date(now.getTime() - ACTIVE_LOOKBACK_MS);
   const prematchEnd = new Date(now.getTime() + ACTIVE_PREMATCH_MS);
+  const recheckStart = new Date(
+    now.getTime() - LIVE_FINISHED_RECHECK_MINUTES * 60 * 1000,
+  );
 
   const candidateRows = await db.query.matches.findMany({
-    where: and(
-      ne(matches.status, MATCH_STATUSES.FINISHED),
-      gte(matches.matchDate, lookbackStart),
-      lte(matches.matchDate, prematchEnd),
+    where: or(
+      and(
+        ne(matches.status, MATCH_STATUSES.FINISHED),
+        gte(matches.matchDate, lookbackStart),
+        lte(matches.matchDate, prematchEnd),
+      ),
+      and(
+        eq(matches.status, MATCH_STATUSES.FINISHED),
+        gte(matches.finishedAt, recheckStart),
+      ),
     ),
     with: {
       homeTeam: { columns: { code: true } },
@@ -446,6 +460,7 @@ export async function runLiveSyncV2(
     stage: row.stage,
     matchDate: row.matchDate,
     status: row.status,
+    finishedAt: row.finishedAt,
     homeScore: row.homeScore,
     awayScore: row.awayScore,
     homeCode: normalizeTeamCode(row.homeTeam.code) ?? "",
@@ -544,17 +559,54 @@ export async function runLiveSyncV2(
 
     totalMapped += 1;
 
+    // Recheck branch: a locally finished match within the post-finalization
+    // window. Only re-verify its score against an authoritative FINISHED
+    // provider snapshot; never act on a lagging non-final snapshot and never
+    // un-finish the match.
+    const isFinishedRecheck = local.status === MATCH_STATUSES.FINISHED;
+    if (isFinishedRecheck && matched.status !== MATCH_STATUSES.FINISHED) {
+      unchangedMatches += 1;
+      logInfo(debug, "Skipping recheck: provider not finished yet", {
+        requestId,
+        matchId: local.id,
+        matchNumber: local.matchNumber,
+        match: `${local.homeCode} vs ${local.awayCode}`,
+        providerMatchId: matched.providerMatchId,
+        providerStatus: matched.status,
+      });
+      continue;
+    }
+
     const nextStatus = resolveNextStatus(local.status, matched.status);
     const selectedScore = selectRelevantScore(matched, local.stage, debug);
 
-    const nextHomeScore =
-      selectedScore.home !== null ? selectedScore.home : local.homeScore;
-    const nextAwayScore =
-      selectedScore.away !== null ? selectedScore.away : local.awayScore;
+    const nextHomeScore = reconcileScore(local.homeScore, selectedScore.home);
+    const nextAwayScore = reconcileScore(local.awayScore, selectedScore.away);
 
     const statusChanged = local.status !== nextStatus;
     const scoreChanged =
       local.homeScore !== nextHomeScore || local.awayScore !== nextAwayScore;
+
+    const scoreDecreased =
+      (local.homeScore !== null &&
+        nextHomeScore !== null &&
+        nextHomeScore < local.homeScore) ||
+      (local.awayScore !== null &&
+        nextAwayScore !== null &&
+        nextAwayScore < local.awayScore);
+
+    if (scoreChanged && scoreDecreased) {
+      logInfo(debug, "Score decreased (possible VAR correction)", {
+        requestId,
+        matchId: local.id,
+        matchNumber: local.matchNumber,
+        match: `${local.homeCode} vs ${local.awayCode}`,
+        providerMatchId: matched.providerMatchId,
+        localStatus: local.status ?? MATCH_STATUSES.SCHEDULED,
+        previousScore: formatScore(local.homeScore, local.awayScore),
+        nextScore: formatScore(nextHomeScore, nextAwayScore),
+      });
+    }
 
     logInfo(debug, "Reconciling match", {
       requestId,
@@ -576,21 +628,25 @@ export async function runLiveSyncV2(
       continue;
     }
 
+    const becameFinished =
+      nextStatus === MATCH_STATUSES.FINISHED &&
+      local.status !== MATCH_STATUSES.FINISHED;
+
     await db
       .update(matches)
       .set({
         homeScore: nextHomeScore,
         awayScore: nextAwayScore,
         status: nextStatus,
+        // Stamp finalization time only on the live->finished transition so the
+        // post-finalization recheck window is measured from the original
+        // finish; recheck-branch corrections must not extend it.
+        ...(becameFinished ? { finishedAt: now } : {}),
       })
       .where(eq(matches.id, local.id));
 
     updatedMatches += 1;
     updatedMatchIds.push(local.id);
-
-    const becameFinished =
-      nextStatus === MATCH_STATUSES.FINISHED &&
-      local.status !== MATCH_STATUSES.FINISHED;
 
     if (becameFinished) {
       finalizedMatches += 1;
