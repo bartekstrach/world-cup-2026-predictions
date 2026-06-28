@@ -85,6 +85,7 @@ type NormalizedProviderMatch = {
   homeCode: string | null;
   awayCode: string | null;
   kickoff: Date | null;
+  rawStatus: string;
   status: MatchStatus;
   duration: string | null;
   regularTime: { home: number | null; away: number | null };
@@ -213,11 +214,15 @@ function parseKickoff(value: string | null | undefined): Date | null {
 function normalizeProviderMatch(
   raw: FootballDataRawMatch,
 ): NormalizedProviderMatch {
+  const rawStatus =
+    typeof raw.status === "string" ? raw.status.trim().toUpperCase() : "";
+
   return {
     providerMatchId: String(raw.id ?? "").trim() || "unknown",
     homeCode: normalizeTeamCode(raw.homeTeam?.tla ?? raw.homeTeam?.code),
     awayCode: normalizeTeamCode(raw.awayTeam?.tla ?? raw.awayTeam?.code),
     kickoff: parseKickoff(raw.utcDate),
+    rawStatus,
     status: normalizeStatus(raw.status),
     duration:
       typeof raw.score?.duration === "string"
@@ -354,51 +359,102 @@ type LocalMatch = {
   awayCode: string;
 };
 
-/**
- * Wybiera wynik istotny dla naszego turnieju:
- * - dla LIVE preferuje regularTime (szybsza aktualizacja in-play),
- * - faza pucharowa w dogrywce/karnych -> wynik po 90 min (regularTime),
- * - w pozostałych przypadkach -> fullTime (lub regularTime jako fallback).
- */
-function selectRelevantScore(
-  incoming: NormalizedProviderMatch,
-  stage: MatchStage,
-  debug: boolean,
-): { home: number | null; away: number | null } {
-  if (incoming.status === MATCH_STATUSES.LIVE) {
-    const score = {
-      home: incoming.regularTime.home ?? incoming.fullTime.home ?? null,
-      away: incoming.regularTime.away ?? incoming.fullTime.away ?? null,
+type OutcomeSkipReason =
+  | "awaiting-regular-time"
+  | "postponed-cancelled"
+  | "suspended-frozen";
+
+type ResolveOutcomeResult =
+  | {
+      kind: "skip";
+      reason: OutcomeSkipReason;
+    }
+  | {
+      kind: "apply";
+      nextStatus: MatchStatus;
+      score: { home: number | null; away: number | null };
     };
 
-    logInfo(debug, "selectRelevantScore: LIVE", score);
-
-    return score;
-  }
-
-  const isKnockout = KNOCKOUT_STAGES.has(stage);
-  const wentBeyondRegular =
-    incoming.duration === "EXTRA_TIME" ||
-    incoming.duration === "PENALTY_SHOOTOUT";
-
+function resolveOutcome(
+  local: LocalMatch,
+  incoming: NormalizedProviderMatch,
+): ResolveOutcomeResult {
+  const rawStatus = incoming.rawStatus;
+  const isKnockout = KNOCKOUT_STAGES.has(local.stage);
   const hasRegular =
     incoming.regularTime.home !== null && incoming.regularTime.away !== null;
   const hasFull =
     incoming.fullTime.home !== null && incoming.fullTime.away !== null;
 
-  if (isKnockout && wentBeyondRegular && hasRegular) {
-    return incoming.regularTime;
+  if (rawStatus === "SUSPENDED") {
+    return { kind: "skip", reason: "suspended-frozen" };
   }
 
-  if (hasFull) {
-    return incoming.fullTime;
+  if (rawStatus === "POSTPONED" || rawStatus === "CANCELLED") {
+    return { kind: "skip", reason: "postponed-cancelled" };
   }
 
-  if (hasRegular) {
-    return incoming.regularTime;
+  if (
+    isKnockout &&
+    (rawStatus === "EXTRA_TIME" || rawStatus === "PENALTY_SHOOTOUT")
+  ) {
+    if (!hasRegular) {
+      return { kind: "skip", reason: "awaiting-regular-time" };
+    }
+
+    return {
+      kind: "apply",
+      nextStatus: MATCH_STATUSES.FINISHED,
+      score: incoming.regularTime,
+    };
   }
 
-  return { home: null, away: null };
+  if (rawStatus === "FINISHED" || rawStatus === "AWARDED") {
+    const wentBeyondRegular =
+      incoming.duration === "EXTRA_TIME" ||
+      incoming.duration === "PENALTY_SHOOTOUT";
+
+    if (isKnockout && wentBeyondRegular) {
+      if (!hasRegular) {
+        return { kind: "skip", reason: "awaiting-regular-time" };
+      }
+
+      return {
+        kind: "apply",
+        nextStatus: MATCH_STATUSES.FINISHED,
+        score: incoming.regularTime,
+      };
+    }
+
+    return {
+      kind: "apply",
+      nextStatus: MATCH_STATUSES.FINISHED,
+      score: hasFull
+        ? incoming.fullTime
+        : hasRegular
+          ? incoming.regularTime
+          : { home: null, away: null },
+    };
+  }
+
+  if (
+    ["IN_PLAY", "PAUSED", "EXTRA_TIME", "PENALTY_SHOOTOUT"].includes(rawStatus)
+  ) {
+    return {
+      kind: "apply",
+      nextStatus: resolveNextStatus(local.status, MATCH_STATUSES.LIVE),
+      score: {
+        home: incoming.regularTime.home ?? incoming.fullTime.home ?? null,
+        away: incoming.regularTime.away ?? incoming.fullTime.away ?? null,
+      },
+    };
+  }
+
+  return {
+    kind: "apply",
+    nextStatus: resolveNextStatus(local.status, MATCH_STATUSES.SCHEDULED),
+    score: { home: null, away: null },
+  };
 }
 
 export async function runLiveSyncV2(
@@ -559,26 +615,42 @@ export async function runLiveSyncV2(
 
     totalMapped += 1;
 
-    // Recheck branch: a locally finished match within the post-finalization
-    // window. Only re-verify its score against an authoritative FINISHED
-    // provider snapshot; never act on a lagging non-final snapshot and never
-    // un-finish the match.
-    const isFinishedRecheck = local.status === MATCH_STATUSES.FINISHED;
-    if (isFinishedRecheck && matched.status !== MATCH_STATUSES.FINISHED) {
+    const outcome = resolveOutcome(local, matched);
+    if (outcome.kind === "skip") {
       unchangedMatches += 1;
-      logInfo(debug, "Skipping recheck: provider not finished yet", {
+      logInfo(debug, "Skipping reconciliation for match", {
         requestId,
         matchId: local.id,
         matchNumber: local.matchNumber,
         match: `${local.homeCode} vs ${local.awayCode}`,
         providerMatchId: matched.providerMatchId,
+        providerRawStatus: matched.rawStatus,
         providerStatus: matched.status,
+        reason: outcome.reason,
       });
       continue;
     }
 
-    const nextStatus = resolveNextStatus(local.status, matched.status);
-    const selectedScore = selectRelevantScore(matched, local.stage, debug);
+    const nextStatus = outcome.nextStatus;
+    const selectedScore = outcome.score;
+
+    // Never un-finish a locally finished match during the recheck window.
+    if (
+      local.status === MATCH_STATUSES.FINISHED &&
+      nextStatus !== MATCH_STATUSES.FINISHED
+    ) {
+      unchangedMatches += 1;
+      logInfo(debug, "Skipping recheck: outcome would un-finish match", {
+        requestId,
+        matchId: local.id,
+        matchNumber: local.matchNumber,
+        match: `${local.homeCode} vs ${local.awayCode}`,
+        providerMatchId: matched.providerMatchId,
+        providerRawStatus: matched.rawStatus,
+        providerStatus: matched.status,
+      });
+      continue;
+    }
 
     const nextHomeScore = reconcileScore(local.homeScore, selectedScore.home);
     const nextAwayScore = reconcileScore(local.awayScore, selectedScore.away);
@@ -616,6 +688,7 @@ export async function runLiveSyncV2(
       providerMatchId: matched.providerMatchId,
       localStatus: local.status ?? MATCH_STATUSES.SCHEDULED,
       localScore: formatScore(local.homeScore, local.awayScore),
+      providerRawStatus: matched.rawStatus,
       providerStatus: matched.status,
       providerScore: formatScore(selectedScore.home, selectedScore.away),
       nextStatus,
