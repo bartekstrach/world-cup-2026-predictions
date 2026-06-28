@@ -1,4 +1,5 @@
 import { ManualPredictionForm } from "@/components/admin/manual-prediction-form";
+import { MATCH_STATUSES } from "@/lib/constants";
 import { db } from "@/lib/db";
 import { PenTool } from "lucide-react";
 import { AdminSectionHeader } from "@/components/admin/admin-section-header";
@@ -10,6 +11,7 @@ async function getData() {
   });
 
   const matches = await db.query.matches.findMany({
+    where: (matches, { ne }) => ne(matches.status, MATCH_STATUSES.FINISHED),
     with: {
       homeTeam: true,
       awayTeam: true,
