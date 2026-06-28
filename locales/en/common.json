@@ -190,6 +190,16 @@
       "none": "No missing predictions in current or next stage.",
       "noStage": "-"
     },
+    "exactScores": {
+      "title": "Predictions summary",
+      "headers": {
+        "participant": "Participant",
+        "count": "Exact scores",
+        "onePointCount": "1-point scores",
+        "oneAndThreePointCount": "1- and 3-point scores"
+      },
+      "none": "No participants yet."
+    },
     "publication": {
       "title": "Publication Controls",
       "stage": "Stage",

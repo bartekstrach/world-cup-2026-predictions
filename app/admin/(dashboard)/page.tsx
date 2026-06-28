@@ -1,4 +1,5 @@
 import { getAdminStats } from "@/lib/admin-stats";
+import { ExactScoresCard } from "@/components/admin/exact-scores-card";
 import { HallOfShameCard } from "@/components/admin/hall-of-shame-card";
 import { NextMatchInsightList } from "@/components/admin/next-match-insight-list";
 import { NextEventCountersCard } from "@/components/admin/next-event-counters-card";
@@ -144,6 +145,8 @@ export default async function AdminDashboard() {
           nextStage={stats.hallOfShameNextStage}
           rows={stats.hallOfShame}
         />
+
+        <ExactScoresCard rows={stats.exactScoresByParticipant} />
 
         <PublishControlsCard />
 

@@ -197,6 +197,16 @@
       "none": "Brak brakujących typów w bieżącym i następnym etapie.",
       "noStage": "-"
     },
+    "exactScores": {
+      "title": "Podsumowanie typów",
+      "headers": {
+        "participant": "Uczestnik",
+        "count": "Dokładne wyniki",
+        "onePointCount": "Typy za 1 punkt",
+        "oneAndThreePointCount": "Typy za 1 i 3 punkty"
+      },
+      "none": "Brak uczestników."
+    },
     "publication": {
       "title": "Kontrola publikacji",
       "stage": "Etap",

@@ -55,6 +55,14 @@ type HallOfShameRow = {
   next_total: string | number;
 };
 
+type ExactScoresByParticipantRow = {
+  participant_id: number;
+  participant_name: string;
+  exact_score_count: string | number;
+  one_point_count: string | number;
+  one_and_three_point_count: string | number;
+};
+
 export type AdminStats = {
   total_matches: number;
   finished_matches: number;
@@ -92,6 +100,13 @@ export type AdminStats = {
     nextMissing: number;
     nextTotal: number;
   }>;
+  exactScoresByParticipant: Array<{
+    participantId: number;
+    participantName: string;
+    exactScoreCount: number;
+    onePointCount: number;
+    oneAndThreePointCount: number;
+  }>;
   nextMatchCountdownTarget: Date | null;
   nextStageCountdownTarget: Date | null;
 };
@@ -112,6 +127,7 @@ export async function getAdminStats(): Promise<AdminStats> {
     hallOfShameCurrentStage: null,
     hallOfShameNextStage: null,
     hallOfShame: [],
+    exactScoresByParticipant: [],
     nextMatchCountdownTarget: null,
     nextStageCountdownTarget: null,
   };
@@ -333,6 +349,22 @@ export async function getAdminStats(): Promise<AdminStats> {
 
     const hallOfShameRows = hallOfShameResult.rows as HallOfShameRow[];
 
+    const exactScoresByParticipantResult = await db.execute(sql`
+    SELECT
+      p.id AS participant_id,
+      p.name AS participant_name,
+      COUNT(pr.id) FILTER (WHERE pr.points = 3) AS exact_score_count,
+      COUNT(pr.id) FILTER (WHERE pr.points = 1) AS one_point_count,
+      COUNT(pr.id) FILTER (WHERE pr.points IN (1, 3)) AS one_and_three_point_count
+    FROM participants p
+    LEFT JOIN predictions pr ON pr.participant_id = p.id
+    GROUP BY p.id, p.name
+    ORDER BY exact_score_count DESC, p.name ASC
+  `);
+
+    const exactScoresByParticipantRows =
+      exactScoresByParticipantResult.rows as ExactScoresByParticipantRow[];
+
     const nextMatchDate = nextEventRows[0]?.match_date
       ? new Date(nextEventRows[0].match_date)
       : null;
@@ -383,6 +415,13 @@ export async function getAdminStats(): Promise<AdminStats> {
         currentTotal: Number(row.current_total),
         nextMissing: Number(row.next_missing),
         nextTotal: Number(row.next_total),
+      })),
+      exactScoresByParticipant: exactScoresByParticipantRows.map((row) => ({
+        participantId: row.participant_id,
+        participantName: row.participant_name,
+        exactScoreCount: Number(row.exact_score_count),
+        onePointCount: Number(row.one_point_count),
+        oneAndThreePointCount: Number(row.one_and_three_point_count),
       })),
       nextMatchCountdownTarget,
       nextStageCountdownTarget,
