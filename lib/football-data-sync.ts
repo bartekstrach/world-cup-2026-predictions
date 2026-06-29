@@ -108,9 +108,20 @@ export type LiveSyncV2Result = {
   updatedMatchIds: number[];
 };
 
+type ProviderPayloadMeta = {
+  url: string;
+  dateFrom: string;
+  dateTo: string;
+  status: number;
+};
+
 type RunOptions = {
   debug?: boolean;
   requestId?: string;
+  onProviderPayload?: (
+    payload: FootballDataMatchesResponse,
+    meta: ProviderPayloadMeta,
+  ) => void;
 };
 
 function logInfo(
@@ -256,6 +267,7 @@ class ProviderFetchError extends Error {
 async function fetchWorldCupSnapshot(
   now: Date,
   debug: boolean,
+  onProviderPayload?: RunOptions["onProviderPayload"],
 ): Promise<NormalizedProviderMatch[]> {
   const token =
     LIVE_MATCHES_API_KEY || process.env.FOOTBALL_DATA_API_TOKEN || "";
@@ -318,7 +330,12 @@ async function fetchWorldCupSnapshot(
     const payload = (await response.json()) as FootballDataMatchesResponse;
     const sourceMatches = Array.isArray(payload.matches) ? payload.matches : [];
 
-    // logInfo(true, JSON.stringify(payload));
+    onProviderPayload?.(payload, {
+      url: endpoint.toString(),
+      dateFrom: formatDateForApi(dateFrom),
+      dateTo: formatDateForApi(dateTo),
+      status: response.status,
+    });
 
     logInfo(debug, "Provider snapshot fetched", {
       dateFrom: formatDateForApi(dateFrom),
@@ -392,6 +409,17 @@ function resolveOutcome(
 
   if (rawStatus === "POSTPONED" || rawStatus === "CANCELLED") {
     return { kind: "skip", reason: "postponed-cancelled" };
+  }
+
+  // For knockout matches the tournament result is the score after 90 minutes.
+  // If provider reports PAUSED after second half and regularTime is already
+  // present, finalize immediately (without waiting for EXTRA_TIME/PENS/FINISHED).
+  if (isKnockout && rawStatus === "PAUSED" && hasRegular) {
+    return {
+      kind: "apply",
+      nextStatus: MATCH_STATUSES.FINISHED,
+      score: incoming.regularTime,
+    };
   }
 
   if (
@@ -546,7 +574,11 @@ export async function runLiveSyncV2(
 
   let incoming: NormalizedProviderMatch[];
   try {
-    incoming = await fetchWorldCupSnapshot(now, debug);
+    incoming = await fetchWorldCupSnapshot(
+      now,
+      debug,
+      options?.onProviderPayload,
+    );
   } catch (error) {
     const reason =
       error instanceof ProviderFetchError ? error.reason : "fetch-error";
