@@ -197,7 +197,8 @@
         "participant": "Participant",
         "count": "Exact scores",
         "onePointCount": "1-point scores",
-        "oneAndThreePointCount": "1- and 3-point scores"
+        "oneAndThreePointCount": "1- and 3-point scores",
+        "oneGoalOffCount": "1 goal off"
       },
       "none": "No participants yet."
     },

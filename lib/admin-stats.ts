@@ -61,6 +61,7 @@ type ExactScoresByParticipantRow = {
   exact_score_count: string | number;
   one_point_count: string | number;
   one_and_three_point_count: string | number;
+  one_goal_off_count: string | number;
 };
 
 export type AdminStats = {
@@ -106,6 +107,7 @@ export type AdminStats = {
     exactScoreCount: number;
     onePointCount: number;
     oneAndThreePointCount: number;
+    oneGoalOffCount: number;
   }>;
   nextMatchCountdownTarget: Date | null;
   nextStageCountdownTarget: Date | null;
@@ -355,9 +357,16 @@ export async function getAdminStats(): Promise<AdminStats> {
       p.name AS participant_name,
       COUNT(pr.id) FILTER (WHERE pr.points = 3) AS exact_score_count,
       COUNT(pr.id) FILTER (WHERE pr.points = 1) AS one_point_count,
-      COUNT(pr.id) FILTER (WHERE pr.points IN (1, 3)) AS one_and_three_point_count
+      COUNT(pr.id) FILTER (WHERE pr.points IN (1, 3)) AS one_and_three_point_count,
+      COUNT(pr.id) FILTER (
+        WHERE m.status = ${MATCH_STATUSES.FINISHED}
+          AND m.home_score IS NOT NULL
+          AND m.away_score IS NOT NULL
+          AND ABS(m.home_score - pr.home_score) + ABS(m.away_score - pr.away_score) = 1
+      ) AS one_goal_off_count
     FROM participants p
     LEFT JOIN predictions pr ON pr.participant_id = p.id
+    LEFT JOIN matches m ON m.id = pr.match_id
     GROUP BY p.id, p.name
     ORDER BY exact_score_count DESC, p.name ASC
   `);
@@ -422,6 +431,7 @@ export async function getAdminStats(): Promise<AdminStats> {
         exactScoreCount: Number(row.exact_score_count),
         onePointCount: Number(row.one_point_count),
         oneAndThreePointCount: Number(row.one_and_three_point_count),
+        oneGoalOffCount: Number(row.one_goal_off_count),
       })),
       nextMatchCountdownTarget,
       nextStageCountdownTarget,

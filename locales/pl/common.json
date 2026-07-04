@@ -204,7 +204,8 @@
         "participant": "Uczestnik",
         "count": "Dokładne wyniki",
         "onePointCount": "Typy za 1 punkt",
-        "oneAndThreePointCount": "Typy za 1 i 3 punkty"
+        "oneAndThreePointCount": "Typy za 1 i 3 punkty",
+        "oneGoalOffCount": "O 1 bramkę"
       },
       "none": "Brak uczestników."
     },

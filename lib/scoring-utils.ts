@@ -58,3 +58,17 @@ export function calculatePoints(
 
   return BAD_PREDICTION;
 }
+
+/** True when total goal difference across both teams is exactly 1 (e.g. 1:0 vs 0:0, 1:1, or 2:0). */
+export function isOneGoalOff(
+  predictedHome: number,
+  predictedAway: number,
+  actualHome: number,
+  actualAway: number,
+): boolean {
+  return (
+    Math.abs(actualHome - predictedHome) +
+      Math.abs(actualAway - predictedAway) ===
+    1
+  );
+}

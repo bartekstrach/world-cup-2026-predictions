@@ -11,9 +11,15 @@ interface ExactScoresItem {
   exactScoreCount: number;
   onePointCount: number;
   oneAndThreePointCount: number;
+  oneGoalOffCount: number;
 }
 
-type SortKey = "participant" | "exactScore" | "onePoint" | "oneAndThreePoint";
+type SortKey =
+  | "participant"
+  | "exactScore"
+  | "onePoint"
+  | "oneAndThreePoint"
+  | "oneGoalOff";
 type SortDir = "asc" | "desc";
 
 interface ExactScoresCardProps {
@@ -70,6 +76,9 @@ export function ExactScoresCard({ rows }: ExactScoresCardProps) {
         case "oneAndThreePoint":
           cmp = a.oneAndThreePointCount - b.oneAndThreePointCount;
           break;
+        case "oneGoalOff":
+          cmp = a.oneGoalOffCount - b.oneGoalOffCount;
+          break;
       }
 
       if (cmp === 0 && sortKey !== "participant") {
@@ -84,9 +93,15 @@ export function ExactScoresCard({ rows }: ExactScoresCardProps) {
 
   const headerClass = (key: SortKey, align: "left" | "right") =>
     cn(
-      "font-medium py-2 whitespace-nowrap cursor-pointer select-none hover:text-slate-700 transition-colors",
-      align === "left" ? "text-left pr-4" : "text-right pr-4 last:pr-0",
+      "w-[20%] px-2 font-medium py-2 cursor-pointer select-none hover:text-slate-700 transition-colors",
+      align === "left" ? "text-left" : "text-right",
       sortKey === key && "text-slate-700",
+    );
+
+  const cellClass = (align: "left" | "right") =>
+    cn(
+      "w-[20%] px-2 py-2.5",
+      align === "left" ? "text-left" : "text-right font-mono text-slate-600",
     );
 
   return (
@@ -99,7 +114,12 @@ export function ExactScoresCard({ rows }: ExactScoresCardProps) {
       <CardContent className="p-0 mt-4">
         {rows.length ? (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full table-fixed text-sm">
+              <colgroup>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <col key={index} style={{ width: "20%" }} />
+                ))}
+              </colgroup>
               <thead>
                 <tr className="border-b border-slate-100 text-slate-500">
                   <th
@@ -142,6 +162,16 @@ export function ExactScoresCard({ rows }: ExactScoresCardProps) {
                       direction={sortDir}
                     />
                   </th>
+                  <th
+                    className={headerClass("oneGoalOff", "right")}
+                    onClick={() => handleSort("oneGoalOff")}
+                  >
+                    {t("admin.exactScores.headers.oneGoalOffCount")}
+                    <SortIndicator
+                      active={sortKey === "oneGoalOff"}
+                      direction={sortDir}
+                    />
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -150,18 +180,15 @@ export function ExactScoresCard({ rows }: ExactScoresCardProps) {
                     key={row.participantId}
                     className="border-b border-slate-50 last:border-0"
                   >
-                    <td className="py-2.5 pr-4 font-medium text-slate-700">
+                    <td className={cn(cellClass("left"), "font-medium text-slate-700")}>
                       {row.participantName}
                     </td>
-                    <td className="py-2.5 pr-4 text-right font-mono text-slate-600">
-                      {row.exactScoreCount}
-                    </td>
-                    <td className="py-2.5 pr-4 text-right font-mono text-slate-600">
-                      {row.onePointCount}
-                    </td>
-                    <td className="py-2.5 text-right font-mono text-slate-600">
+                    <td className={cellClass("right")}>{row.exactScoreCount}</td>
+                    <td className={cellClass("right")}>{row.onePointCount}</td>
+                    <td className={cellClass("right")}>
                       {row.oneAndThreePointCount}
                     </td>
+                    <td className={cellClass("right")}>{row.oneGoalOffCount}</td>
                   </tr>
                 ))}
               </tbody>
