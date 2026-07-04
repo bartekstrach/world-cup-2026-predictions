@@ -53,6 +53,7 @@
   },
   "predictionSheets": {
     "noSheets": "No prediction sheets available yet.",
+    "showMore": "Show more",
     "headers": {
       "participant": "Participant",
       "uploaded": "Uploaded",

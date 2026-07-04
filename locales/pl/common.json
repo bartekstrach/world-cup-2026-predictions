@@ -57,6 +57,7 @@
   },
   "predictionSheets": {
     "noSheets": "Brak dostępnych kart typów.",
+    "showMore": "Pokaż więcej",
     "headers": {
       "participant": "Imię",
       "uploaded": "Wgrano",
