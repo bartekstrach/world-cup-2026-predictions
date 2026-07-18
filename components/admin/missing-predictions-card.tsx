@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { withMatchMedal } from "@/components/tournament-medal-ui";
 import { getT } from "@/lib/i18n/server";
 
 interface MissingByParticipantItem {
@@ -90,8 +91,16 @@ export async function MissingPredictionsCard({
                     className="flex items-center justify-between py-1.5 border-b border-slate-50 last:border-0"
                   >
                     <span className="truncate text-slate-600 font-mono text-sm">
-                      #{item.matchNumber} {item.homeTeamCode} {t("common.vs")}{" "}
-                      {item.awayTeamCode}
+                      #{item.matchNumber}{" "}
+                      {withMatchMedal(
+                        `${item.homeTeamCode} ${t("common.vs")} ${item.awayTeamCode}`,
+                        {
+                          matchNumber: item.matchNumber,
+                          matchId: item.matchId,
+                          homeTeamCode: item.homeTeamCode,
+                          awayTeamCode: item.awayTeamCode,
+                        },
+                      )}
                     </span>
                     <span className="font-mono text-[#10b981] font-bold text-sm">
                       {item.missingCount}

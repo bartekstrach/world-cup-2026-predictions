@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { formatDateTime, getShortWeekday } from "@/lib/date";
 import { calculatePoints, formatScore } from "@/lib/scoring-utils";
 import { getMatchTeamNames, getShortMatchTeamNames } from "@/lib/teams";
+import { getMatchMedalEmoji } from "@/components/tournament-medal-ui";
 import type { PredictionsGridData } from "@/lib/types";
 import { MATCH_STAGES, NO_RESULT, type MatchStage } from "@/lib/constants";
 import { useTranslation } from "react-i18next";
@@ -223,9 +224,14 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
                       >
                         {/* Group/stage */}
                         <td className="hidden sm:table-cell text-center text-slate-400 whitespace-nowrap p-2 sm:p-4 align-middle">
-                          {match.stage.startsWith("group_")
-                            ? match.homeTeam.group
-                            : t(`predictionSheets.stages.${match.stage}`)}
+                          {getMatchMedalEmoji({
+                            matchNumber: match.matchNumber,
+                            homeTeamCode: match.homeTeam.code,
+                            awayTeamCode: match.awayTeam.code,
+                          }) ??
+                            (match.stage.startsWith("group_")
+                              ? match.homeTeam.group
+                              : t(`predictionSheets.stages.${match.stage}`))}
                         </td>
 
                         {/* Date */}

@@ -23,6 +23,7 @@ import {
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { getMatchTeamNames } from "@/lib/teams";
+import { withMatchMedal } from "@/components/tournament-medal-ui";
 
 interface ParticipantOption {
   id: number;
@@ -109,12 +110,19 @@ export function PredictionsEditor({
 
   const shownCount = visibleRows.length;
 
-  function formatMatchLabel(homeTeamCode: string, awayTeamCode: string) {
-    return getMatchTeamNames({
-      displayFlags: true,
-      homeTeamCode,
-      awayTeamCode,
-    });
+  function formatMatchLabel(
+    homeTeamCode: string,
+    awayTeamCode: string,
+    matchNumber?: number,
+  ) {
+    return withMatchMedal(
+      getMatchTeamNames({
+        displayFlags: true,
+        homeTeamCode,
+        awayTeamCode,
+      }),
+      { matchNumber, homeTeamCode, awayTeamCode },
+    );
   }
 
   function updateScore(
@@ -286,7 +294,12 @@ export function PredictionsEditor({
                   </SelectItem>
                   {matches.map((match) => (
                     <SelectItem key={match.id} value={match.id.toString()}>
-                      #{match.matchNumber} {formatMatchLabel(match.homeTeamCode, match.awayTeamCode)}
+                      #{match.matchNumber}{" "}
+                      {formatMatchLabel(
+                        match.homeTeamCode,
+                        match.awayTeamCode,
+                        match.matchNumber,
+                      )}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -351,7 +364,11 @@ export function PredictionsEditor({
                         #{row.matchNumber}
                       </TableCell>
                       <TableCell className="p-4 font-medium text-slate-700">
-                        {formatMatchLabel(row.homeTeamCode, row.awayTeamCode)}
+                        {formatMatchLabel(
+                          row.homeTeamCode,
+                          row.awayTeamCode,
+                          row.matchNumber,
+                        )}
                       </TableCell>
                       <TableCell className="p-4 text-center">
                         <div className="flex items-center justify-center gap-2">

@@ -4,6 +4,7 @@ import type { LeaderboardEntry } from "@/lib/types";
 import { Card } from "@/components/ui/card";
 import { useSelectedParticipant } from "@/components/selected-participant-provider";
 import { getShortMatchTeamNames } from "@/lib/teams";
+import { withMatchMedal } from "@/components/tournament-medal-ui";
 import { useTranslation } from "react-i18next";
 
 interface LeaderboardTableProps {
@@ -52,11 +53,19 @@ export function LeaderboardTable({ data }: LeaderboardTableProps) {
                   key={match.id}
                   className="border-b border-slate-100 p-4 h-auto text-center truncate"
                 >
-                  {getShortMatchTeamNames({
-                    displayFlags: true,
-                    homeTeamCode: match.homeTeamCode,
-                    awayTeamCode: match.awayTeamCode,
-                  })}
+                  {withMatchMedal(
+                    getShortMatchTeamNames({
+                      displayFlags: true,
+                      homeTeamCode: match.homeTeamCode,
+                      awayTeamCode: match.awayTeamCode,
+                    }),
+                    {
+                      matchNumber: match.matchNumber,
+                      matchId: match.id,
+                      homeTeamCode: match.homeTeamCode,
+                      awayTeamCode: match.awayTeamCode,
+                    },
+                  )}
                 </th>
               ))}
             </tr>

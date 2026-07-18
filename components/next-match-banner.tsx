@@ -3,6 +3,7 @@
 import type { NextMatchBannerData } from "@/lib/types";
 import { formatWeekdayDateTime } from "@/lib/date";
 import { getMatchTeamNames } from "@/lib/teams";
+import { withMatchMedal } from "@/components/tournament-medal-ui";
 import { useTranslation } from "react-i18next";
 
 interface NextMatchBannerProps {
@@ -13,11 +14,17 @@ export function NextMatchBanner({ data }: NextMatchBannerProps) {
   const { t } = useTranslation();
   const teamsLabel = data.matches
     .map((match) =>
-      getMatchTeamNames({
-        displayFlags: false,
-        homeTeamCode: match.homeTeamCode,
-        awayTeamCode: match.awayTeamCode,
-      }),
+      withMatchMedal(
+        getMatchTeamNames({
+          displayFlags: false,
+          homeTeamCode: match.homeTeamCode,
+          awayTeamCode: match.awayTeamCode,
+        }),
+        {
+          homeTeamCode: match.homeTeamCode,
+          awayTeamCode: match.awayTeamCode,
+        },
+      ),
     )
     .join(` ${t("common.and")} `);
 

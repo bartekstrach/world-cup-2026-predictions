@@ -2,6 +2,7 @@ import { Calendar } from "lucide-react";
 
 import { KickoffDateLabel } from "@/components/kickoff-date-label";
 import { getMatchTeamNames } from "@/lib/teams";
+import { withMatchMedal } from "@/components/tournament-medal-ui";
 import { getT } from "@/lib/i18n/server";
 
 interface NextMatchInsightItem {
@@ -46,11 +47,17 @@ export async function NextMatchInsightList({
         {nextMatches.map((match, index) => (
           <div key={`${match.homeTeamCode}-${match.awayTeamCode}-${index}`}>
             <div className="text-2xl font-bold text-[#0a192f] flex items-center gap-2">
-              {getMatchTeamNames({
-                displayFlags: true,
-                homeTeamCode: match.homeTeamCode,
-                awayTeamCode: match.awayTeamCode,
-              })}
+              {withMatchMedal(
+                getMatchTeamNames({
+                  displayFlags: true,
+                  homeTeamCode: match.homeTeamCode,
+                  awayTeamCode: match.awayTeamCode,
+                }),
+                {
+                  homeTeamCode: match.homeTeamCode,
+                  awayTeamCode: match.awayTeamCode,
+                },
+              )}
             </div>
             <KickoffDateLabel date={match.matchDate} />
           </div>

@@ -30,6 +30,7 @@ import {
 } from "@/lib/constants";
 import { formatDateTime } from "@/lib/date";
 import { toFifaCode } from "@/lib/country-utils";
+import { withMatchMedal } from "@/components/tournament-medal-ui";
 import { cn } from "@/lib/utils";
 
 const STATUS_FILTER_OPTIONS: MatchStatus[] = [
@@ -323,8 +324,15 @@ export function MatchesTable({
                   {t(`predictionSheets.stages.${match.stage}`)}
                 </TableCell>
                 <TableCell className="font-medium text-slate-700 p-4">
-                  {toFifaCode(match.homeTeam.code)} {t("common.vs")}{" "}
-                  {toFifaCode(match.awayTeam.code)}
+                  {withMatchMedal(
+                    `${toFifaCode(match.homeTeam.code)} ${t("common.vs")} ${toFifaCode(match.awayTeam.code)}`,
+                    {
+                      matchNumber: match.matchNumber,
+                      matchId: match.id,
+                      homeTeamCode: match.homeTeam.code,
+                      awayTeamCode: match.awayTeam.code,
+                    },
+                  )}
                 </TableCell>
                 <TableCell className="text-center p-4">
                   {editing === match.id ? (

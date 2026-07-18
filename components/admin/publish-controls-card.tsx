@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { withMatchMedal } from "@/components/tournament-medal-ui";
 
 type PublicationStageOption = {
   stage: string;
@@ -111,7 +112,15 @@ export function PublishControlsCard() {
       (item) => item.id.toString() === selectedMatchId,
     );
     if (!match) return t("admin.publication.selectMatch");
-    return `${match.homeTeamCode} ${t("common.vs")} ${match.awayTeamCode}`;
+    return withMatchMedal(
+      `${match.homeTeamCode} ${t("common.vs")} ${match.awayTeamCode}`,
+      {
+        matchNumber: match.matchNumber,
+        matchId: match.id,
+        homeTeamCode: match.homeTeamCode,
+        awayTeamCode: match.awayTeamCode,
+      },
+    );
   }, [matches, selectedMatchId, t]);
 
   const publishStage = useCallback(async () => {
@@ -288,8 +297,16 @@ export function PublishControlsCard() {
               <SelectContent>
                 {matches.map((item) => (
                   <SelectItem key={item.id} value={item.id.toString()}>
-                    #{item.matchNumber} {item.homeTeamCode} {t("common.vs")}{" "}
-                    {item.awayTeamCode}
+                    #{item.matchNumber}{" "}
+                    {withMatchMedal(
+                      `${item.homeTeamCode} ${t("common.vs")} ${item.awayTeamCode}`,
+                      {
+                        matchNumber: item.matchNumber,
+                        matchId: item.id,
+                        homeTeamCode: item.homeTeamCode,
+                        awayTeamCode: item.awayTeamCode,
+                      },
+                    )}
                   </SelectItem>
                 ))}
               </SelectContent>
