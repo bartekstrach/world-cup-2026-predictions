@@ -182,7 +182,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
             {groupedMatches.map((group) => {
               const isCollapsed =
                 group.stage === "final"
-                  ? true
+                  ? false
                   : Boolean(collapsedStages[group.stage]);
               const stageLabel = t(`predictionSheets.stages.${group.stage}`);
 
