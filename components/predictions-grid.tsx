@@ -64,7 +64,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
         (match) => match.stage === stage,
       );
       if (stage === "final") {
-        initial[stage] = true;
+        initial[stage] = false;
         continue;
       }
       if (stageMatches.length === 0) continue;
