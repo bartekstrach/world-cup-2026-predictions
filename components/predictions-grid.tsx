@@ -63,6 +63,10 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
       const stageMatches = sortedMatches.filter(
         (match) => match.stage === stage,
       );
+      if (stage === "final") {
+        initial[stage] = true;
+        continue;
+      }
       if (stageMatches.length === 0) continue;
 
       const allFinished = stageMatches.every(
@@ -98,6 +102,7 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
   });
 
   function toggleStage(stage: MatchStage) {
+    if (stage === "final") return;
     setCollapsedStages((prev) => ({
       ...prev,
       [stage]: !prev[stage],
@@ -175,7 +180,10 @@ export function PredictionsGrid({ data }: PredictionsGridProps) {
           </thead>
           <tbody>
             {groupedMatches.map((group) => {
-              const isCollapsed = Boolean(collapsedStages[group.stage]);
+              const isCollapsed =
+                group.stage === "final"
+                  ? true
+                  : Boolean(collapsedStages[group.stage]);
               const stageLabel = t(`predictionSheets.stages.${group.stage}`);
 
               return (
