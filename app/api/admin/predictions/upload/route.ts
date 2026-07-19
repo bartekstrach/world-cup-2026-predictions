@@ -7,7 +7,11 @@ import {
   buildPredictionBlobPath,
   normalizeSubmissionStage,
 } from "@/lib/blob-naming";
-import { SUBMISSION_STAGES, TWO_PAGE_SUBMISSION_STAGES } from "@/lib/constants";
+import {
+  ONE_OR_TWO_PAGE_SUBMISSION_STAGES,
+  SUBMISSION_STAGES,
+  TWO_PAGE_SUBMISSION_STAGES,
+} from "@/lib/constants";
 import { predictionSubmissions } from "@/lib/schema";
 import { and, eq } from "drizzle-orm";
 import { getActiveAiModel } from "@/actions/settings";
@@ -65,6 +69,9 @@ export async function POST(request: NextRequest) {
     const requiresTwoPages = TWO_PAGE_SUBMISSION_STAGES.includes(
       resolvedStage as (typeof TWO_PAGE_SUBMISSION_STAGES)[number],
     );
+    const allowsOneOrTwoPages = ONE_OR_TWO_PAGE_SUBMISSION_STAGES.includes(
+      resolvedStage as (typeof ONE_OR_TWO_PAGE_SUBMISSION_STAGES)[number],
+    );
 
     if (requiresTwoPages && allFiles.length !== 2) {
       return NextResponse.json(
@@ -73,7 +80,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!requiresTwoPages && allFiles.length !== 1) {
+    if (allowsOneOrTwoPages && (allFiles.length < 1 || allFiles.length > 2)) {
+      return NextResponse.json(
+        { error: "This stage allows 1 or 2 scanned pages" },
+        { status: 400 },
+      );
+    }
+
+    if (!requiresTwoPages && !allowsOneOrTwoPages && allFiles.length !== 1) {
       return NextResponse.json(
         { error: "This stage requires exactly 1 scanned page" },
         { status: 400 },

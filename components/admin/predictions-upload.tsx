@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import {
+  ONE_OR_TWO_PAGE_SUBMISSION_STAGES,
   SUBMISSION_STAGES,
   TWO_PAGE_SUBMISSION_STAGES,
   type SubmissionStage,
@@ -54,6 +55,17 @@ function isTwoPageStage(stage: SubmissionStage | ""): stage is SubmissionStage {
   );
 }
 
+function isOneOrTwoPageStage(
+  stage: SubmissionStage | "",
+): stage is SubmissionStage {
+  return (
+    stage !== "" &&
+    ONE_OR_TWO_PAGE_SUBMISSION_STAGES.includes(
+      stage as (typeof ONE_OR_TWO_PAGE_SUBMISSION_STAGES)[number],
+    )
+  );
+}
+
 export function PredictionsUpload({
   participants,
 }: {
@@ -82,12 +94,20 @@ export function PredictionsUpload({
     const selectedFiles = Array.from(e.target.files ?? []);
     if (!selectedFiles.length) return;
 
+    const allowsOneOrTwoPages = isOneOrTwoPageStage(uploadStage);
     const requiredFilesCount = isTwoPageStage(uploadStage) ? 2 : 1;
-    if (selectedFiles.length !== requiredFilesCount) {
+
+    const hasValidPagesCount = allowsOneOrTwoPages
+      ? selectedFiles.length >= 1 && selectedFiles.length <= 2
+      : selectedFiles.length === requiredFilesCount;
+
+    if (!hasValidPagesCount) {
       toast.error(t("predictionsUpload.invalidPagesCount"), {
-        description: t("predictionsUpload.requiredPagesCount", {
-          count: requiredFilesCount,
-        }),
+        description: allowsOneOrTwoPages
+          ? t("predictionsUpload.allowedPagesCount", { min: 1, max: 2 })
+          : t("predictionsUpload.requiredPagesCount", {
+              count: requiredFilesCount,
+            }),
       });
       e.target.value = "";
       return;
@@ -351,15 +371,17 @@ export function PredictionsUpload({
             <input
               type="file"
               accept="image/*"
-              multiple={isTwoPageStage(uploadStage)}
+              multiple={isTwoPageStage(uploadStage) || isOneOrTwoPageStage(uploadStage)}
               onChange={handleFileChange}
               disabled={!uploadParticipantName.trim()}
               className="block w-full max-w-xl text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-slate-200 file:text-sm file:font-medium file:bg-[#f0f4f8] file:text-[#0a192f] hover:file:bg-slate-100"
             />
             <p className="text-xs text-slate-500 mt-1">
-              {t("predictionsUpload.requiredPagesCount", {
-                count: isTwoPageStage(uploadStage) ? 2 : 1,
-              })}
+              {isOneOrTwoPageStage(uploadStage)
+                ? t("predictionsUpload.allowedPagesCount", { min: 1, max: 2 })
+                : t("predictionsUpload.requiredPagesCount", {
+                    count: isTwoPageStage(uploadStage) ? 2 : 1,
+                  })}
             </p>
             {!uploadParticipantName.trim() && (
               <p className="text-xs text-amber-600 mt-1">

@@ -364,6 +364,7 @@
     "selectScannedImage": "Wybierz zeskanowany obraz",
     "fillParticipantFirst": "Najpierw wpisz nazwę uczestnika, aby włączyć wybór pliku.",
     "requiredPagesCount": "Wymagana liczba stron dla tego etapu: {{count}}",
+    "allowedPagesCount": "Dozwolona liczba stron dla tego etapu: {{min}} lub {{max}}",
     "invalidPagesCount": "Wybrano nieprawidłową liczbę stron",
     "pageLabel": "Strona {{page}}",
     "preview": "Podgląd:",

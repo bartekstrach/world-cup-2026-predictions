@@ -357,6 +357,7 @@
     "selectScannedImage": "Select scanned image",
     "fillParticipantFirst": "Fill participant name first to enable file selection.",
     "requiredPagesCount": "Required pages for this stage: {{count}}",
+    "allowedPagesCount": "Allowed pages for this stage: {{min}} or {{max}}",
     "invalidPagesCount": "Wrong number of pages selected",
     "pageLabel": "Page {{page}}",
     "preview": "Preview:",

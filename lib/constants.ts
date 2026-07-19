@@ -87,6 +87,8 @@ export const TWO_PAGE_SUBMISSION_STAGES = [
   "round_32",
 ] as const;
 
+export const ONE_OR_TWO_PAGE_SUBMISSION_STAGES = ["final"] as const;
+
 export const STAGE_ORDER: Record<SubmissionStage, number> = {
   group_1: 0,
   group_2: 1,
